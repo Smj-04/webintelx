@@ -1,12 +1,17 @@
 const { exec } = require("child_process");
 
 function runCommand(command) {
-  return new Promise((resolve, reject) => {
-    exec(command, (error, stdout, stderr) => {
+  return new Promise((resolve) => {
+    exec(command, { timeout: 15000 }, (error, stdout, stderr) => {
       if (error) {
-        return reject(stderr || error.message);
+        resolve(
+          stdout ||
+          stderr ||
+          `Command failed but scan continued`
+        );
+      } else {
+        resolve(stdout);
       }
-      resolve(stdout);
     });
   });
 }

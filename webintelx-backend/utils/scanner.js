@@ -37,9 +37,9 @@ module.exports = {
   nslookup: (target) => runCommand(`nslookup ${target}`),
 
   // -------------------------------------
-  // Ping Test
+  // Ping Test (Windows)
   // -------------------------------------
-  ping: (target) => runCommand(`ping -n 4 ${target}`), // Windows uses -n
+  ping: (target) => runCommand(`ping -n 4 ${target}`),
 
   // -------------------------------------
   // WHOIS Lookup
@@ -55,7 +55,7 @@ module.exports = {
   // Quick Port Scan (returns PORT + NAME)
   // -------------------------------------
   portScan: async (host) => {
-    const ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 3306]; // common ports
+    const ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 3306];
     const results = [];
 
     const checkPort = (port) => {
@@ -77,9 +77,7 @@ module.exports = {
           resolve();
         });
 
-        socket.on("error", () => {
-          resolve();
-        });
+        socket.on("error", () => resolve());
 
         socket.connect(port, host);
       });
@@ -100,7 +98,7 @@ module.exports = {
       const url = target.startsWith("http") ? target : `https://${target}`;
       const res = await axios.get(url, { timeout: 5000 });
       return res.headers;
-    } catch (err) {
+    } catch {
       return { error: "Could not retrieve headers" };
     }
   },
@@ -111,8 +109,21 @@ module.exports = {
   ssl: async (domain) => {
     try {
       return await sslChecker(domain);
-    } catch (error) {
+    } catch {
       return { error: "SSL scan failed" };
+    }
+  },
+
+  // -------------------------------------
+  // ✅ WHATWEB (RUNS VIA WSL)
+  // -------------------------------------
+  whatweb: async (target) => {
+    try {
+      // --log-json=- sends JSON output to stdout
+      const command = `wsl whatweb ${target} --log-json=-`;
+      return await runCommand(command);
+    } catch (err) {
+      return "WhatWeb scan failed";
     }
   },
 };

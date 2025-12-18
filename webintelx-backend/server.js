@@ -10,11 +10,12 @@ const headersRoute = require("./routes/headersRoute");
 const sslRoute = require("./routes/sslRoute");
 const app = express();
 const quickScanRoute = require("./routes/quickScanRoute");
+const whatwebRoute = require("./routes/whatwebRoute");
+
 
 app.use(cors());
 app.use(express.json());
-
-
+app.use("/api/whatweb", whatwebRoute);
 app.use("/api/nslookup", nslookupRoute);
 app.use("/api/whois", whoisRoute);
 app.use("/api/ping", pingRoute);

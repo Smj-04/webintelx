@@ -6,6 +6,7 @@ import {
   FaExclamationTriangle,
   FaFileDownload,
 } from "react-icons/fa";
+import Footer from "../components/Footer";
 
 export default function QuickScan() {
   const [input, setInput] = useState("");
@@ -34,7 +35,7 @@ export default function QuickScan() {
       if (!data.success) {
         setError(data.error);
       } else {
-        setResults(data.data); // ✔ FIXED
+        setResults(data.data);
       }
     } catch (err) {
       setError("Network error — backend unreachable.");
@@ -57,7 +58,9 @@ export default function QuickScan() {
 
       {/* Description */}
       <div className="max-w-4xl mx-auto mt-10 px-6">
-        <h2 className="text-2xl font-bold mb-4 text-indigo-400">What Quick Scan Includes</h2>
+        <h2 className="text-2xl font-bold mb-4 text-indigo-400">
+          What Quick Scan Includes
+        </h2>
         <p className="text-gray-300 mb-6">
           Quick Scan performs lightweight checks such as DNS lookup, ping tests,
           security headers, and common open ports to give you an instant security overview.
@@ -134,8 +137,12 @@ export default function QuickScan() {
       {/* Loader */}
       {isScanning && (
         <div className="mt-12 text-center animate-pulse">
-          <h2 className="text-2xl font-semibold text-indigo-400">Running Checks...</h2>
-          <p className="text-gray-400 mt-2">Scanning DNS, ports, headers, SSL...</p>
+          <h2 className="text-2xl font-semibold text-indigo-400">
+            Running Checks...
+          </h2>
+          <p className="text-gray-400 mt-2">
+            Scanning DNS, ports, headers, SSL...
+          </p>
           <div className="mt-6 flex justify-center">
             <div className="w-12 h-12 border-4 border-gray-600 border-t-indigo-500 rounded-full animate-spin"></div>
           </div>
@@ -146,7 +153,9 @@ export default function QuickScan() {
       {scanDone && results && (
         <div className="mt-16 px-4 mb-20">
           <div className="bg-gray-800 p-6 rounded-2xl shadow-xl max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold text-green-400 mb-3">Quick Scan Results</h2>
+            <h2 className="text-3xl font-bold text-green-400 mb-3">
+              Quick Scan Results
+            </h2>
 
             {/* DNS */}
             <h3 className="text-xl font-bold text-blue-400 mb-2">DNS Lookup</h3>
@@ -161,7 +170,9 @@ export default function QuickScan() {
             </pre>
 
             {/* Headers */}
-            <h3 className="text-xl font-bold text-blue-400 mt-6 mb-2">Security Headers</h3>
+            <h3 className="text-xl font-bold text-blue-400 mt-6 mb-2">
+              Security Headers
+            </h3>
             <pre className="bg-black p-4 rounded-lg text-green-400 text-sm whitespace-pre-wrap">
               {JSON.stringify(results.headers, null, 2)}
             </pre>
@@ -170,14 +181,30 @@ export default function QuickScan() {
             <h3 className="text-xl font-bold text-blue-400 mt-6 mb-2">Open Ports</h3>
             <pre className="bg-black p-4 rounded-lg text-yellow-400 text-sm whitespace-pre-wrap">
               {results.openPorts.length > 0
-                ? results.openPorts.map(p => `${p.port} (${p.name})`).join(", ")
+                ? results.openPorts
+                    .map(p => `${p.port} (${p.name})`)
+                    .join(", ")
                 : "No common ports detected"}
             </pre>
 
             {/* SSL */}
-            <h3 className="text-xl font-bold text-blue-400 mt-6 mb-2">SSL Certificate</h3>
+            <h3 className="text-xl font-bold text-blue-400 mt-6 mb-2">
+              SSL Certificate
+            </h3>
             <pre className="bg-black p-4 rounded-lg text-green-400 text-sm whitespace-pre-wrap">
               {JSON.stringify(results.ssl, null, 2)}
+            </pre>
+
+            {/* ✅ WHATWEB (ONLY ADDITION) */}
+            <h3 className="text-xl font-bold text-blue-400 mt-6 mb-2">
+              Technology Fingerprinting (WhatWeb)
+            </h3>
+            <pre className="bg-black p-4 rounded-lg text-purple-400 text-sm whitespace-pre-wrap">
+              {results.whatweb
+                ? typeof results.whatweb === "string"
+                  ? results.whatweb
+                  : JSON.stringify(results.whatweb, null, 2)
+                : "No technology data detected"}
             </pre>
 
             <button className="mt-6 flex items-center mx-auto bg-green-600 hover:bg-green-700 transition py-3 px-6 rounded-md text-lg font-semibold shadow-lg">
@@ -187,6 +214,7 @@ export default function QuickScan() {
           </div>
         </div>
       )}
+    <Footer />  
     </div>
   );
 }

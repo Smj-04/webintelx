@@ -11,36 +11,44 @@ exports.quickScan = async (req, res) => {
     });
   }
 
-  const target = cleanUrl(url); // ✔ FIXED
+  const target = cleanUrl(url);
 
   try {
-    const [dnsResult, pingResult, headersResult, portResult, sslResult] =
-      await Promise.all([
-        scanner.nslookup(target),
-        scanner.ping(target),
-        scanner.headers(target),
-        scanner.portScan(target),
-        scanner.ssl(target),
-      ]);
+    // ✅ Run all scans safely
+    const results = await Promise.allSettled([
+      scanner.nslookup(target),
+      scanner.ping(target),
+      scanner.headers(target),
+      scanner.portScan(target),
+      scanner.ssl(target),
+      scanner.whatweb(target),
+    ]);
+
+    // ✅ Helper: return value OR error string
+    const safe = (r) =>
+      r.status === "fulfilled"
+        ? r.value
+        : `Scan failed: ${r.reason}`;
 
     const output = {
-      dns: dnsResult,
-      ping: pingResult,
-      headers: headersResult,
-      openPorts: portResult,
-      ssl: sslResult,
+      dns: safe(results[0]),
+      ping: safe(results[1]),
+      headers: safe(results[2]),
+      openPorts: safe(results[3]),
+      ssl: safe(results[4]),
+      whatweb: safe(results[5]),
     };
 
     return res.json({
       success: true,
-      message: "Quick scan completed successfully",
+      message: "Quick scan completed (partial results possible)",
       data: output,
     });
   } catch (err) {
-    console.error("QuickScan Error:", err);
+    console.error("QuickScan Fatal Error:", err);
     return res.status(500).json({
       success: false,
-      error: "Quick Scan failed: " + err.toString(),
+      error: "Quick Scan crashed",
     });
   }
 };
