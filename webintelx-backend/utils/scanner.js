@@ -2,6 +2,8 @@ const runCommand = require("./runCommand");
 const net = require("net");
 const axios = require("axios");
 const sslChecker = require("ssl-checker");
+const endpointScan = require("./endpointScanner");
+const { scanXSS } = require("./xssScanner");
 
 // ------------------------------------------------------
 // PORT NAME MAPPING (for QuickScan)
@@ -113,6 +115,19 @@ module.exports = {
       return { error: "SSL scan failed" };
     }
   },
+  // -------------------------------------
+  // XSS Vulnerability Scan (Standalone)
+  // -------------------------------------
+  xssScan: async (target) => {
+    try {
+      const url = target.startsWith("http")
+        ? target
+        : `https://${target}`;
+      return await scanXSS(url);
+    } catch (err) {
+      return { error: "XSS scan failed" };
+    }
+  },
 
   // -------------------------------------
   // ✅ WHATWEB (RUNS VIA WSL)
@@ -126,4 +141,10 @@ module.exports = {
       return "WhatWeb scan failed";
     }
   },
+  // -------------------------------------
+  // Endpoint & SQLi Detection
+  // -------------------------------------
+  endpointScan: (target) => endpointScan(target)
+
+  
 };

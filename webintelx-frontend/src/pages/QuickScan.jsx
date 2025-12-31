@@ -206,6 +206,14 @@ export default function QuickScan() {
                   : JSON.stringify(results.whatweb, null, 2)
                 : "No technology data detected"}
             </pre>
+            {/* Endpoint Detection */}
+            <h3 className="text-xl font-bold text-blue-400 mt-6 mb-2">
+              Endpoint & SQLi Detection
+            </h3>
+
+            <pre className="bg-black p-4 rounded-lg text-yellow-400 text-sm whitespace-pre-wrap">
+              {JSON.stringify(results.endpoints, null, 2)}
+            </pre>
 
             <button className="mt-6 flex items-center mx-auto bg-green-600 hover:bg-green-700 transition py-3 px-6 rounded-md text-lg font-semibold shadow-lg">
               <FaFileDownload className="mr-2" />

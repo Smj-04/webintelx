@@ -11,7 +11,8 @@ const sslRoute = require("./routes/sslRoute");
 const app = express();
 const quickScanRoute = require("./routes/quickScanRoute");
 const whatwebRoute = require("./routes/whatwebRoute");
-
+const xssRoutes = require("./routes/xssRoutes");
+const autoXssRoute = require("./routes/autoXssRoute");
 
 app.use(cors());
 app.use(express.json());
@@ -24,6 +25,8 @@ app.use("/api/portscan", portscanRoute);
 app.use("/api/headers", headersRoute);
 app.use("/api/ssl", sslRoute);
 app.use("/api/quickscan", quickScanRoute);
+app.use("/api", xssRoutes);
+app.use("/api", autoXssRoute);
 
 const PORT = 5000;
 

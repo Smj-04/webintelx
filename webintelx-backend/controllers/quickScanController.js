@@ -21,6 +21,7 @@ exports.quickScan = async (req, res) => {
       scanner.headers(target),
       scanner.portScan(target),
       scanner.ssl(target),
+      scanner.endpointScan(target),
       scanner.whatweb(target),
     ]);
 
@@ -37,6 +38,7 @@ exports.quickScan = async (req, res) => {
       openPorts: safe(results[3]),
       ssl: safe(results[4]),
       whatweb: safe(results[5]),
+      endpoints: safe(results[6]),   
     };
 
     return res.json({
