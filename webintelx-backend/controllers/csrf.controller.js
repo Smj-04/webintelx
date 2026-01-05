@@ -1,7 +1,7 @@
 // ✅ IMPORT REQUIRED SERVICES
-const enumerateEndpoints = require("../services/endpointEnum");
-const testCSRF = require("../services/csrfTester");
-const classifyRisk = require("../services/riskClassifier");
+const enumerateEndpoints = require("../utils/endpointEnum");
+const testCSRF = require("../utils/csrfTester");
+const classifyRisk = require("../utils/riskClassifier");
 
 exports.scanCSRF = async (req, res) => {
   try {
@@ -54,3 +54,4 @@ exports.scanCSRF = async (req, res) => {
     res.status(500).json({ error: "CSRF scan failed" });
   }
 };
+
