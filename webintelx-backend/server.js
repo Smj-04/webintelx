@@ -15,6 +15,8 @@ const whatwebRoute = require("./routes/whatwebRoute");
 const xssRoutes = require("./routes/xssRoutes");
 const autoXssRoute = require("./routes/autoXssRoute");
 const sqlmapRoute = require("./routes/sqlmapRoute");
+const csrfRoutes = require("./routes/csrf.routes");
+
 
 app.use(cors());
 app.use(express.json());
@@ -34,6 +36,7 @@ app.use("/api", sqlmapRoute);
 app.use("/api", require("./routes/aiReportRoute"));
 app.use("/api", require("./routes/fullScanRoute"));
 
+app.use("/api/csrf", csrfRoutes);
 
 const PORT = 5000;
 
