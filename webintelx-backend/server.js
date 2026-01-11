@@ -37,6 +37,9 @@ app.use("/api", require("./routes/aiReportRoute"));
 app.use("/api", require("./routes/fullScanRoute"));
 
 app.use("/api/csrf", csrfRoutes);
+app.use("/api", require("./routes/clickjackingRoute"));
+app.use("/api", require("./routes/leakcheckRoute"));
+app.use("/api", require("./routes/emailRepRoute"));
 
 const PORT = 5000;
 
