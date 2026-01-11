@@ -1,66 +1,49 @@
 const axios = require("axios");
+const { URL } = require("url");
 
-// Common sensitive / vulnerable endpoints
-const commonEndpoints = [
-  "/login",
-  "/admin",
-  "/admin/login",
-  "/dashboard",
-  "/wp-admin",
-  "/wp-login.php",
-  "/phpmyadmin",
-  "/user",
-  "/users",
-  "/account",
-  "/search",
-  "/product",
-  "/products",
-  "/api",
-  "/api/v1",
-  "/test",
-  "/debug"
+const COMMON_ENDPOINTS = [
+  "/index.php",
+  "/listproducts.php",   
+  "/product.php",
+  "/products.php",
+  "/search.php",
+  "/category.php",
+  "/admin"
 ];
 
-// SQLi-prone parameter patterns
-const sqlParams = ["id", "uid", "user", "product", "item", "cat", "page"];
 
-async function endpointScan(target) {
-  const baseUrl = target.startsWith("http")
-    ? target
-    : `http://${target}`;
+// ONLY params that commonly hit SQL queries
+const SQL_PARAMS = [
+  "id",
+  "cat",
+  "category",
+  "product",
+  "item",
+  "uid"
+];
 
-  const discovered = [];
+async function endpointScanner(baseUrl) {
+  const results = [];
 
-  for (const endpoint of commonEndpoints) {
-    const url = baseUrl + endpoint;
-
+  for (const ep of COMMON_ENDPOINTS) {
     try {
-      const res = await axios.get(url, {
+      const res = await axios.get(baseUrl + ep, {
         timeout: 3000,
-        validateStatus: () => true, // accept all status codes
+        validateStatus: () => true
       });
 
-      if ([200, 301, 302, 401, 403].includes(res.status)) {
-        discovered.push({
-          endpoint,
-          status: res.status,
-          suspicious: endpoint.includes("admin") || endpoint.includes("login"),
-        });
+      if ([200, 301, 302].includes(res.status)) {
+        for (const param of SQL_PARAMS) {
+          results.push({
+            url: `${baseUrl}${ep}?${param}=1`,
+            param
+          });
+        }
       }
-    } catch (err) {
-      // ignore unreachable endpoints
-    }
+    } catch {}
   }
 
-  // SQLi endpoint suggestions
-  const sqlCandidates = sqlParams.map(
-    (p) => `/index.php?${p}=1`
-  );
-
-  return {
-    discoveredEndpoints: discovered,
-    sqlmapCandidates: sqlCandidates,
-  };
+  return results;
 }
 
-module.exports = endpointScan;
+module.exports = endpointScanner;

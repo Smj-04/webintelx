@@ -1,0 +1,172 @@
+const axios = require("axios");
+const cheerio = require("cheerio");
+const { URL } = require("url");
+
+/**
+ * Dynamically discover endpoints and parameters from a base URL
+ * No static data - works for any website
+ */
+async function discoverEndpointsAndParams(baseUrl) {
+  const results = [];
+  const visited = new Set();
+  const queue = [{ url: baseUrl, depth: 0 }];
+  const maxDepth = 1; // Reduced from 2 to 1 for faster discovery
+
+  // Common SQL injection parameter names (these are common patterns, not static endpoints)
+  const sqlParamPatterns = [
+    "id", "cat", "category", "product", "item", "uid", "user", "user_id",
+    "page", "p", "pid", "post_id", "article_id", "news_id",
+    "search", "q", "query", "keyword", "term",
+    "sort", "order", "orderby", "filter", "where"
+  ];
+
+  while (queue.length > 0 && results.length < 30) { // Reduced from 50 to 30 endpoints for faster scanning
+    const { url, depth } = queue.shift();
+    
+    if (depth > maxDepth || visited.has(url)) continue;
+    visited.add(url);
+
+    try {
+      console.log(`🔍 Discovering: ${url} (depth: ${depth})`);
+      
+      const response = await axios.get(url, {
+        timeout: 5000,
+        validateStatus: () => true,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+
+      if (![200, 301, 302, 403].includes(response.status)) {
+        continue;
+      }
+
+      // Parse HTML to find links and forms
+      const $ = cheerio.load(response.data);
+
+      // 1. Extract parameters from current URL
+      try {
+        const urlObj = new URL(url);
+        urlObj.searchParams.forEach((value, key) => {
+          if (sqlParamPatterns.some(pattern => key.toLowerCase().includes(pattern.toLowerCase()))) {
+            results.push({
+              url: url,
+              param: key,
+              source: "url_query"
+            });
+          }
+        });
+      } catch (e) {
+        // Invalid URL, skip
+      }
+
+      // 2. Find all links (a tags)
+      $("a[href]").each((_, el) => {
+        try {
+          const href = $(el).attr("href");
+          if (!href) return;
+
+          const fullUrl = new URL(href, baseUrl).toString();
+          
+          // Only process URLs from the same domain
+          if (fullUrl.startsWith(baseUrl.split('/').slice(0, 3).join('/'))) {
+            // Extract parameters from the link
+            try {
+              const linkUrl = new URL(fullUrl);
+              linkUrl.searchParams.forEach((value, key) => {
+                if (sqlParamPatterns.some(pattern => key.toLowerCase().includes(pattern.toLowerCase()))) {
+                  results.push({
+                    url: fullUrl,
+                    param: key,
+                    source: "link"
+                  });
+                }
+              });
+            } catch (e) {}
+
+            // Add to queue for further crawling
+            if (depth < maxDepth && !visited.has(fullUrl)) {
+              queue.push({ url: fullUrl, depth: depth + 1 });
+            }
+          }
+        } catch (e) {
+          // Invalid URL, skip
+        }
+      });
+
+      // 3. Find forms and extract parameters
+      $("form[action]").each((_, el) => {
+        try {
+          const action = $(el).attr("action");
+          const method = ($(el).attr("method") || "get").toLowerCase();
+          
+          if (!action) return;
+
+          const formUrl = new URL(action, baseUrl).toString();
+          
+          // Extract input fields from form
+          const formParams = [];
+          $(el).find("input[name], select[name], textarea[name]").each((_, input) => {
+            const name = $(input).attr("name");
+            if (name && sqlParamPatterns.some(pattern => name.toLowerCase().includes(pattern.toLowerCase()))) {
+              formParams.push(name);
+            }
+          });
+
+          // Add form parameters
+          formParams.forEach(param => {
+            results.push({
+              url: formUrl,
+              param: param,
+              source: "form"
+            });
+          });
+        } catch (e) {
+          // Invalid URL, skip
+        }
+      });
+
+      // 4. Test common parameter patterns on discovered endpoints
+      // Extract base path from URL
+      try {
+        const urlObj = new URL(url);
+        const path = urlObj.pathname;
+        
+        // If we found a valid page, test common SQL parameters on it
+        if (path && response.status === 200) {
+          sqlParamPatterns.slice(0, 3).forEach(param => { // Reduced from 5 to 3 common params
+            const testUrl = `${urlObj.origin}${path}?${param}=1`;
+            if (!results.some(r => r.url === testUrl && r.param === param)) {
+              results.push({
+                url: testUrl,
+                param: param,
+                source: "pattern_test"
+              });
+            }
+          });
+        }
+      } catch (e) {}
+
+    } catch (error) {
+      // Continue to next URL if this one fails
+      continue;
+    }
+  }
+
+  // Remove duplicates
+  const uniqueResults = [];
+  const seen = new Set();
+  
+  for (const result of results) {
+    const key = `${result.url}|${result.param}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueResults.push(result);
+    }
+  }
+
+  console.log(`✅ Discovered ${uniqueResults.length} endpoint/parameter combinations`);
+  return uniqueResults;
+}
+
+module.exports = { discoverEndpointsAndParams };

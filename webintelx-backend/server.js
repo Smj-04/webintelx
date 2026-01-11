@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 
@@ -13,6 +14,7 @@ const quickScanRoute = require("./routes/quickScanRoute");
 const whatwebRoute = require("./routes/whatwebRoute");
 const xssRoutes = require("./routes/xssRoutes");
 const autoXssRoute = require("./routes/autoXssRoute");
+const sqlmapRoute = require("./routes/sqlmapRoute");
 
 app.use(cors());
 app.use(express.json());
@@ -27,9 +29,16 @@ app.use("/api/ssl", sslRoute);
 app.use("/api/quickscan", quickScanRoute);
 app.use("/api", xssRoutes);
 app.use("/api", autoXssRoute);
+app.use("/api", sqlmapRoute);
+
+app.use("/api", require("./routes/aiReportRoute"));
+app.use("/api", require("./routes/fullScanRoute"));
+
 
 const PORT = 5000;
 
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
 });
+
+console.log("Gemini Key Loaded:", process.env.GEMINI_API_KEY ? "YES" : "NO");

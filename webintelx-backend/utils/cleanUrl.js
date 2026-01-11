@@ -7,9 +7,12 @@ module.exports = function cleanUrl(input) {
     }
 
     const url = new URL(input);
-    return url.hostname; // hostname ONLY
+    return url.origin; // protocol + hostname (and port if present)
   } catch (err) {
-    // If parsing fails, return original best guess
-    return input.replace(/https?:\/\//, "").split("/")[0];
+    // If parsing fails, return original best guess with protocol
+    const host = input.replace(/https?:\/\//, "").split("/")[0];
+    return host.startsWith("http://") || host.startsWith("https://")
+      ? host
+      : `http://${host}`;
   }
 };
