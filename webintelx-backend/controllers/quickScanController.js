@@ -1,5 +1,6 @@
 const scanner = require("../utils/scanner");
 const cleanUrl = require("../utils/cleanUrl");
+const { getSecurityTrailsData } = require("../utils/securitytrails");
 
 exports.quickScan = async (req, res) => {
   const { url } = req.body;
@@ -11,21 +12,50 @@ exports.quickScan = async (req, res) => {
     });
   }
 
-  const target = cleanUrl(url);
+  // 🔹 Normalize URL
+  const cleanedUrl = cleanUrl(url);
+
+  let hostname;
+  try {
+    const parsed = new URL(cleanedUrl);
+    hostname = parsed.hostname;
+  } catch (e) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid URL format",
+    });
+  }
 
   try {
-    // ✅ Run all scans safely
+    // 🔹 Run ACTIVE / LOCAL scanners (hostname where required)
     const results = await Promise.allSettled([
-      scanner.nslookup(target),
-      scanner.ping(target),
-      scanner.headers(target),
-      scanner.portScan(target),
-      scanner.ssl(target),
-      scanner.endpointScan(target),
-      scanner.whatweb(target),
+      scanner.nslookup(hostname),     // DNS needs hostname
+      scanner.ping(hostname),         // Ping needs hostname
+      scanner.headers(cleanedUrl),    // Headers need full URL
+      scanner.portScan(hostname),     // Port scan needs hostname/IP
+      scanner.ssl(cleanedUrl),        // SSL needs URL
+      scanner.endpointScan(cleanedUrl), // Crawling needs URL
+      scanner.whatweb(cleanedUrl),    // Tech fingerprinting needs URL
     ]);
 
-    // ✅ Helper: return value OR error string
+    // 🔹 Run SecurityTrails (PASSIVE, HOSTNAME ONLY)
+    let securityTrailsResult = null;
+    let securityTrailsRisk = "LOW";
+
+    try {
+      securityTrailsResult = await getSecurityTrailsData(hostname);
+
+      const subCount = securityTrailsResult.subdomains.length;
+
+      if (subCount > 30) securityTrailsRisk = "HIGH";
+      else if (subCount > 10) securityTrailsRisk = "MEDIUM";
+    } catch (e) {
+      securityTrailsResult = {
+        error: "SecurityTrails unavailable or plan restricted",
+      };
+    }
+
+    // 🔹 Helper: safe extraction
     const safe = (r) =>
       r.status === "fulfilled"
         ? r.value
@@ -37,13 +67,23 @@ exports.quickScan = async (req, res) => {
       headers: safe(results[2]),
       openPorts: safe(results[3]),
       ssl: safe(results[4]),
-      whatweb: safe(results[5]),
-      endpoints: safe(results[6]),   
+      endpoints: safe(results[5]),
+      whatweb: safe(results[6]),
+
+      // 🆕 SecurityTrails block
+      securityTrails: {
+        scanType: "passive",
+        risk: securityTrailsRisk,
+        subdomainCount: securityTrailsResult?.subdomains?.length || 0,
+        subdomains: securityTrailsResult?.subdomains || [],
+        note: "Passive DNS intelligence (SecurityTrails)",
+      },
     };
 
     return res.json({
       success: true,
       message: "Quick scan completed (partial results possible)",
+      target: hostname,
       data: output,
     });
   } catch (err) {

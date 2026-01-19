@@ -8,95 +8,72 @@ import {
 } from "react-icons/fa";
 import Footer from "../components/Footer";
 
-const formatAIReport = (report) => {
-  return report.split("\n").map((line, index) => {
-    const clean = line.replace(/[#*]/g, "").trim();
-    if (!clean) return null;
+/* =======================
+   🔹 RISK HELPERS
+======================= */
 
-    const upper = clean.toUpperCase();
+const calculateOverallRisk = (data) => {
+  let score = 0;
 
-    // 🔵 MAIN HEADINGS
-    if (
-      upper === "EXECUTIVE SUMMARY" ||
-      upper === "FINDINGS" ||
-      upper === "METHODOLOGY" ||
-      upper === "COMPLIANCE MAPPING" ||
-      upper === "RECOMMENDATIONS" ||
-      upper === "REMEDIATION" ||
-      upper.match(/^\d+\.\s*(EXECUTIVE SUMMARY|FINDINGS|METHODOLOGY|COMPLIANCE MAPPING|RECOMMENDATIONS|REMEDIATION)$/)
-    ) {
-      return (
-        <h2
-          key={index}
-          className="text-2xl font-bold text-indigo-700 mt-8 mb-4 border-b border-indigo-300 pb-2"
-        >
-          {clean}
-        </h2>
-      );
-    }
+  if (data?.securityTrails?.risk === "HIGH") score += 3;
+  if (data?.securityTrails?.risk === "MEDIUM") score += 2;
 
+  if (data?.endpoints?.length > 20) score += 3;
+  else if (data?.endpoints?.length > 10) score += 2;
 
-    // 🟢 SUB-HEADINGS
-  if (clean.endsWith(":")) {
-    return (
-      <h4
-        key={index}
-        className="text-lg font-semibold text-teal-700 mt-6 mb-2"
-      >
-        {clean}
-      </h4>
-    );
-  }
+  if (data?.headers?.["x-powered-by"]?.includes("PHP/5")) score += 2;
 
+  if (data?.ssl?.error) score += 1;
 
-    // 🔴 HIGH / CRITICAL
-    if (upper.includes("CRITICAL") || upper.includes("HIGH")) {
-      return (
-        <p
-          key={index}
-          className="mt-2 text-red-600 font-semibold"
-        >
-          ⚠ {clean}
-        </p>
-      );
-    }
-
-    // 🟡 MEDIUM
-    if (upper.includes("MEDIUM")) {
-      return (
-        <p
-          key={index}
-          className="mt-2 text-yellow-600 font-semibold"
-        >
-          ⚠ {clean}
-        </p>
-      );
-    }
-
-    // 🟢 LOW
-    if (upper.includes("LOW")) {
-      return (
-        <p
-          key={index}
-          className="mt-2 text-green-600 font-semibold"
-        >
-          ℹ {clean}
-        </p>
-      );
-    }
-
-    // ⚪ NORMAL PARAGRAPH TEXT
-    return (
-      <p
-        key={index}
-        className="mt-2 text-lg text-gray-900 leading-relaxed"
-      >
-        {clean}
-      </p>
-    );
-  });
+  if (score >= 7) return "CRITICAL";
+  if (score >= 5) return "HIGH";
+  if (score >= 3) return "MEDIUM";
+  return "LOW";
 };
 
+const riskColor = (risk) => {
+  if (risk === "CRITICAL") return "text-red-700 bg-red-100";
+  if (risk === "HIGH") return "text-red-600 bg-red-100";
+  if (risk === "MEDIUM") return "text-yellow-700 bg-yellow-100";
+  return "text-green-700 bg-green-100";
+};
+
+/* =======================
+   🔹 SUMMARY CARD
+======================= */
+
+const SummaryCard = ({ title, icon, summary, risk, details = [] }) => (
+  <div className="bg-gray-800 p-5 rounded-xl shadow flex gap-4">
+    <div className="text-3xl">{icon}</div>
+
+    <div className="flex-1">
+      <h4 className="text-lg font-semibold">{title}</h4>
+      <p className="text-gray-400 text-sm mt-1">{summary}</p>
+
+      {details.length > 0 && (
+        <ul className="mt-3 text-sm text-gray-300 list-disc list-inside space-y-1">
+          {details.map((d, i) => (
+            <li key={i}>{d}</li>
+          ))}
+        </ul>
+      )}
+
+      {risk && (
+        <span
+          className={`inline-block mt-3 px-3 py-1 text-xs font-bold rounded ${riskColor(
+            risk
+          )}`}
+        >
+          {risk}
+        </span>
+      )}
+    </div>
+  </div>
+);
+
+/* =======================
+   🔹 MAIN COMPONENT
+======================= */
 
 export default function QuickScan() {
   const [input, setInput] = useState("");
@@ -104,10 +81,7 @@ export default function QuickScan() {
   const [scanDone, setScanDone] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState("");
-
-  // ✅ AI STATES (must be inside component)
-  const [aiReport, setAiReport] = useState("");
-  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleScan = async () => {
     if (!input.trim()) return alert("Please enter a URL");
@@ -115,11 +89,9 @@ export default function QuickScan() {
     setIsScanning(true);
     setError("");
     setResults(null);
-    setAiReport("");
     setScanDone(false);
 
     try {
-      // 🔹 STEP 1: Run QuickScan
       const scanRes = await fetch("http://localhost:5000/api/quickscan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -135,34 +107,55 @@ export default function QuickScan() {
       }
 
       setResults(scanData.data);
-
-      // 🔹 STEP 2: Generate AI Summary
-      setIsGeneratingReport(true);
-
-      const aiRes = await fetch("http://localhost:5000/api/ai-report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scanType: "Quick Scan",
-          scanData: scanData.data,
-        }),
-      });
-
-      const aiData = await aiRes.json();
-
-      if (!aiData.success) {
-        setError("AI report generation failed");
-      } else {
-        setAiReport(aiData.aiReport);
-      }
+      setScanDone(true);
     } catch (err) {
       setError("Server unreachable");
     }
 
     setIsScanning(false);
-    setIsGeneratingReport(false);
-    setScanDone(true);
   };
+
+  /* =======================
+     📄 PDF DOWNLOAD HANDLER
+  ======================= */
+
+  const downloadPDF = async () => {
+    if (!results) return;
+
+    setIsDownloading(true);
+
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/report/quickscan/pdf",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            target: input,
+            scanData: results,
+          }),
+        }
+      );
+
+      if (!res.ok) throw new Error("PDF generation failed");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `QuickScan-${input.replace(/[^a-z0-9]/gi, "_")}.pdf`;
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("Failed to download PDF report");
+    }
+
+    setIsDownloading(false);
+  };
+
+  const overallRisk = results ? calculateOverallRisk(results) : null;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
@@ -170,63 +163,14 @@ export default function QuickScan() {
       <div className="text-center py-16 bg-gradient-to-r from-purple-600 to-indigo-600 shadow-lg">
         <h1 className="text-4xl font-extrabold mb-3">Quick Scan</h1>
         <p className="text-gray-200 text-lg max-w-2xl mx-auto">
-          A fast overview scan to identify basic security risks and exposures.
+          High-level security snapshot to identify immediate risks.
         </p>
       </div>
 
-      {/* Description */}
-      <div className="max-w-4xl mx-auto mt-10 px-6">
-        <h2 className="text-2xl font-bold mb-4 text-indigo-400">
-          What Quick Scan Includes
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-gray-800 p-5 rounded-xl flex gap-4 shadow">
-            <FaBug className="text-red-400 text-3xl mt-1" />
-            <div>
-              <h4 className="text-lg font-semibold">Basic Vulnerability Detection</h4>
-              <p className="text-gray-400 text-sm">
-                Checks outdated headers, weak SSL, misconfigurations.
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-gray-800 p-5 rounded-xl flex gap-4 shadow">
-            <FaShieldAlt className="text-green-400 text-3xl mt-1" />
-            <div>
-              <h4 className="text-lg font-semibold">Security Headers</h4>
-              <p className="text-gray-400 text-sm">
-                CSP, X-Frame-Options, HSTS, XSS Protection.
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-gray-800 p-5 rounded-xl flex gap-4 shadow">
-            <FaExclamationTriangle className="text-yellow-400 text-3xl mt-1" />
-            <div>
-              <h4 className="text-lg font-semibold">Open Ports Snapshot</h4>
-              <p className="text-gray-400 text-sm">
-                Common exposed services and ports.
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-gray-800 p-5 rounded-xl flex gap-4 shadow">
-            <FaSearch className="text-blue-400 text-3xl mt-1" />
-            <div>
-              <h4 className="text-lg font-semibold">Exposure Checks</h4>
-              <p className="text-gray-400 text-sm">
-                DNS, IP exposure, technology fingerprinting.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Input */}
-      <div className="flex flex-col items-center mt-14 px-4">
+      <div className="flex flex-col items-center mt-12 px-4">
         <div className="bg-gray-800 p-6 rounded-2xl shadow-xl w-full max-w-xl">
-          <label className="text-lg font-semibold">Enter URL</label>
+          <label className="text-lg font-semibold">Target URL</label>
 
           <input
             value={input}
@@ -251,53 +195,120 @@ export default function QuickScan() {
       {isScanning && (
         <div className="mt-12 text-center animate-pulse">
           <h2 className="text-2xl font-semibold text-indigo-400">
-            Running Checks...
+            Running security checks…
           </h2>
         </div>
       )}
 
-      {/* AI Report Loader */}
-      {isGeneratingReport && (
-        <div className="mt-12 text-center animate-pulse">
-          <h2 className="text-2xl font-semibold text-indigo-400">
-            Generating Security Summary...
-          </h2>
-        </div>
-      )}
-
-      {/* AI Summary */}
-      {aiReport && (
-        <div className="mt-16 px-4">
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-lg">
-        <h2 className="text-3xl font-bold text-indigo-700 mb-6">
-          AI Security Summary
-        </h2>
-
-        <div className="space-y-4">
-          {formatAIReport(aiReport)}
-        </div>
-        </div>
-
-        </div>
-)}
-
-
-      {/* Raw Results (unchanged) */}
+      {/* OVERALL SUMMARY */}
       {scanDone && results && (
-        <div className="mt-16 px-4 mb-20">
-          <div className="bg-gray-800 p-6 rounded-2xl shadow-xl max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold text-green-400 mb-3">
-              Quick Scan Raw Results
+        <div className="mt-16 px-4 max-w-6xl mx-auto">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8">
+            <h2 className="text-3xl font-bold mb-6">
+              Overall Risk Assessment
             </h2>
 
-            <pre className="bg-black p-4 rounded-lg text-green-400 text-sm whitespace-pre-wrap">
-              {JSON.stringify(results, null, 2)}
-            </pre>
+            <div
+              className={`inline-block mb-8 px-6 py-3 text-xl font-extrabold rounded ${riskColor(
+                overallRisk
+              )}`}
+            >
+              {overallRisk} RISK
+            </div>
 
-            <button className="mt-6 flex items-center mx-auto bg-green-600 hover:bg-green-700 py-3 px-6 rounded-md font-semibold">
-              <FaFileDownload className="mr-2" />
-              Download PDF Report
-            </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <SummaryCard
+                title="Attack Surface (SecurityTrails)"
+                icon={<FaSearch className="text-blue-400" />}
+                summary={`${results.securityTrails.subdomainCount} subdomains discovered`}
+                risk={results.securityTrails.risk}
+                details={[
+                  `Examples: ${results.securityTrails.subdomains
+                    .slice(0, 3)
+                    .join(", ")}`,
+                  "Large historical DNS footprint detected",
+                ]}
+              />
+
+              <SummaryCard
+                title="Exposed Endpoints"
+                icon={<FaBug className="text-red-400" />}
+                summary={`${results.endpoints.length} parameterized URLs found`}
+                risk={
+                  results.endpoints.length > 20
+                    ? "HIGH"
+                    : results.endpoints.length > 10
+                    ? "MEDIUM"
+                    : "LOW"
+                }
+                details={[
+                  `Common params: ${[
+                    ...new Set(results.endpoints.map((e) => e.param)),
+                  ]
+                    .slice(0, 4)
+                    .join(", ")}`,
+                  "Potential SQLi / XSS surface",
+                ]}
+              />
+
+              <SummaryCard
+                title="Technology Stack"
+                icon={<FaShieldAlt className="text-green-400" />}
+                summary={`Server: ${results.headers.server}`}
+                risk={
+                  results.headers["x-powered-by"]?.includes("PHP/5")
+                    ? "HIGH"
+                    : "LOW"
+                }
+                details={[
+                  `Backend: ${
+                    results.headers["x-powered-by"] || "Unknown"
+                  }`,
+                  "Legacy stack increases exploit likelihood",
+                ]}
+              />
+
+              <SummaryCard
+                title="Network & Transport"
+                icon={
+                  <FaExclamationTriangle className="text-yellow-400" />
+                }
+                summary={`Open ports: ${results.openPorts.length}`}
+                risk={results.ssl.error ? "MEDIUM" : "LOW"}
+                details={[
+                  results.ssl.error
+                    ? "HTTPS not enforced"
+                    : "TLS enabled",
+                  results.openPorts.length
+                    ? `Ports: ${results.openPorts
+                        .map((p) => p.port)
+                        .join(", ")}`
+                    : "No common ports exposed",
+                ]}
+              />
+            </div>
+
+            {/* PDF BUTTON */}
+            <div className="mt-10 text-center">
+              <button
+                onClick={downloadPDF}
+                disabled={isDownloading}
+                className={`flex items-center mx-auto py-3 px-8 rounded-md font-semibold ${
+                  isDownloading
+                    ? "bg-gray-600 cursor-not-allowed"
+                    : "bg-indigo-600 hover:bg-indigo-700"
+                }`}
+              >
+                <FaFileDownload className="mr-2" />
+                {isDownloading
+                  ? "Preparing PDF…"
+                  : "Download Detailed PDF Report"}
+              </button>
+
+              <p className="text-gray-400 text-sm mt-2">
+                Includes full findings, evidence & remediation guidance
+              </p>
+            </div>
           </div>
         </div>
       )}

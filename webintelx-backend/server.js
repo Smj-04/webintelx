@@ -16,6 +16,8 @@ const xssRoutes = require("./routes/xssRoutes");
 const autoXssRoute = require("./routes/autoXssRoute");
 const sqlmapRoute = require("./routes/sqlmapRoute");
 const csrfRoutes = require("./routes/csrf.routes");
+const securityTrailsRoute = require("./routes/securitytrailsRoute");
+const reportRoute = require("./routes/reportRoute");
 
 
 app.use(cors());
@@ -32,6 +34,7 @@ app.use("/api/quickscan", quickScanRoute);
 app.use("/api", xssRoutes);
 app.use("/api", autoXssRoute);
 app.use("/api", sqlmapRoute);
+app.use("/api/report", reportRoute);
 
 app.use("/api", require("./routes/aiReportRoute"));
 app.use("/api", require("./routes/fullScanRoute"));
@@ -40,6 +43,9 @@ app.use("/api/csrf", csrfRoutes);
 app.use("/api", require("./routes/clickjackingRoute"));
 app.use("/api", require("./routes/leakcheckRoute"));
 app.use("/api", require("./routes/emailRepRoute"));
+app.use("/api", require("./routes/commandInjectionRoute"));
+app.use("/api", securityTrailsRoute);
+app.use("/api", require("./routes/domXssRoute"));
 
 const PORT = 5000;
 
