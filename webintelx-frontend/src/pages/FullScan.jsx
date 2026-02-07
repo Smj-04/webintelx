@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import {
   FaSearch,
   FaFingerprint,
@@ -13,17 +14,47 @@ export default function FullScan() {
   const [input, setInput] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [scanDone, setScanDone] = useState(false);
+  const [scanResult, setScanResult] = useState(null);
+  const [expanded, setExpanded] = useState({});
 
-  const handleScan = () => {
+  // Trigger full scan via backend API and store unified result
+  const handleScan = async () => {
     if (!input.trim()) return alert("Please enter a domain or company name");
     setIsScanning(true);
+    setScanDone(false);
+    setScanResult(null);
 
-    // simulate scan (backend later)
-    setTimeout(() => {
-      setIsScanning(false);
+    try {
+      // POST to existing backend endpoint. Using relative path so dev proxy works.
+      const resp = await axios.post("http://localhost:5000/api/fullscan", { url: input }, { timeout: 0 });
+      // store unified result object returned by backend
+      setScanResult(resp.data);
       setScanDone(true);
-    }, 3500);
+    } catch (err) {
+      console.error("FullScan API error:", err);
+      alert("FullScan failed. See console for details.");
+    } finally {
+      setIsScanning(false);
+    }
   };
+
+  const downloadPDF = async () => {
+  const resp = await axios.post(
+    "/api/fullscan/pdf",
+    { scanData: scanResult, target: scanResult.target },
+    { responseType: "blob" }
+  );
+
+  const blob = new Blob([resp.data], { type: "application/pdf" });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `FullScan-${scanResult.target}.pdf`;
+  a.click();
+};
+
+  // Helper: toggle expandable panels per module
+  const toggle = (key) => setExpanded((s) => ({ ...s, [key]: !s[key] }));
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
@@ -150,27 +181,236 @@ export default function FullScan() {
         </div>
       )}
 
-      {/* Results */}
+      {/* Results: replaced static placeholder with actual unified API rendering
+          - Uses `scanResult` returned from `/api/fullscan`
+          - Renders header (target + duration), risk summary, quickscan summary,
+            and per-module vulnerability blocks with expandable details.
+          - Keeps existing layout, colors and spacing but removes SQLMap-only assumptions.
+      */}
       {scanDone && !isScanning && (
         <div className="mt-16 px-4">
           <div className="bg-gray-800 p-6 rounded-2xl shadow-xl max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold text-green-400 mb-3">Full Scan Completed</h2>
 
-            <p className="text-gray-300 mb-6">
-              These results provide a complete breakdown of vulnerabilities and exposed assets.
-            </p>
+            <p className="text-gray-300 mb-2">These results provide a complete breakdown of vulnerabilities and exposed assets.</p>
 
-            <div className="bg-gray-700 p-5 rounded-lg text-gray-300">
-
-              <p className="mb-2">• Subdomains discovered: <span className="text-blue-400">12</span></p>
-              <p className="mb-2">• Open ports identified: <span className="text-yellow-400">3</span></p>
-              <p className="mb-2">• Critical vulnerabilities: <span className="text-red-400">2 Found</span></p>
-              <p className="mb-2">• Data breaches: <span className="text-red-400">Email leaked in 1 breach</span></p>
-              <p className="mb-2">• Technology stack: <span className="text-green-400">Angular, nginx, MySQL</span></p>
-
+            {/* Header details: target + duration */}
+            <div className="bg-gray-700 p-4 rounded-lg text-gray-300 mb-4">
+              <p className="mb-1">• Target: <span className="text-blue-400">{(scanResult && scanResult.target) || input}</span></p>
+              <p className="mb-1">• Scan started: <span className="text-yellow-300">{scanResult?.meta?.startedAt ? new Date(scanResult.meta.startedAt).toLocaleString() : '—'}</span></p>
+              <p className="mb-1">• Scan completed: <span className="text-yellow-300">{scanResult?.meta?.completedAt ? new Date(scanResult.meta.completedAt).toLocaleString() : '—'}</span></p>
+              <p className="mb-1">• Duration: <span className="text-green-200">{(scanResult && scanResult.meta && scanResult.meta.startedAt && scanResult.meta.completedAt) ?
+                `${Math.max(0, (new Date(scanResult.meta.completedAt) - new Date(scanResult.meta.startedAt))/1000).toFixed(0)}s` : '—'}</span></p>
             </div>
 
-            <button className="mt-6 flex items-center mx-auto bg-green-600 hover:bg-green-700 transition py-3 px-6 rounded-md text-lg font-semibold shadow-lg">
+            {/* Risk Summary Section */}
+            <div className="flex gap-3 mb-4 flex-wrap">
+              <div className="bg-gray-700 p-3 rounded w-full sm:w-auto">
+                <div className="text-sm text-gray-400">Critical</div>
+                <div className="text-xl font-bold text-red-400">{scanResult?.summary?.critical ?? 0}</div>
+              </div>
+              <div className="bg-gray-700 p-3 rounded w-full sm:w-auto">
+                <div className="text-sm text-gray-400">High</div>
+                <div className="text-xl font-bold text-orange-400">{scanResult?.summary?.high ?? 0}</div>
+              </div>
+              <div className="bg-gray-700 p-3 rounded w-full sm:w-auto">
+                <div className="text-sm text-gray-400">Medium</div>
+                <div className="text-xl font-bold text-yellow-400">{scanResult?.summary?.medium ?? 0}</div>
+              </div>
+              <div className="bg-gray-700 p-3 rounded w-full sm:w-auto">
+                <div className="text-sm text-gray-400">Low</div>
+                <div className="text-xl font-bold text-green-400">{scanResult?.summary?.low ?? 0}</div>
+              </div>
+            </div>
+
+            {/* QuickScan Summary Section (compact, read-only) */}
+            <div className="bg-gray-700 p-4 rounded-lg text-gray-300 mb-6">
+              <p className="mb-1">• Subdomains discovered: <span className="text-blue-400">{scanResult?.quickscan?.attackSurface?.subdomainCount ?? 0}</span></p>
+              <p className="mb-1">• Parameterized endpoints: <span className="text-blue-400">{scanResult?.quickscan?.attackSurface?.endpointCount ?? 0}</span></p>
+              <p className="mb-1">• Open ports: <span className="text-yellow-400">{scanResult?.quickscan?.attackSurface?.openPorts ?? 0}</span></p>
+              <p className="mb-1">• Backend technology: <span className="text-green-400">{scanResult?.quickscan?.technology?.backend ?? 'Unknown'}</span></p>
+              <p className="mb-1">• SSL: <span className="text-green-200">{scanResult?.quickscan?.technology?.ssl ? 'Yes' : 'No'}</span></p>
+            </div>
+
+            {/* Vulnerability Results Section: module-specific blocks */}
+            <div className="space-y-4">
+              {/* Render helper inline to keep structure compact and readable */}
+              {(() => {
+                const v = scanResult?.vulnerabilities || {};
+
+                const ModuleBlock = ({ keyName, title, found, children }) => (
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`px-2 py-1 rounded text-sm ${found ? 'bg-red-600 text-white' : 'bg-green-600 text-white'}`}>
+                          {found ? 'VULNERABLE' : 'NOT FOUND'}
+                        </div>
+                        <h4 className="text-lg font-semibold">{title}</h4>
+                      </div>
+                      <div>
+                        <button onClick={() => toggle(keyName)} className="text-sm px-3 py-1 rounded bg-gray-800 hover:bg-gray-600">{expanded[keyName] ? 'Hide' : 'Details'}</button>
+                      </div>
+                    </div>
+                    {expanded[keyName] && (
+                      <div className="mt-3 text-gray-300">
+                        {children}
+                      </div>
+                    )}
+                  </div>
+                );
+
+                return (
+                  <>
+                    {/* SQL Injection */}
+                    <ModuleBlock keyName="sql" title="SQL Injection" found={!!v.sqlInjection?.found}>
+                      {v.sqlInjection?.details?.findings?.length > 0 ? (
+                        <ul className="list-disc pl-5">
+                          {v.sqlInjection.details.findings.map((f, i) => (
+                            <li key={i} className="mb-2">
+                              <div className="font-medium">Endpoint: <span className="text-blue-300">{f.url}</span></div>
+                              <div>Parameter: <span className="text-yellow-300">{f.param}</span></div>
+                              <div>Databases: <span className="text-green-300">{(f.databases || []).join(', ') || 'N/A'}</span></div>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div>No vulnerability details provided by module.</div>
+                      )}
+                      </ModuleBlock>
+                      
+                      {/* DOM XSS */}
+                      <ModuleBlock keyName="dom" title="DOM XSS" found={!!v.domXss?.found}>
+                        {v.domXss?.found ? (
+                          <div className="space-y-2">
+                            <div>
+                              <strong>Parameter:</strong>{" "}
+                              <span className="text-yellow-300">
+                                {v.domXss.details?.parameter || "N/A"}
+                              </span>
+                            </div>
+
+                            <div>
+                              <strong>Payload:</strong>{" "}
+                              <span className="text-green-300">
+                                {v.domXss.details?.payload || "N/A"}
+                              </span>
+                            </div>
+
+                            <div>
+                              <strong>Evidence:</strong>{" "}
+                              <span className="text-gray-300">
+                                {v.domXss.details?.evidence || "N/A"}
+                              </span>
+                            </div>
+
+                            <div>
+                              <strong>Confidence:</strong>{" "}
+                              <span className="text-blue-300">
+                                {v.domXss.details?.confidence || "Unknown"}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div>No vulnerability detected</div>
+                        )}
+                      </ModuleBlock>
+
+
+                      {/* Stored XSS */}
+                      <ModuleBlock keyName="stored" title="Stored XSS" found={!!v.storedXss?.found}>
+                        {v.storedXss?.found ? (
+                          <div className="space-y-2">
+                            <div>
+                              <strong>Parameter:</strong>{" "}
+                              <span className="text-yellow-300">
+                                {v.storedXss.details?.parameter || "N/A"}
+                              </span>
+                            </div>
+
+                            <div>
+                              <strong>Payload:</strong>{" "}
+                              <span className="text-green-300">
+                                {v.storedXss.details?.payload || "N/A"}
+                              </span>
+                            </div>
+
+                            <div>
+                              <strong>Evidence:</strong>{" "}
+                              <span className="text-gray-300">
+                                {v.storedXss.details?.evidence || "N/A"}
+                              </span>
+                            </div>
+
+                            <div>
+                              <strong>Confidence:</strong>{" "}
+                              <span className="text-blue-300">
+                                {v.storedXss.details?.confidence || "Unknown"}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div>No vulnerability detected</div>
+                        )}
+                      </ModuleBlock>
+
+
+                    {/* CSRF */}
+                    <ModuleBlock keyName="csrf" title="CSRF" found={!!v.csrf?.found}>
+                      {v.csrf?.found ? (
+                        <>
+                          <div className="mb-2">Vulnerable endpoints: <span className="text-yellow-300">{v.csrf.details?.vulnerableEndpoints?.length || 'N/A'}</span></div>
+                          <ul className="list-disc pl-5">
+                            {(v.csrf.details?.vulnerableEndpoints || []).map((ep, i) => (
+                              <li key={i}>{ep.endpoint || ep}</li>
+                            ))}
+                          </ul>
+                        </>
+                      ) : (
+                        <div>No vulnerability detected</div>
+                      )}
+                    </ModuleBlock>
+
+                    {/* Clickjacking */}
+                    <ModuleBlock keyName="click" title="Clickjacking" found={!!v.clickjacking?.vulnerable}>
+                      {v.clickjacking?.vulnerable ? (
+                        <>
+                          <div className="mb-2">Issue: <span className="text-yellow-300">{v.clickjacking.details?.issue || 'Missing frame protections'}</span></div>
+                          <div className="mb-2">Relevant headers:</div>
+                          <ul className="list-disc pl-5">
+                            {Object.entries(v.clickjacking.headers || {}).slice(0,6).map(([k, val]) => (
+                              <li key={k}><span className="font-medium">{k}</span>: {String(val)}</li>
+                            ))}
+                          </ul>
+                        </>
+                      ) : (
+                        <div>No vulnerability detected</div>
+                      )}
+                    </ModuleBlock>
+
+                    {/* Command Injection */}
+                    <ModuleBlock keyName="cmd" title="Command Injection" found={!!v.commandInjection?.found}>
+                      {v.commandInjection?.found ? (
+                        <>
+                          <div className="mb-2">Evidence: <span className="text-yellow-300">{v.commandInjection.details?.evidence || v.commandInjection.details?.notes || 'Command execution indicators observed'}</span></div>
+                          {v.commandInjection.details?.endpoints && (
+                            <ul className="list-disc pl-5">
+                              {v.commandInjection.details.endpoints.map((e, i) => <li key={i}>{e}</li>)}
+                            </ul>
+                          )}
+                        </>
+                      ) : (
+                        <div>No vulnerability detected</div>
+                      )}
+                    </ModuleBlock>
+                  </>
+                );
+              })()}
+            </div>
+
+            <button
+              onClick={downloadPDF}
+              className="mt-6 flex items-center mx-auto bg-green-600 hover:bg-green-700 transition py-3 px-6 rounded-md text-lg font-semibold shadow-lg"
+            >
               <FaFileDownload className="mr-2" /> Download Full PDF Report
             </button>
           </div>

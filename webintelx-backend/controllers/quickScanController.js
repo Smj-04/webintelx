@@ -29,14 +29,18 @@ exports.quickScan = async (req, res) => {
   try {
     // 🔹 Run ACTIVE / LOCAL scanners (hostname where required)
     const results = await Promise.allSettled([
-      scanner.nslookup(hostname),     // DNS needs hostname
-      scanner.ping(hostname),         // Ping needs hostname
-      scanner.headers(cleanedUrl),    // Headers need full URL
-      scanner.portScan(hostname),     // Port scan needs hostname/IP
-      scanner.ssl(cleanedUrl),        // SSL needs URL
-      scanner.endpointScan(cleanedUrl), // Crawling needs URL
-      scanner.whatweb(cleanedUrl),    // Tech fingerprinting needs URL
+      scanner.nslookup(hostname),        // 0
+      scanner.ping(hostname),            // 1
+      scanner.headers(cleanedUrl),       // 2
+      scanner.portScan(hostname),        // 3
+      scanner.ssl(cleanedUrl),           // 4
+      scanner.endpointScan(cleanedUrl),  // 5
+      scanner.whatweb(cleanedUrl),       // 6
+      scanner.whois(hostname),           // 7 
+      scanner.traceroute(hostname),      // 8 
+      scanner.emailReputation(hostname), // 9 
     ]);
+
 
     // 🔹 Run SecurityTrails (PASSIVE, HOSTNAME ONLY)
     let securityTrailsResult = null;
@@ -69,7 +73,9 @@ exports.quickScan = async (req, res) => {
       ssl: safe(results[4]),
       endpoints: safe(results[5]),
       whatweb: safe(results[6]),
-
+      whois: safe(results[7]),
+      traceroute: safe(results[8]),
+      emailReputation: safe(results[9]),
       // 🆕 SecurityTrails block
       securityTrails: {
         scanType: "passive",

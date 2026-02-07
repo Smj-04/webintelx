@@ -2,6 +2,7 @@
   "name": "webintelx-frontend",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:5000",
   "dependencies": {
     "@radix-ui/react-icons": "^1.3.2",
     "@testing-library/dom": "^10.4.1",

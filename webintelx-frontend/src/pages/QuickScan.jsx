@@ -288,6 +288,72 @@ export default function QuickScan() {
               />
             </div>
 
+            {/* Infrastructure Intelligence */}
+            <h2 className="text-2xl font-bold mt-12 mb-6">
+              Infrastructure Intelligence
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <SummaryCard
+              title="DNS Intelligence"
+              icon={<FaSearch className="text-blue-400" />}
+              summary="DNS resolution and record lookup"
+              risk="LOW"
+              details={[
+                results.dns
+                  ? "DNS records successfully resolved"
+                  : "DNS lookup failed or unavailable",
+              ]}
+            />
+
+            <SummaryCard
+              title="WHOIS Information"
+              icon={<FaShieldAlt className="text-indigo-400" />}
+              summary="Domain registration metadata"
+              risk="LOW"
+              details={[
+                results.whois
+                  ? "WHOIS data retrieved successfully"
+                  : "WHOIS information unavailable",
+              ]}
+            />
+
+            <SummaryCard
+              title="Network Path (Traceroute)"
+              icon={<FaExclamationTriangle className="text-yellow-400" />}
+              summary={`${results.traceroute?.length || 0} network hops identified`}
+              risk="LOW"
+              details={[
+                results.traceroute
+                  ? "Network routing path mapped successfully"
+                  : "Traceroute blocked or unavailable",
+              ]}
+            />
+
+            <SummaryCard
+              title="Host Reachability (Ping)"
+              icon={<FaBug className="text-green-400" />}
+              summary="ICMP echo response test"
+              risk="LOW"
+              details={[
+                results.ping
+                  ? "Host responded to ICMP echo requests"
+                  : "No ICMP response received",
+              ]}
+            />
+
+            <SummaryCard
+              title="Email / Domain Reputation"
+              icon={<FaBug className="text-purple-400" />}
+              summary={`Reputation level: ${results.emailReputation?.risk}`}
+              risk={results.emailReputation?.risk}
+              details={[
+                results.emailReputation?.note ||
+                  "Domain reputation assessment completed",
+              ]}
+            />
+            </div>
+
             {/* PDF BUTTON */}
             <div className="mt-10 text-center">
               <button

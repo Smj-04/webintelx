@@ -19,6 +19,7 @@ const csrfRoutes = require("./routes/csrf.routes");
 const securityTrailsRoute = require("./routes/securitytrailsRoute");
 const reportRoute = require("./routes/reportRoute");
 
+console.log("🚀 SERVER FILE PATH:", __filename);
 
 app.use(cors());
 app.use(express.json());
@@ -31,13 +32,13 @@ app.use("/api/portscan", portscanRoute);
 app.use("/api/headers", headersRoute);
 app.use("/api/ssl", sslRoute);
 app.use("/api/quickscan", quickScanRoute);
+app.use("/api/fullscan", require("./routes/fullScanRoute"));
 app.use("/api", xssRoutes);
 app.use("/api", autoXssRoute);
 app.use("/api", sqlmapRoute);
 app.use("/api/report", reportRoute);
 
 app.use("/api", require("./routes/aiReportRoute"));
-app.use("/api", require("./routes/fullScanRoute"));
 
 app.use("/api/csrf", csrfRoutes);
 app.use("/api", require("./routes/clickjackingRoute"));
@@ -46,6 +47,12 @@ app.use("/api", require("./routes/emailRepRoute"));
 app.use("/api", require("./routes/commandInjectionRoute"));
 app.use("/api", securityTrailsRoute);
 app.use("/api", require("./routes/domXssRoute"));
+app.use("/api", require("./routes/ldapInjectionRoute"));
+app.use("/api", require("./routes/sstiRoute"));
+app.use("/api", require("./routes/storedXssRoute"));
+app.use("/api", require("./routes/csrfTokenRoute"));
+app.use("/api", require("./routes/tokenAuthRoute"));
+app.use("/api", require("./routes/idorRoute"));
 
 const PORT = 5000;
 

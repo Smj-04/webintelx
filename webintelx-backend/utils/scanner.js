@@ -144,7 +144,31 @@ module.exports = {
   // -------------------------------------
   // Endpoint & SQLi Detection
   // -------------------------------------
-  endpointScan: (target) => endpointScan(target)
+  endpointScan: (target) => endpointScan(target),
+
+
+  // -------------------------------------
+// Email / Domain Reputation (QuickScan)
+// -------------------------------------
+emailReputation: async (domain) => {
+  try {
+    // Basic heuristic-based reputation
+    const suspiciousTLDs = [".tk", ".ml", ".ga", ".cf"];
+    const isSuspiciousTLD = suspiciousTLDs.some(tld =>
+      domain.endsWith(tld)
+    );
+
+    return {
+      domain,
+      disposable: false, // placeholder (future API)
+      suspiciousTLD: isSuspiciousTLD,
+      risk: isSuspiciousTLD ? "MEDIUM" : "LOW",
+      note: "Heuristic-based domain reputation (QuickScan)",
+    };
+  } catch (err) {
+    return { error: "Email reputation check failed" };
+  }
+}
 
   
 };

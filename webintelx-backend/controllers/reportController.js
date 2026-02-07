@@ -1,5 +1,138 @@
 const PDFDocument = require("pdfkit");
 
+function detectDisclosedTechnology(headers = {}) {
+  const headerText = Object.entries(headers)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join(" ");
+
+  return headerText.match(
+    /(php\/[0-9]|joomla|wordpress|drupal|asp\.net)/i
+  );
+}
+
+function classifyQuickScanFindings(scanData) {
+  const findings = [];
+
+
+    // -----------------------------
+    // SSL / Transport Security
+    // -----------------------------
+    const hasHTTPSPort = scanData.openPorts?.some(
+      (p) => p.port === 443
+    );
+
+    if (!hasHTTPSPort && scanData.ssl?.error) {
+      findings.push({
+        title: "SSL/TLS Not Detected",
+        classification: "Vulnerability",
+        type: "Security Misconfiguration",
+        evidence: "No HTTPS service detected on the target",
+      });
+    } else if (hasHTTPSPort) {
+      findings.push({
+        title: "HTTPS Service Detected",
+        classification: "Not a Vulnerability",
+        type: "Informational",
+        evidence: "HTTPS service detected (enforcement not validated in Quick Scan)",
+      });
+    } else {
+      findings.push({
+        title: "SSL/TLS Status Indeterminate",
+        classification: "Not a Vulnerability",
+        type: "Informational",
+        evidence: "SSL/TLS could not be reliably assessed in Quick Scan",
+      });
+    }
+
+  // -----------------------------
+  // Outdated Technology
+  // -----------------------------
+    const techMatch = detectDisclosedTechnology(scanData.headers);
+
+    if (techMatch) {
+      findings.push({
+        title: "Disclosed Application Technology",
+        classification: "Security Weakness",
+        type: "Technology Disclosure",
+        evidence: techMatch[0],
+      });
+    }
+
+
+  // -----------------------------
+  // Attack Surface (Subdomains)
+  // -----------------------------
+  if (scanData.securityTrails?.subdomainCount > 0) {
+    findings.push({
+      title: "Expanded Attack Surface",
+      classification: "Not a Vulnerability",
+      type: "Exposure",
+      evidence: `${scanData.securityTrails.subdomainCount} subdomains discovered`,
+    });
+  }
+
+  // -----------------------------
+  // Parameterized Endpoints
+  // -----------------------------
+  if (scanData.endpoints?.length > 0) {
+    findings.push({
+      title: "Parameterized Endpoints Detected",
+      classification: "Not a Vulnerability",
+      type: "Informational",
+      evidence: `${scanData.endpoints.length} parameterized URLs identified`,
+    });
+  }
+
+  // -----------------------------
+  // Open Ports
+  // -----------------------------
+  if (scanData.openPorts?.length > 0) {
+    findings.push({
+      title: "Open Network Ports",
+      classification: "Not a Vulnerability",
+      type: "Exposure",
+      evidence: `Open ports: ${scanData.openPorts
+        .map((p) => p.port)
+        .join(", ")}`,
+    });
+  }
+
+  // -----------------------------
+  // Infrastructure Intelligence
+  // -----------------------------
+  ["dns", "whois", "ping", "traceroute"].forEach((key) => {
+    if (scanData[key]) {
+      findings.push({
+        title: key.toUpperCase(),
+        classification: "Not a Vulnerability",
+        type: "Informational",
+        evidence: "Module executed successfully",
+      });
+    }
+  });
+
+  // -----------------------------
+  // Email Reputation
+  // -----------------------------
+  if (scanData.emailReputation?.risk === "HIGH") {
+    findings.push({
+      title: "Domain Reputation Risk",
+      classification: "Security Weakness",
+      type: "Reputation Risk",
+      evidence: "High-risk domain indicators detected",
+    });
+  } else if (scanData.emailReputation?.risk) {
+    findings.push({
+      title: "Domain Reputation",
+      classification: "Not a Vulnerability",
+      type: "Informational",
+      evidence: `Risk level: ${scanData.emailReputation.risk}`,
+    });
+  }
+
+  return findings;
+}
+
 exports.generateQuickScanPDF = async (req, res) => {
   try {
     const { scanData, target } = req.body;
@@ -169,25 +302,156 @@ exports.generateQuickScanPDF = async (req, res) => {
 
     doc.moveDown(1.5);
 
-    /* =========================
-       🛠 RECOMMENDATIONS
-    ========================= */
+   /* =========================
+   🌍 NETWORK & TRANSPORT
+   ========================= */
     doc
       .fontSize(14)
       .fillColor("#1f2937")
-      .text("Recommendations", { underline: true });
+      .text("Infrastructure Intelligence", { underline: true });
 
-    doc.moveDown(0.5);
+    doc.moveDown(0.8);
 
-    doc.fontSize(11).fillColor("black").text(
-      "• Enforce HTTPS and configure TLS securely\n" +
-        "• Upgrade legacy server-side technologies\n" +
-        "• Review exposed endpoints for injection vulnerabilities\n" +
-        "• Reduce unnecessary subdomains and decommission unused services\n" +
-        "• Perform a Full Scan for deeper vulnerability analysis"
+    doc.fontSize(12).text("DNS Intelligence");
+    doc.moveDown(0.3);
+
+    if (scanData.dns) {
+      doc.fontSize(11).text(
+        "DNS resolution completed successfully for the target domain."
+      );
+    } else {
+      doc.fontSize(11).text(
+        "DNS resolution could not be completed for the target domain."
+      );
+    }
+
+    doc.moveDown(0.8);
+
+    doc.fontSize(12).text("WHOIS Information");
+    doc.moveDown(0.3);
+
+    if (scanData.whois) {
+      doc.fontSize(11).text(
+        "WHOIS records were retrieved, providing domain registration metadata."
+      );
+    } else {
+      doc.fontSize(11).text(
+        "WHOIS information could not be retrieved for the target domain."
+      );
+    }
+
+    doc.moveDown(0.8);
+
+    doc.fontSize(12).text("Network Path Analysis (Traceroute)");
+    doc.moveDown(0.3);
+
+    if (Array.isArray(scanData.traceroute)) {
+      const hops = scanData.traceroute.filter((l) =>
+        /^\s*\d+/.test(l)
+      ).length;
+
+      findings.push({
+        title: "Traceroute Analysis",
+        classification: "Not a Vulnerability",
+        type: "Informational",
+        evidence:
+          hops > 0
+            ? `${hops} routing hops identified`
+            : "Traceroute executed but no hops could be resolved",
+      });
+    }
+
+
+    doc.moveDown(0.8);
+
+    doc.fontSize(12).text("Host Reachability (Ping)");
+    doc.moveDown(0.3);
+
+    if (scanData.ping) {
+      doc.fontSize(11).text(
+        "The target host responded to ICMP echo requests, confirming network-level reachability."
+      );
+    } else {
+      doc.fontSize(11).text(
+        "The target host did not respond to ICMP echo requests."
+      );
+    }
+
+    doc.moveDown(0.8);
+
+    doc.fontSize(12).text("Email / Domain Reputation");
+    doc.moveDown(0.3);
+
+    if (scanData.emailReputation?.risk) {
+      doc.fontSize(11).text(
+        `Domain reputation assessment completed with a reported risk level of ${scanData.emailReputation.risk}.`
+      );
+    } else {
+      doc.fontSize(11).text(
+        "Domain reputation assessment could not be completed."
+      );
+    }
+
+    doc.moveDown(1.2);
+
+
+    doc
+  .fontSize(14)
+  .fillColor("#1f2937")
+  .text("Data-Driven Scan Summary", { underline: true });
+
+doc.moveDown(0.5);
+
+doc.fontSize(11).fillColor("black").text(
+  `• ${scanData.securityTrails.subdomainCount} subdomains were identified through passive DNS intelligence.\n` +
+  `• ${scanData.endpoints.length} parameterized endpoints were discovered during endpoint enumeration.\n` +
+  `• The application stack exposes ${
+    scanData.headers?.["x-powered-by"] || "no disclosed backend technology"
+  }.\n` +
+  `• ${
+    scanData.openPorts.length
+      ? scanData.openPorts.length + " open network ports were detected."
+      : "No common network ports were detected."
+  }\n` +
+  `• HTTPS service ${
+    scanData.openPorts?.some((p) => p.port === 443)
+      ? "was detected on the target"
+      : "was not detected on the target"
+  }.\n` +
+  `• Infrastructure intelligence modules (DNS, WHOIS, traceroute, and ping) were executed as part of this Quick Scan.`
+);
+
+
+
+const classifiedFindings = classifyQuickScanFindings(scanData);
+
+doc
+  .fontSize(14)
+  .fillColor("#1f2937")
+  .text("Vulnerability Classification", { underline: true });
+
+doc.moveDown(0.6);
+
+doc.fontSize(11).fillColor("black").text(
+  "The following classifications are automatically derived from scan results. " +
+  "Quick Scan does not perform exploitation or confirmation testing."
+);
+
+doc.moveDown(0.8);
+
+classifiedFindings.forEach((finding, index) => {
+  doc
+    .fontSize(11)
+    .text(
+      `${index + 1}. ${finding.title}\n` +
+        `   Classification: ${finding.classification}\n` +
+        `   Category: ${finding.type}\n` +
+        `   Evidence: ${finding.evidence}`
     );
+  doc.moveDown(0.6);
+});
 
-    doc.moveDown(2);
+doc.moveDown(1.5);
 
     /* =========================
        📌 FOOTER

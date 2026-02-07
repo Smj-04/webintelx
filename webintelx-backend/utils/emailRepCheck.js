@@ -9,12 +9,13 @@ async function emailRepCheck(email) {
       {
         timeout: 8000,
         headers: {
-          "User-Agent": "WebIntelX"
+          "User-Agent": "WebIntelX",
+          ...(process.env.EMAILREP_API_KEY && {
+            "Key": process.env.EMAILREP_API_KEY
+          })
         }
       }
     );
-
-    console.log("✅ [EmailRep] Response received");
 
     return {
       success: true,
@@ -32,11 +33,7 @@ async function emailRepCheck(email) {
 
   } catch (err) {
     console.error("❌ [EmailRep] Error:", err.message);
-
-    return {
-      success: false,
-      error: "EmailRep request failed"
-    };
+    return { success: false, error: "EmailRep failed" };
   }
 }
 
