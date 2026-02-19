@@ -43,23 +43,80 @@ const SENSITIVE_KEYWORDS = [
 const USER_AGENT = "WebIntelX-IDOR-Scanner/1.0";
 const TIMEOUT = 40000; // Increased timeout for crawling
 
+const AUTH_CONTEXT = {
+  username: null
+};
+
+
 const cookieJar = new tough.CookieJar();
 const client = wrapper(
   axios.create({
     jar: cookieJar,
     withCredentials: true,
     timeout: TIMEOUT,
+    maxRedirects: 5,
     headers: { "User-Agent": USER_AGENT },
   })
 );
-async function loginIfNeeded(baseUrl) {
-  try {
-    console.log("[AUTH] Logging in for IDOR test...");
-    await client.get(`${baseUrl}/login`);
-  } catch (e) {
-    console.log("[AUTH] Login failed or not required");
+
+
+async function authenticate(auth) {
+  console.log("[AUTH] Authenticating for IDOR scan...");
+
+  if (auth.type === "form") {
+    const res = await client.post(
+      auth.loginUrl,
+      new URLSearchParams({
+        [auth.usernameField]: auth.username,
+        [auth.passwordField]: auth.password,
+        submit: "login"
+      }),
+      {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        validateStatus: () => true
+      }
+    );
+
+    console.log(
+      "[DEBUG] Login response snippet:",
+      String(res.data).slice(0, 300)
+    );
+
+    const origin = new URL(auth.loginUrl).origin;
+    const cookies = await cookieJar.getCookies(origin);
+
+    console.log(
+      "[DEBUG] Session cookies:",
+      cookies.map(c => `${c.key}=${c.value}`)
+    );
+
+    if (!cookies || cookies.length === 0) {
+      throw new Error("Authentication failed (no session cookie)");
+    }
+
+    console.log("[AUTH] Authentication successful (FORM)");
+    return;
   }
+
+  if (auth.type === "json") {
+    const res = await client.post(auth.loginUrl, {
+      [auth.usernameField]: auth.username,
+      [auth.passwordField]: auth.password,
+    });
+
+    if (!res.data.token) {
+      throw new Error("Authentication failed (no token)");
+    }
+
+    client.defaults.headers.Authorization = `Bearer ${res.data.token}`;
+    console.log("[AUTH] Authentication successful (JWT)");
+    return;
+  }
+
+  throw new Error("Unsupported auth type");
 }
+
+
 
 function normalizeUrl(input) {
   if (!input.startsWith("http://") && !input.startsWith("https://")) {
@@ -174,17 +231,55 @@ async function discoverUrlsWithIds(baseUrl, maxPages = 15) {
   return urlsWithIds;
 }
 
+
+function detectOwnerMismatch(originalBody, testBody) {
+  try {
+    const o = JSON.parse(originalBody);
+    const t = JSON.parse(testBody);
+
+    const ownerKeys = ["owner", "ownerId", "user", "userId", "accountId", "createdBy"];
+
+    function extractOwner(obj) {
+      if (!obj || typeof obj !== "object") return null;
+
+      for (const key of ownerKeys) {
+        if (obj[key]) return obj[key];
+      }
+
+      for (const k of Object.keys(obj)) {
+        const found = extractOwner(obj[k]);
+        if (found) return found;
+      }
+
+      return null;
+    }
+
+    const oOwner = extractOwner(o);
+    const tOwner = extractOwner(t);
+
+    if (!oOwner || !tOwner) return false;
+
+    const normalize = (v) =>
+      typeof v === "object" && v.id ? String(v.id) : String(v);
+
+    return normalize(oOwner) !== normalize(tOwner);
+  } catch {
+    return false;
+  }
+}
+
+
+
 /**
  * Tests IDOR by accessing different object IDs
  */
 async function testIDOR(targetUrl, idValue, idType, idKey = null) {
   try {
     console.log(`Testing IDOR: ${idValue} (${idType}${idKey ? `, key: ${idKey}` : ""})`);
+    await new Promise(r => setTimeout(r, 250));
 
         // Fetch original object response for comparison
     let originalResponseBody = "";
-    let originalResponseLength = 0;
-
     try {
       const originalRes = await client.get(targetUrl, {
         timeout: TIMEOUT,
@@ -193,7 +288,6 @@ async function testIDOR(targetUrl, idValue, idType, idKey = null) {
       });
 
       originalResponseBody = String(originalRes.data || "");
-      originalResponseLength = originalResponseBody.length;
     } catch {}
 
     // Generate test IDs (increment, decrement, sequential)
@@ -256,64 +350,29 @@ async function testIDOR(targetUrl, idValue, idType, idKey = null) {
           // Check if response is different from original (not just same error page)
           const responseBody = String(response.data || "");
           const responseLength = responseBody.length;
-          const lengthDifference = Math.abs(responseLength - originalResponseLength);
-          const significantDifference = lengthDifference > 50;
-
-          const contentLooksSame =
-            responseBody.slice(0, 200) === originalResponseBody.slice(0, 200);
-
-            const containsSensitiveData = SENSITIVE_KEYWORDS.some((kw) =>
-              responseBody.toLowerCase().includes(kw));
-            const looksLikePublicObject = PUBLIC_OBJECT_KEYWORDS.some((kw) =>
-              (idKey || "").toLowerCase().includes(kw) ||
-              targetUrl.toLowerCase().includes(kw)
-            );
-
-          // Indicators of successful access
-          const successIndicators = [
-            !responseBody.toLowerCase().includes("not found"),
-            !responseBody.toLowerCase().includes("forbidden"),
-            !responseBody.toLowerCase().includes("unauthorized"),
-            !responseBody.toLowerCase().includes("access denied"),
-            !responseBody.toLowerCase().includes("404"),
-            !responseBody.toLowerCase().includes("403"),
-            !responseBody.toLowerCase().includes("401"),
-          ];
-            let ownerMismatch = false;
-
-            try {
-              const json = JSON.parse(responseBody);
-
-              // LAB-SPECIFIC LOGIC
-              if (
-                json.accessedBy &&
-                json.data &&
-                json.data.id !== undefined &&
-                String(json.data.id) !== String(idValue)
-              ) {
-                ownerMismatch = true;
-              }
-            } catch {}
 
 
-          const isSuccessful =
-          successIndicators.filter((ind) => ind).length >= 3 &&
-          (
-            containsSensitiveData ||
-            (significantDifference && !contentLooksSame)
-          ) &&
-          !looksLikePublicObject;
-
-
-
-        if (isSuccessful) {
-        const isConfirmedIDOR =
-          ownerMismatch ||
-          (
-            response.status === 200 &&
-            String(testId) !== String(idValue)
+           const looksLikePublicObject = PUBLIC_OBJECT_KEYWORDS.some((kw) =>
+            testUrl.toLowerCase().includes(`/${kw}`) ||
+            testUrl.toLowerCase().includes(`${kw}=`)
           );
 
+
+          const ownerMismatch = detectOwnerMismatch(
+            originalResponseBody,
+            responseBody
+          );
+          if (looksLikePublicObject) {
+            continue;
+          }
+
+        if (
+          response.status === 200 &&
+          ownerMismatch &&
+          String(testId) !== String(idValue)
+        ) {
+
+      
 
         console.log("[IDOR] Owner mismatch detected:", {
           originalId: idValue,
@@ -326,16 +385,11 @@ async function testIDOR(targetUrl, idValue, idType, idKey = null) {
             testId: testId,
             url: testUrl,
             status: response.status,
-            evidence: `Successfully accessed object with ID ${testId}`,
+            authenticatedUser: AUTH_CONTEXT.username,
             responseLength: responseLength,
-            confidence: containsSensitiveData
-              ? "High"
-              : significantDifference
-              ? "Medium"
-              : "Low",
-            classification: isConfirmedIDOR
-              ? "Confirmed IDOR"
-              : "Possible IDOR (Manual Review Recommended)",
+            classification: "Confirmed IDOR",
+            confidence: "High",
+
           });
         }
 
@@ -359,6 +413,7 @@ async function testIDOR(targetUrl, idValue, idType, idKey = null) {
 async function testIDORPost(targetUrl, idValue, idKey) {
   try {
     console.log(`Testing IDOR via POST: ${idKey} = ${idValue}`);
+    await new Promise(r => setTimeout(r, 250));
 
     const testIds = [
       String(parseInt(idValue) + 1),
@@ -384,40 +439,30 @@ async function testIDORPost(targetUrl, idValue, idKey) {
           }
         );
 
-        if (response.status === 200 || response.status === 201) {
-          const responseBody = String(response.data || "");
-          const successIndicators = [
-            !responseBody.toLowerCase().includes("not found"),
-            !responseBody.toLowerCase().includes("forbidden"),
-            !responseBody.toLowerCase().includes("unauthorized"),
-            responseBody.length > 50,
-          ];
-
-          const isSuccessful = successIndicators.filter((ind) => ind).length >= 2;
-
-          if (isSuccessful) {
-            const containsSensitiveData = SENSITIVE_KEYWORDS.some((kw) =>
-              responseBody.toLowerCase().includes(kw)
-            );
-
-          const isConfirmedIDOR =
-            containsSensitiveData &&
-            String(testId) !== String(idValue);
+      const ownerMismatch = detectOwnerMismatch(
+        JSON.stringify({ owner: AUTH_CONTEXT.username }),
+        JSON.stringify(response.data)
+      );
 
 
-            findings.push({
-              originalId: idValue,
-              testId: testId,
-              method: "POST",
-              status: response.status,
-              evidence: `Successfully accessed/modified object with ID ${testId}`,
-              confidence: containsSensitiveData ? "High" : "Medium",
-              classification: isConfirmedIDOR
-                ? "Confirmed IDOR"
-                : "Possible IDOR (Manual Review Recommended)",
-            });
-          }
-        }
+    if (
+      response.status >= 200 &&
+      response.status < 300 &&
+      ownerMismatch &&
+      String(testId) !== String(idValue)
+    ) {
+      findings.push({
+        originalId: idValue,
+        testId: testId,
+        method: "POST",
+        status: response.status,
+        authenticatedUser: AUTH_CONTEXT.username,
+        evidence: "Authenticated user modified object owned by another user",
+        confidence: "High",
+        classification: "Confirmed IDOR"
+      });
+    }
+
       } catch (error) {
         console.error(`Error testing IDOR POST with ID ${testId}:`, error.message);
         continue;
@@ -480,12 +525,37 @@ function detectPredictablePatterns(url) {
 /**
  * Main function to scan for IDOR vulnerabilities
  */
-async function scanIDOR(url) {
-   url = normalizeUrl(url);
-   const baseOrigin = new URL(url).origin;
+async function scanIDOR(url, options = {}) {
+   const { auth } = options;
+   console.log("[DEBUG] IDOR auth received:", auth);
 
-    // 🔐 AUTHENTICATE FIRST
-    await loginIfNeeded(baseOrigin);
+   url = normalizeUrl(url);
+  if (!auth) {
+  return {
+    module: "IDOR",
+    target: url,
+    skipped: true,
+    vulnerable: false,
+    evidence: "Authentication required",
+    notes: "IDOR requires authenticated context. Provide test account credentials in Custom Scan."
+  };
+}
+
+    try {
+      await authenticate(auth);
+      AUTH_CONTEXT.username = auth.username;
+      console.log("[DEBUG] Logged in as:", AUTH_CONTEXT.username);
+
+    } catch (e) {
+      return {
+        module: "IDOR",
+        target: url,
+        vulnerable: false,
+        evidence: "Login failed",
+        notes: e.message
+      };
+    }
+
 
   console.log(`Starting IDOR scan for: ${url}`);
 
@@ -648,6 +718,12 @@ async function scanIDOR(url) {
     );
 
     const vulnerable = hasConfirmedIDOR;
+
+    try {
+      cookieJar.removeAllCookiesSync();
+      client.defaults.headers.Authorization = undefined;
+      AUTH_CONTEXT.username = null;
+    } catch {}
 
     return {
       module: "IDOR",

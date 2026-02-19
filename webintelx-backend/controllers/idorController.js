@@ -1,7 +1,7 @@
 const { scanIDOR } = require("../utils/idorCheck");
 
 exports.scanIDOR = async (req, res) => {
-  const { url } = req.body;
+  const { url, options } = req.body;
 
   if (!url) {
     return res.status(400).json({
@@ -12,7 +12,11 @@ exports.scanIDOR = async (req, res) => {
 
   try {
     console.log(`IDOR scan requested for: ${url}`);
-    const result = await scanIDOR(url);
+    console.log("[DEBUG] Controller forwarding auth:", options?.auth);
+
+    const result = await scanIDOR(url, {
+      auth: options?.auth
+    });
 
     console.log(`IDOR scan completed. Vulnerable: ${result.vulnerable}`);
 

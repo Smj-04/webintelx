@@ -111,7 +111,7 @@ exports.fullScan = async (req, res) => {
     }
 
     // 3) Run SQLMap sequentially per endpoint (slow) and aggregate findings
-    const sqlFindings = [];
+    /*const sqlFindings = [];
     for (const target of endpoints) {
       // call internal SQLMap API sequentially
       const resSql = await safePost("http://localhost:5000/api/sqlmap", { url: target.url, param: target.param }, { timeout: 40000 });
@@ -126,7 +126,7 @@ exports.fullScan = async (req, res) => {
       fullResult.vulnerabilities.sqlInjection.details = { findings: sqlFindings };
       fullResult.summary.high += 1; // SQLi counted once
     }
-
+*/
 
     // 4) Run other modules in parallel
     const moduleCalls = await Promise.allSettled([

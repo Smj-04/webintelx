@@ -1,9 +1,52 @@
 const scanner = require("../utils/scanner");
 const cleanUrl = require("../utils/cleanUrl");
 const { getSecurityTrailsData } = require("../utils/securitytrails");
+const dns = require("dns").promises;
+const axios = require("axios");
+
+// ==========================
+// 🔹 TARGET VALIDATION
+// ==========================
+
+async function validateTarget(url) {
+  try {
+    const formatted = url.startsWith("http")
+      ? url
+      : `http://${url}`;
+
+    const hostname = new URL(formatted).hostname;
+
+    // 1️⃣ DNS resolution check
+    await dns.lookup(hostname);
+
+    // 2️⃣ Try HTTPS first, fallback to HTTP
+    try {
+      await axios.get(`https://${hostname}`, { timeout: 5000 });
+    } catch {
+      await axios.get(`http://${hostname}`, { timeout: 5000 });
+    }
+
+    return { valid: true };
+  } catch (err) {
+    return {
+      valid: false,
+      error: "Target is not reachable or does not exist",
+    };
+  }
+}
 
 exports.quickScan = async (req, res) => {
   const { url } = req.body;
+
+  // 🔹 Validate target before running scan
+  const validation = await validateTarget(url);
+
+  if (!validation.valid) {
+    return res.json({
+      success: false,
+      error: validation.error,
+    });
+  }
 
   if (!url) {
     return res.status(400).json({
