@@ -15,7 +15,6 @@ const whatwebRoute = require("./routes/whatwebRoute");
 const xssRoutes = require("./routes/xssRoutes");
 const autoXssRoute = require("./routes/autoXssRoute");
 const sqlmapRoute = require("./routes/sqlmapRoute");
-const csrfRoutes = require("./routes/csrf.routes");
 const securityTrailsRoute = require("./routes/securitytrailsRoute");
 const reportRoute = require("./routes/reportRoute");
 
@@ -40,7 +39,6 @@ app.use("/api/report", reportRoute);
 
 app.use("/api", require("./routes/aiReportRoute"));
 
-app.use("/api/csrf", csrfRoutes);
 app.use("/api", require("./routes/clickjackingRoute"));
 app.use("/api", require("./routes/leakcheckRoute"));
 app.use("/api", require("./routes/emailRepRoute"));
@@ -50,7 +48,6 @@ app.use("/api", require("./routes/domXssRoute"));
 app.use("/api", require("./routes/ldapInjectionRoute"));
 app.use("/api", require("./routes/sstiRoute"));
 app.use("/api", require("./routes/storedXssRoute"));
-app.use("/api", require("./routes/csrfTokenRoute"));
 app.use("/api", require("./routes/tokenAuthRoute"));
 app.use("/api", require("./routes/idorRoute"));
 

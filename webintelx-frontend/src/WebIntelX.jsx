@@ -1,9 +1,17 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
 
 export default function Home() {
   const navigate = useNavigate();
+  const scanSectionRef = useRef(null);
+
+  const scrollToScanSection = () => {
+  scanSectionRef.current?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+};
 
   return (
     <div
@@ -44,10 +52,14 @@ export default function Home() {
 
           <div className="nav-links">
             <a className="nav-item">Dashboard</a>
-            <a className="nav-item">Scan Modes</a>
-            <a className="nav-item">Live Map</a>
-            <a className="nav-item">Reports</a>
-            <a className="nav-item">Settings</a>
+            <a
+            className="nav-item"
+            onClick={scrollToScanSection}
+            style={{ cursor: "pointer" }}
+          >
+            Action Selection
+          </a>
+        
           </div>
 
 
@@ -57,10 +69,7 @@ export default function Home() {
         <main className="main-content">
           {/* HERO */}
           <section className="hero-section">
-            <div className="hero-badge">
-              <iconify-icon icon="lucide:sparkles" style={{ fontSize: "14px" }} />
-              <span>v2.4 Now Live: AI-Powered Risk Assessment</span>
-            </div>
+         
 
             <h1 className="hero-title">
               Unified Web Intelligence & <br />
@@ -75,7 +84,7 @@ export default function Home() {
             <div className="hero-actions">
               <button
                 className="btn btn-primary"
-                onClick={() => navigate("/quick")}
+                onClick={() => navigate("/scan")}
               >
                 <iconify-icon icon="lucide:play" style={{ fontSize: "18px" }} />
                 Start Scan
@@ -89,159 +98,203 @@ export default function Home() {
             </div>
           </section>
 
-          {/* SCAN OPTIONS */}
-          <section className="scan-options">
-            <div className="scan-options-header">
-              <div>
-                <div className="scan-options-title">
-                  Choose your scan mode
-                </div>
-                <div className="scan-options-subtitle">
-                  Select how deep you want WebIntelX to probe your target surface.
-                </div>
-              </div>
-              <div className="scan-options-indicator">
-                <span className="scan-dot"></span>
-                <span>Scanner idle • Ready to launch</span>
+          <div
+            ref={scanSectionRef}
+            style={{
+              display: "flex",
+              gap: "30px",
+              justifyContent: "center",
+              alignItems: "stretch",
+              maxWidth: "1100px",
+              margin: "0 auto",
+              flexWrap: "wrap",
+            }}
+          >
+
+            {/* START SCAN */}
+            <div
+              onClick={() => navigate("/scan")}
+              style={{
+                flex: "1 1 300px",
+                background: "linear-gradient(135deg, #2563eb, #6366f1)",
+                padding: "32px",
+                borderRadius: "18px",
+                cursor: "pointer",
+                transition: "0.3s ease",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.transform = "translateY(-6px)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.transform = "translateY(0)")
+              }
+            >
+              <h3 style={{ fontSize: "20px", marginBottom: "12px" }}>
+                Start Security Scan
+              </h3>
+              <p style={{ opacity: 0.9, fontSize: "14px", lineHeight: "1.6" }}>
+                Launch reconnaissance, OSINT analysis and vulnerability testing
+                from a unified scanning interface.
+              </p>
+              <div style={{ marginTop: "18px", fontWeight: "500" }}>
+                Choose Scan Mode →
               </div>
             </div>
 
-            <div className="scan-options-grid">
-              <div
-                className="scan-option-card"
-                onClick={() => navigate("/quick")}
-              >
-                <div className="scan-option-inner">
-                  <div className="scan-option-top">
-                    <div>
-                      <div className="scan-option-label">Quick Scan</div>
-                      <div className="scan-option-tag">
-                        ~ 2 minutes • Surface checks
-                      </div>
-                    </div>
-                    <div className="scan-option-icon">
-                      <iconify-icon icon="lucide:radar" style={{ fontSize: "18px" }} />
-                    </div>
-                  </div>
-                  <div className="scan-option-meta">
-                    <span>Best for: instant health check</span>
-                    <span>Last used 5m ago</span>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className="scan-option-card"
-                onClick={() => navigate("/full")}
-              >
-                <div className="scan-option-inner">
-                  <div className="scan-option-top">
-                    <div>
-                      <div className="scan-option-label">Full Scan</div>
-                      <div className="scan-option-tag">
-                        45-90 minutes • Deep coverage
-                      </div>
-                    </div>
-                    <div className="scan-option-icon">
-                      <iconify-icon icon="lucide:scan-line" style={{ fontSize: "18px" }} />
-                    </div>
-                  </div>
-                  <div className="scan-option-meta">
-                    <span>Recon + OSINT + CVE sweep</span>
-                    <span>Recommended weekly</span>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className="scan-option-card"
-                onClick={() => navigate("/custom")}
-              >
-                <div className="scan-option-inner">
-                  <div className="scan-option-top">
-                    <div>
-                      <div className="scan-option-label">Custom Scan</div>
-                      <div className="scan-option-tag">
-                        Fine-grained controls
-                      </div>
-                    </div>
-                    <div className="scan-option-icon">
-                      <iconify-icon icon="lucide:settings-2" style={{ fontSize: "18px" }} />
-                    </div>
-                  </div>
-                  <div className="scan-option-meta">
-                    <span>Targeted ports, tech, scopes</span>
-                    <span>Templates available</span>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className="scan-option-card"
-                onClick={() => navigate("/phishing")}
-              >
-                <div className="scan-option-inner">
-                  <div className="scan-option-top">
-                    <div>
-                      <div className="scan-option-label">Password Checker</div>
-                      <div className="scan-option-tag">
-                        Credential exposure audit
-                      </div>
-                    </div>
-                    <div className="scan-option-icon">
-                      <iconify-icon icon="lucide:key-round" style={{ fontSize: "18px" }} />
-                    </div>
-                  </div>
-                  <div className="scan-option-meta">
-                    <span>HIBP-style breach lookup</span>
-                    <span>Safe & hashed locally</span>
-                  </div>
-                </div>
+            {/* PASSWORD CHECKER */}
+            <div
+              onClick={() => window.location.href = "http://localhost:3001"}
+              style={{
+                flex: "1 1 300px",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                padding: "32px",
+                borderRadius: "18px",
+                cursor: "pointer",
+                transition: "0.3s ease",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.transform = "translateY(-6px)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.transform = "translateY(0)")
+              }
+            >
+              <h3 style={{ fontSize: "20px", marginBottom: "12px" }}>
+                Password Strength Checker
+              </h3>
+              <p style={{ opacity: 0.7, fontSize: "14px", lineHeight: "1.6" }}>
+                Check password strength and exposure against breach databases.
+              </p>
+              <div style={{ marginTop: "18px", fontWeight: "500" }}>
+                Analyze Password →
               </div>
             </div>
-          </section>
 
-          {/* FEATURES */}
-          <section className="features-grid">
-            <div className="feature-card">
-              <div className="feature-icon-wrapper">
-                <iconify-icon icon="lucide:radar" style={{ fontSize: "24px" }} />
+            {/* PHISHING DETECTION */}
+            <div
+              onClick={() => navigate("/phishing")}
+              style={{
+                flex: "1 1 300px",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                padding: "32px",
+                borderRadius: "18px",
+                cursor: "pointer",
+                transition: "0.3s ease",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.transform = "translateY(-6px)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.transform = "translateY(0)")
+              }
+            >
+              <h3 style={{ fontSize: "20px", marginBottom: "12px" }}>
+                Phishing Site Detection
+              </h3>
+              <p style={{ opacity: 0.7, fontSize: "14px", lineHeight: "1.6" }}>
+                Detect malicious or spoofed websites using intelligent heuristics.
+              </p>
+              <div style={{ marginTop: "18px", fontWeight: "500" }}>
+                Scan Website →
               </div>
-              <h3 className="feature-title">Reconnaissance</h3>
-              <p className="feature-desc">
-                Automated sub-domain enumeration and port scanning to map your entire attack surface instantly.
+            </div>
+          </div>
+
+          {/* FEATURES - PROFESSIONAL STACKED VERSION */}
+          <section
+            style={{
+              marginTop: "120px",
+              maxWidth: "1000px",
+              marginLeft: "auto",
+              marginRight: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: "40px",
+              padding: "0 20px",
+            }}
+          >
+
+            {/* RECON */}
+            <div
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                padding: "40px",
+                borderRadius: "20px",
+              }}
+            >
+              <h2 style={{ fontSize: "22px", marginBottom: "14px" }}>
+                🔍 Reconnaissance & Surface Mapping
+              </h2>
+              <p style={{ opacity: 0.75, lineHeight: "1.8" }}>
+                Automated sub-domain enumeration, directory discovery,
+                port scanning and technology fingerprinting to map your
+                entire external attack surface with precision. 
+                Designed to identify hidden assets before attackers do.
               </p>
             </div>
 
-            <div className="feature-card">
-              <div className="feature-icon-wrapper">
-                <iconify-icon icon="lucide:globe" style={{ fontSize: "24px" }} />
-              </div>
-              <h3 className="feature-title">OSINT Analysis</h3>
-              <p className="feature-desc">
-                Deep web scraping and public record correlation to identify exposed assets and data leaks.
+            {/* OSINT */}
+            <div
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                padding: "40px",
+                borderRadius: "20px",
+              }}
+            >
+              <h2 style={{ fontSize: "22px", marginBottom: "14px" }}>
+                🌐 OSINT Intelligence Correlation
+              </h2>
+              <p style={{ opacity: 0.75, lineHeight: "1.8" }}>
+                Deep public record aggregation and breach database correlation
+                to uncover exposed credentials, leaked assets and publicly
+                accessible data tied to your organization.
+                All findings are cross-validated for risk accuracy.
               </p>
             </div>
 
-            <div className="feature-card">
-              <div className="feature-icon-wrapper">
-                <iconify-icon icon="lucide:shield-alert" style={{ fontSize: "24px" }} />
-              </div>
-              <h3 className="feature-title">Vulnerability Scan</h3>
-              <p className="feature-desc">
-                Continuous security testing against CVE databases to detect critical weaknesses before exploitation.
+            {/* VULNERABILITY */}
+            <div
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                padding: "40px",
+                borderRadius: "20px",
+              }}
+            >
+              <h2 style={{ fontSize: "22px", marginBottom: "14px" }}>
+                🛡 Vulnerability Assessment Engine
+              </h2>
+              <p style={{ opacity: 0.75, lineHeight: "1.8" }}>
+                Continuous security testing against CVE databases,
+                injection flaws, misconfigurations and known exploit patterns.
+                Active scanning modules validate real-world exploitability
+                to reduce false positives.
               </p>
             </div>
 
-            <div className="feature-card">
-              <div className="feature-icon-wrapper">
-                <iconify-icon icon="lucide:bot" style={{ fontSize: "24px" }} />
-              </div>
-              <h3 className="feature-title">AI Risk Reports</h3>
-              <p className="feature-desc">
-                Generative AI analysis of findings to prioritize threats and suggest remediation steps.
-              </p>
-            </div>
+          {/* CROSS VALIDATION */}
+          <div
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              padding: "40px",
+              borderRadius: "20px",
+            }}
+          >
+            <h2 style={{ fontSize: "22px", marginBottom: "14px" }}>
+              🧩 Cross-Validation & Threat Correlation
+            </h2>
+            <p style={{ opacity: 0.75, lineHeight: "1.8" }}>
+              Findings from reconnaissance, OSINT intelligence, and vulnerability
+              scanning are automatically correlated to identify high-risk assets.
+              This layered validation reduces false positives and highlights
+              exploitable attack paths across your infrastructure.
+            </p>
+          </div>
           </section>
 
           

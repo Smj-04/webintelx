@@ -1,6 +1,7 @@
 const cleanUrl = require("../utils/cleanUrl");
 const endpointScanner = require("../utils/endpointScanner");
 const axios = require("axios");
+const dns = require("dns").promises;
 const PDFDocument = require("pdfkit");
 console.log("🔥 fullScanController.js LOADED");
 
@@ -24,6 +25,36 @@ async function safePost(url, body, opts = {}) {
   }
 }
 
+// ==========================
+// 🔹 TARGET VALIDATION
+// ==========================
+
+async function validateTarget(url) {
+  try {
+    const formatted = url.startsWith("http")
+      ? url
+      : `http://${url}`;
+
+    const hostname = new URL(formatted).hostname;
+
+    // 1️⃣ DNS resolution check
+    await dns.lookup(hostname);
+
+    // 2️⃣ Try HTTPS first, fallback to HTTP
+    try {
+      await axios.get(`https://${hostname}`, { timeout: 5000 });
+    } catch {
+      await axios.get(`http://${hostname}`, { timeout: 5000 });
+    }
+
+    return { valid: true };
+  } catch (err) {
+    return {
+      valid: false,
+      error: "Target is not reachable or does not exist",
+    };
+  }
+}
 exports.fullScan = async (req, res) => {
   console.log("🔥 FULLSCAN CONTROLLER LOADED");
 
@@ -33,6 +64,17 @@ exports.fullScan = async (req, res) => {
   const startedAt = new Date().toISOString();
   const baseUrl = cleanUrl(url);
 
+  // ==========================
+// 🔹 VALIDATE TARGET HERE
+// ==========================
+const validation = await validateTarget(baseUrl);
+
+if (!validation.valid) {
+  return res.status(400).json({
+    success: false,
+    error: validation.error
+  });
+}
   // Prepare the unified response skeleton
   const fullResult = {
     success: true,
@@ -63,7 +105,7 @@ exports.fullScan = async (req, res) => {
       sqlInjection: { found: false, details: null },
       domXss: { found: false, details: null },
       storedXss: { found: false, details: null },
-      csrf: { found: false, details: null },
+      reflectedXss: { found: false, details: null },
       clickjacking: { vulnerable: false, headers: {} },
       commandInjection: { found: false, details: null }
     }
@@ -128,19 +170,19 @@ exports.fullScan = async (req, res) => {
     }
 */
 
-    // 4) Run other modules in parallel
-    const moduleCalls = await Promise.allSettled([
-      // DOM XSS
-      axios.post("http://localhost:5000/api/dom-xss", { url: baseUrl }, { timeout: 20000 }),
-      // Stored XSS
-      axios.post("http://localhost:5000/api/stored-xss", { url: baseUrl }, { timeout: 20000 }),
-      // CSRF (note: mounted under /api/csrf/scan)
-      axios.post("http://localhost:5000/api/csrf/scan", { url: baseUrl }, { timeout: 30000 }),
-      // Clickjacking
-      axios.post("http://localhost:5000/api/clickjacking", { url: baseUrl }, { timeout: 10000 }),
-      // Command Injection
-      axios.post("http://localhost:5000/api/command-injection", { url: baseUrl }, { timeout: 20000 })
-    ]);
+      // 4) Run other modules in parallel (incl. AutoXSS -> reflected XSS)
+      const moduleCalls = await Promise.allSettled([
+        // DOM XSS
+        axios.post("http://localhost:5000/api/dom-xss", { url: baseUrl }, { timeout: 20000 }),
+        // Stored XSS
+        axios.post("http://localhost:5000/api/stored-xss", { url: baseUrl }, { timeout: 20000 }),
+        // Reflected / Auto XSS
+        axios.post("http://localhost:5000/api/autoxss", { url: baseUrl }, { timeout: 30000 }),
+        // Clickjacking
+        axios.post("http://localhost:5000/api/clickjacking", { url: baseUrl }, { timeout: 10000 }),
+        // Command Injection
+        axios.post("http://localhost:5000/api/command-injection", { url: baseUrl }, { timeout: 20000 })
+      ]);
 
     // Helper to safely extract module result
     const safeModule = (settled) => {
@@ -151,7 +193,7 @@ exports.fullScan = async (req, res) => {
 
     const domRes = safeModule(moduleCalls[0]);
     const storedRes = safeModule(moduleCalls[1]);
-    const csrfRes = safeModule(moduleCalls[2]);
+    const reflectedRes = safeModule(moduleCalls[2]);
     const clickRes = safeModule(moduleCalls[3]);
     const cmdRes = safeModule(moduleCalls[4]);
 
@@ -172,15 +214,22 @@ exports.fullScan = async (req, res) => {
       }
     }
 
-
-    if (csrfRes.ok && csrfRes.data) {
-      const vulnerableCount = csrfRes.data.vulnerableEndpoints?.length || 0;
-      fullResult.vulnerabilities.csrf.found = vulnerableCount > 0;
-      fullResult.vulnerabilities.csrf.details = csrfRes.data || null;
+    // Reflected / Auto XSS
+    if (reflectedRes.ok && reflectedRes.data) {
+      const vulnerableEndpoints = reflectedRes.data.vulnerableEndpoints || [];
+      const vulnerableCount = Array.isArray(vulnerableEndpoints) ? vulnerableEndpoints.length : 0;
+      fullResult.vulnerabilities.reflectedXss.found = vulnerableCount > 0;
+      // Store all AutoXSS data: testedEndpoints, vulnerableEndpoints
+      fullResult.vulnerabilities.reflectedXss.details = {
+        testedEndpoints: reflectedRes.data.testedEndpoints || 0,
+        vulnerableEndpoints: vulnerableEndpoints,
+        base: reflectedRes.data.base || null
+      };
       if (vulnerableCount > 0) {
         fullResult.summary.medium += 1;
       }
     }
+
 
 
     if (clickRes.ok && clickRes.data) {
@@ -241,7 +290,7 @@ exports.generateFullScanPDF = async (scanData, target, res) => {
     // Executive Summary
     doc.fontSize(16).fillColor('#111827').text('Executive Summary', { underline: true });
     doc.moveDown(0.5);
-    doc.fontSize(11).fillColor('black').text('This Full Scan aggregates QuickScan reconnaissance and targeted vulnerability tests (SQLi, DOM XSS, Stored XSS, CSRF, Clickjacking, Command Injection). Findings are risk-classified for prioritization.');
+    doc.fontSize(11).fillColor('black').text('This Full Scan aggregates QuickScan reconnaissance and targeted vulnerability tests (SQLi, DOM XSS, Stored XSS, Reflected XSS, Clickjacking, Command Injection). Findings are risk-classified for prioritization.');
     doc.moveDown(1);
 
     // Attack Surface Summary
@@ -262,7 +311,7 @@ exports.generateFullScanPDF = async (scanData, target, res) => {
       { name: 'SQL Injection', found: vuln.sqlInjection.found },
       { name: 'DOM XSS', found: vuln.domXss.found },
       { name: 'Stored XSS', found: vuln.storedXss.found },
-      { name: 'CSRF', found: vuln.csrf.found },
+      { name: 'Reflected XSS', found: vuln.reflectedXss?.found },
       { name: 'Clickjacking', found: vuln.clickjacking.vulnerable },
       { name: 'Command Injection', found: vuln.commandInjection.found }
     ];
@@ -287,42 +336,95 @@ exports.generateFullScanPDF = async (scanData, target, res) => {
     if (vuln.domXss.found) {
       doc.fontSize(14).fillColor('#1f2937').text('DOM XSS — Details', { underline: true });
       doc.moveDown(0.5);
-      doc.fontSize(11).text(
-        `Evidence: ${vuln.domXss.details?.evidence || "DOM-based payload reflection detected"}`
-        );
-      doc.moveDown(0.8);
+      const domEvidence = vuln.domXss.details?.evidence;
+      if (Array.isArray(domEvidence)) {
+        domEvidence.forEach((item, idx) => {
+          doc.fontSize(10).text(`${idx + 1}. Type: ${item.type || 'Unknown'}`);
+          doc.fontSize(10).text(`   Location: ${item.location || 'Unknown'}`);
+          doc.fontSize(10).text(`   Evidence: ${item.evidence || 'N/A'}`);
+          doc.fontSize(10).text(`   Confidence: ${item.confidence || 'Unknown'}`);
+          doc.moveDown(0.3);
+        });
+      } else {
+        doc.fontSize(11).text(vuln.domXss.details?.notes || "DOM-based payload reflection detected");
+      }
+      doc.moveDown(0.5);
     }
 
     if (vuln.storedXss.found) {
       doc.fontSize(14).fillColor('#1f2937').text('Stored XSS — Details', { underline: true });
       doc.moveDown(0.5);
-      doc.fontSize(11).text(
-        `Evidence: ${vuln.storedXss.details?.evidence || "Stored XSS payload detected"}`
-      );
-      doc.moveDown(0.8);
+      const storedEvidence = vuln.storedXss.details?.evidence;
+      if (Array.isArray(storedEvidence)) {
+        storedEvidence.forEach((item, idx) => {
+          doc.fontSize(10).text(`${idx + 1}. Location: ${item.location || 'Unknown'}`);
+          doc.fontSize(10).text(`   Payload: ${item.payload || 'N/A'} (truncated)`);
+          doc.fontSize(10).text(`   Evidence: ${item.evidence || 'N/A'}`);
+          doc.fontSize(10).text(`   Confidence: ${item.confidence || 'Unknown'}`);
+          doc.moveDown(0.3);
+        });
+      } else {
+        doc.fontSize(11).text(vuln.storedXss.details?.notes || "Stored XSS payload detected");
+      }
+      doc.moveDown(0.5);
     }
 
-    if (vuln.csrf.found) {
-      doc.fontSize(14).fillColor('#1f2937').text('CSRF — Details', { underline: true });
+    if (vuln.reflectedXss && vuln.reflectedXss.found) {
+      doc.fontSize(14).fillColor('#1f2937').text('Reflected XSS — Details', { underline: true });
       doc.moveDown(0.5);
-      doc.fontSize(11).text(`Vulnerable endpoints: ${vuln.csrf.details?.vulnerableEndpoints?.length || 0}`);
-      doc.moveDown(0.8);
+      const refDetails = vuln.reflectedXss.details || {};
+      doc.fontSize(11).text(`Endpoints tested: ${refDetails.testedEndpoints || 0}`);
+      doc.fontSize(11).text(`Vulnerable endpoints found: ${(refDetails.vulnerableEndpoints || []).length || 0}`);
+      doc.moveDown(0.5);
+      const vulnEndpoints = refDetails.vulnerableEndpoints || [];
+      if (vulnEndpoints.length > 0) {
+        vulnEndpoints.slice(0, 10).forEach((ep, idx) => {
+          doc.fontSize(10).text(`${idx + 1}. URL: ${ep.url || 'Unknown'}`);
+          if (Array.isArray(ep.findings) && ep.findings.length > 0) {
+            ep.findings.slice(0, 3).forEach((f) => {
+              doc.fontSize(9).text(`   - ${f.type || 'Finding'}: ${f.evidence || 'Detected'} (${f.confidence || 'unknown'})`);
+            });
+          }
+          doc.moveDown(0.2);
+        });
+      }
+      doc.moveDown(0.5);
     }
 
     if (vuln.clickjacking.vulnerable) {
       doc.fontSize(14).fillColor('#1f2937').text('Clickjacking — Details', { underline: true });
       doc.moveDown(0.5);
-      doc.fontSize(11).text(
-        "Missing X-Frame-Options or frame-ancestors protection detected."
-      );
-      doc.moveDown(0.8);
+      const clickDetails = vuln.clickjacking.details || {};
+      doc.fontSize(11).text(`Issue: ${clickDetails.issue || 'Missing X-Frame-Options / CSP frame-ancestors'}`);
+      doc.moveDown(0.3);
+      if (clickDetails.headers && Object.keys(clickDetails.headers).length > 0) {
+        doc.fontSize(10).text('Relevant headers:');
+        Object.entries(clickDetails.headers).slice(0, 5).forEach(([k, v]) => {
+          doc.fontSize(9).text(`• ${k}: ${String(v).substring(0, 50)}...`);
+        });
+      }
+      doc.moveDown(0.5);
     }
 
     if (vuln.commandInjection.found) {
       doc.fontSize(14).fillColor('#1f2937').text('Command Injection — Details', { underline: true });
       doc.moveDown(0.5);
-      doc.fontSize(11).text(JSON.stringify(vuln.commandInjection.details || {}, null, 2));
-      doc.moveDown(0.8);
+      const cmdDetails = vuln.commandInjection.details || {};
+      doc.fontSize(11).text(`Confidence: ${cmdDetails.confidence || 'Unknown'}`);
+      doc.fontSize(11).text(`Notes: ${cmdDetails.notes || 'Vulnerability confirmed'}`);
+      doc.moveDown(0.3);
+      const cmdEvidence = cmdDetails.evidence;
+      if (Array.isArray(cmdEvidence)) {
+        cmdEvidence.forEach((item, idx) => {
+          doc.fontSize(10).text(`${idx + 1}. Parameter: ${item.parameter || 'Unknown'}`);
+          doc.fontSize(10).text(`   Payload: ${item.payload || 'N/A'} (snippet)`);
+          doc.fontSize(10).text(`   Evidence: ${item.evidence || 'N/A'}`);
+          doc.moveDown(0.2);
+        });
+      } else if (cmdEvidence) {
+        doc.fontSize(10).text(JSON.stringify(cmdEvidence, null, 2).substring(0, 200));
+      }
+      doc.moveDown(0.5);
     }
 
     // Risk Classification

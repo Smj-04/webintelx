@@ -121,7 +121,7 @@ export default function CustomScan() {
             <div>
               <h4 className="text-lg font-semibold">Vulnerability Checks</h4>
               <p className="text-gray-400 text-sm mt-1">
-                SQLi, XSS, CSRF, Clickjacking, Open Redirects & other web attacks.
+                SQLi, XSS, Clickjacking, Open Redirects & other web attacks.
               </p>
             </div>
           </label>

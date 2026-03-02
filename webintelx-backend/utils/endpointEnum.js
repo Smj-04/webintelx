@@ -3,9 +3,9 @@ const fetch = (...args) =>
 const { JSDOM } = require("jsdom");
 
 /**
- * Site-wide endpoint enumeration for CSRF detection
+ * Site-wide endpoint enumeration
  * Input  : Base URL only (e.g. http://testphp.vulnweb.com)
- * Output : Array of CSRF-relevant endpoints
+ * Output : Array of discovered state-changing endpoints (POST/PUT/DELETE)
  */
 module.exports = async function enumerateEndpoints(baseUrl) {
   const visitedPages = new Set();
@@ -25,13 +25,13 @@ module.exports = async function enumerateEndpoints(baseUrl) {
     const dom = new JSDOM(html);
     const document = dom.window.document;
 
-    /* =====================================================
-       1️⃣ FIND CSRF-RELEVANT ENDPOINTS (STATE-CHANGING FORMS)
-    ====================================================== */
+     /* =====================================================
+       1️⃣ FIND STATE-CHANGING ENDPOINTS (FORMS)
+     ====================================================== */
     document.querySelectorAll("form").forEach(form => {
       const method = (form.method || "GET").toUpperCase();
 
-      // CSRF applies only to state-changing requests
+      // Only consider state-changing methods
       if (!["POST", "PUT", "DELETE"].includes(method)) return;
 
       // Handle missing action → submit to same page

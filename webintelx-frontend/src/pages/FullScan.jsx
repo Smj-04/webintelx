@@ -16,23 +16,37 @@ export default function FullScan() {
   const [scanDone, setScanDone] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [expanded, setExpanded] = useState({});
+  const [error, setError] = useState(null);
+  const [showRawDomFindings, setShowRawDomFindings] = useState(false);
 
   // Trigger full scan via backend API and store unified result
   const handleScan = async () => {
     if (!input.trim()) return alert("Please enter a domain or company name");
+
     setIsScanning(true);
     setScanDone(false);
     setScanResult(null);
+    setError(null);
 
     try {
-      // POST to existing backend endpoint. Using relative path so dev proxy works.
-      const resp = await axios.post("http://localhost:5000/api/fullscan", { url: input }, { timeout: 0 });
-      // store unified result object returned by backend
+      const resp = await axios.post(
+        "http://localhost:5000/api/fullscan",
+        { url: input },
+        { timeout: 0 }
+      );
+
       setScanResult(resp.data);
       setScanDone(true);
+
     } catch (err) {
-      console.error("FullScan API error:", err);
-      alert("FullScan failed. See console for details.");
+
+      if (err.response) {
+        // 🔹 This catches your backend 400 validation error
+        setError(err.response.data.error || "Invalid target");
+      } else {
+        setError("Backend not reachable or network error.");
+      }
+
     } finally {
       setIsScanning(false);
     }
@@ -56,143 +70,156 @@ export default function FullScan() {
   // Helper: toggle expandable panels per module
   const toggle = (key) => setExpanded((s) => ({ ...s, [key]: !s[key] }));
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+return (
+  <div className="min-h-screen bg-[#0f172a] text-white relative overflow-hidden flex flex-col">
 
-      {/* Header */}
-      <div className="text-center py-16 bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg">
-        <h1 className="text-4xl font-extrabold mb-3">Full Scan</h1>
-        <p className="text-gray-200 text-lg max-w-2xl mx-auto">
-          Deep OSINT + Reconnaissance + Vulnerability Assessment for complete intelligence.
-        </p>
-      </div>
+    {/* GRID BACKGROUND (same as Home) */}
+    <div className="absolute inset-0 bg-[linear-gradient(rgba(56,189,248,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.05)_1px,transparent_1px)] bg-[size:40px_40px] opacity-30"></div>
 
-      {/* What Full Scan Does */}
-      <div className="max-w-5xl mx-auto mt-10 px-6">
-        <h2 className="text-2xl font-bold mb-4 text-blue-400">What Full Scan Includes</h2>
-        <p className="text-gray-300 mb-6">
-          Full Scan performs a complete investigation into the target’s public exposure, internal weaknesses, 
-          and web infrastructure footprint. It is designed for security professionals who want comprehensive results.
-        </p>
+    {/* Header */}
+    <div className="relative z-10 text-center py-20">
+      <h1 className="text-5xl font-extrabold mb-4 bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+        Full Scan
+      </h1>
+      <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+        Deep OSINT + Reconnaissance + Vulnerability Assessment for complete intelligence.
+      </p>
+    </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+    {/* What Full Scan Does */}
+    <div className="relative z-10 max-w-5xl mx-auto mt-10 px-6">
+      <h2 className="text-2xl font-bold mb-4 text-sky-400">What Full Scan Includes</h2>
+      <p className="text-slate-400 mb-6">
+        Full Scan performs a complete investigation into the target’s public exposure, internal weaknesses,
+        and web infrastructure footprint. It is designed for security professionals who want comprehensive results.
+      </p>
 
-          {/* OSINT */}
-          <div className="bg-gray-800 p-5 rounded-xl flex items-start gap-4 shadow">
-            <FaUserSecret className="text-purple-400 text-3xl mt-1" />
-            <div>
-              <h4 className="text-lg font-semibold">Deep OSINT Enumeration</h4>
-              <p className="text-gray-400 text-sm mt-1">
-                Scrapes public records, social sources, leak databases, DNS history, WHOIS, emails & metadata.
-              </p>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-          {/* Recon */}
-          <div className="bg-gray-800 p-5 rounded-xl flex items-start gap-4 shadow">
-            <FaNetworkWired className="text-green-400 text-3xl mt-1" />
-            <div>
-              <h4 className="text-lg font-semibold">Infrastructure Reconnaissance</h4>
-              <p className="text-gray-400 text-sm mt-1">
-                Maps subdomains, servers, CDN layers, firewalls, hosting providers & entry points.
-              </p>
-            </div>
-          </div>
-
-          {/* Vuln assessment */}
-          <div className="bg-gray-800 p-5 rounded-xl flex items-start gap-4 shadow">
-            <FaBug className="text-red-400 text-3xl mt-1" />
-            <div>
-              <h4 className="text-lg font-semibold">Vulnerability Assessment</h4>
-              <p className="text-gray-400 text-sm mt-1">
-                Detects SQLi, XSS, CSRF, Clickjacking, Open Redirects & exposed sensitive files.
-              </p>
-            </div>
-          </div>
-
-          {/* Fingerprinting */}
-          <div className="bg-gray-800 p-5 rounded-xl flex items-start gap-4 shadow">
-            <FaFingerprint className="text-yellow-400 text-3xl mt-1" />
-            <div>
-              <h4 className="text-lg font-semibold">Technology Fingerprinting</h4>
-              <p className="text-gray-400 text-sm mt-1">
-                Identifies CMS, frameworks, JS libraries, outdated components & vulnerable versions.
-              </p>
-            </div>
-          </div>
-
-          {/* Ports & services */}
-          <div className="bg-gray-800 p-5 rounded-xl flex items-start gap-4 shadow">
-            <FaListUl className="text-pink-400 text-3xl mt-1" />
-            <div>
-              <h4 className="text-lg font-semibold">Port & Service Mapping</h4>
-              <p className="text-gray-400 text-sm mt-1">
-                Performs deep port scans to fingerprint running services & detect outdated servers.
-              </p>
-            </div>
-          </div>
-
-          {/* Malware / phishing */}
-          <div className="bg-gray-800 p-5 rounded-xl flex items-start gap-4 shadow">
-            <FaSearch className="text-blue-400 text-3xl mt-1" />
-            <div>
-              <h4 className="text-lg font-semibold">Malware & Phishing Indicators</h4>
-              <p className="text-gray-400 text-sm mt-1">
-                Scans domain reputation, blocklists, suspicious redirects & malware hosting markers.
-              </p>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Input */}
-      <div className="flex flex-col items-center mt-14 px-4">
-        <div className="bg-gray-800 p-6 rounded-2xl shadow-xl w-full max-w-xl">
-          <label className="text-lg font-semibold">Enter Domain or Company Name</label>
-
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="example.com or company"
-            className="w-full mt-3 px-4 py-3 rounded-md bg-gray-700 text-white outline-none placeholder-gray-400 border border-gray-600 focus:border-blue-400"
-          />
-
-          <button
-            onClick={handleScan}
-            className="mt-5 flex items-center justify-center w-full bg-blue-600 hover:bg-blue-700 transition py-3 rounded-md font-semibold text-white shadow-lg"
-          >
-            <FaSearch className="mr-2 text-lg" />
-            Start Full Scan
-          </button>
-        </div>
-      </div>
-
-      {/* Loading */}
-      {isScanning && (
-        <div className="mt-12 text-center animate-pulse">
-          <h2 className="text-2xl font-semibold text-blue-400">Running Deep Scan...</h2>
-          <p className="text-gray-400 mt-2">This may take several minutes</p>
-
-          <div className="mt-6 flex justify-center">
-            <div className="w-12 h-12 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin"></div>
+        {/* OSINT */}
+        <div className="bg-slate-800/60 backdrop-blur-md border border-slate-700 p-5 rounded-xl flex items-start gap-4 shadow">
+          <FaUserSecret className="text-purple-400 text-3xl mt-1" />
+          <div>
+            <h4 className="text-lg font-semibold">Deep OSINT Enumeration</h4>
+            <p className="text-slate-400 text-sm mt-1">
+              Scrapes public records, social sources, leak databases, DNS history, WHOIS, emails & metadata.
+            </p>
           </div>
         </div>
-      )}
 
-      {/* Results: replaced static placeholder with actual unified API rendering
-          - Uses `scanResult` returned from `/api/fullscan`
-          - Renders header (target + duration), risk summary, quickscan summary,
-            and per-module vulnerability blocks with expandable details.
-          - Keeps existing layout, colors and spacing but removes SQLMap-only assumptions.
-      */}
-      {scanDone && !isScanning && (
-        <div className="mt-16 px-4">
-          <div className="bg-gray-800 p-6 rounded-2xl shadow-xl max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-green-400 mb-3">Full Scan Completed</h2>
+        {/* Recon */}
+        <div className="bg-slate-800/60 backdrop-blur-md border border-slate-700 p-5 rounded-xl flex items-start gap-4 shadow">
+          <FaNetworkWired className="text-green-400 text-3xl mt-1" />
+          <div>
+            <h4 className="text-lg font-semibold">Infrastructure Reconnaissance</h4>
+            <p className="text-slate-400 text-sm mt-1">
+              Maps subdomains, servers, CDN layers, firewalls, hosting providers & entry points.
+            </p>
+          </div>
+        </div>
 
-            <p className="text-gray-300 mb-2">These results provide a complete breakdown of vulnerabilities and exposed assets.</p>
+        {/* Vuln assessment */}
+        <div className="bg-slate-800/60 backdrop-blur-md border border-slate-700 p-5 rounded-xl flex items-start gap-4 shadow">
+          <FaBug className="text-red-400 text-3xl mt-1" />
+          <div>
+            <h4 className="text-lg font-semibold">Vulnerability Assessment</h4>
+            <p className="text-slate-400 text-sm mt-1">
+              Detects SQLi, XSS (DOM/Stored/Reflected), Clickjacking, Command Injection & exposed sensitive files.
+            </p>
+          </div>
+        </div>
+
+        {/* Fingerprinting */}
+        <div className="bg-slate-800/60 backdrop-blur-md border border-slate-700 p-5 rounded-xl flex items-start gap-4 shadow">
+          <FaFingerprint className="text-yellow-400 text-3xl mt-1" />
+          <div>
+            <h4 className="text-lg font-semibold">Technology Fingerprinting</h4>
+            <p className="text-slate-400 text-sm mt-1">
+              Identifies CMS, frameworks, JS libraries, outdated components & vulnerable versions.
+            </p>
+          </div>
+        </div>
+
+        {/* Ports */}
+        <div className="bg-slate-800/60 backdrop-blur-md border border-slate-700 p-5 rounded-xl flex items-start gap-4 shadow">
+          <FaListUl className="text-pink-400 text-3xl mt-1" />
+          <div>
+            <h4 className="text-lg font-semibold">Port & Service Mapping</h4>
+            <p className="text-slate-400 text-sm mt-1">
+              Performs deep port scans to fingerprint running services & detect outdated servers.
+            </p>
+          </div>
+        </div>
+
+        {/* Malware */}
+        <div className="bg-slate-800/60 backdrop-blur-md border border-slate-700 p-5 rounded-xl flex items-start gap-4 shadow">
+          <FaSearch className="text-sky-400 text-3xl mt-1" />
+          <div>
+            <h4 className="text-lg font-semibold">Malware & Phishing Indicators</h4>
+            <p className="text-slate-400 text-sm mt-1">
+              Scans domain reputation, blocklists, suspicious redirects & malware hosting markers.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    {/* Input */}
+    <div className="relative z-10 flex flex-col items-center mt-14 px-4">
+      <div className="bg-slate-800/60 backdrop-blur-md border border-slate-700 p-6 rounded-2xl shadow-xl w-full max-w-xl">
+        <label className="text-lg font-semibold">Enter Domain or URL</label>
+
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="example.com or company"
+          className="w-full mt-3 px-4 py-3 rounded-lg bg-slate-900 text-white outline-none placeholder-slate-500 border border-slate-700 focus:border-sky-400"
+        />
+
+        <button
+          onClick={handleScan}
+          className="mt-5 flex items-center justify-center w-full bg-sky-500 hover:bg-sky-400 transition py-3 rounded-lg font-semibold text-black shadow-lg shadow-sky-500/20"
+        >
+          <FaSearch className="mr-2 text-lg" />
+          Start Full Scan
+        </button>
+      </div>
+    </div>
+
+    {error && (
+      <div className="relative z-10 mt-6 text-center">
+        <div className="bg-red-600 text-white px-4 py-3 rounded-lg max-w-xl mx-auto">
+          {error}
+        </div>
+      </div>
+    )}
+
+    {/* Loading */}
+    {isScanning && (
+      <div className="relative z-10 mt-12 text-center animate-pulse">
+        <h2 className="text-2xl font-semibold text-sky-400">Running Deep Scan...</h2>
+        <p className="text-slate-400 mt-2">This may take several minutes</p>
+
+        <div className="mt-6 flex justify-center">
+          <div className="w-12 h-12 border-4 border-slate-700 border-t-sky-500 rounded-full animate-spin"></div>
+        </div>
+      </div>
+    )}
+
+    {/* RESULTS */}
+    {scanDone && !isScanning && (
+      <div className="relative z-10 mt-16 px-4">
+        <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl shadow-xl max-w-4xl mx-auto">
+
+          <h2 className="text-3xl font-bold text-green-400 mb-3">Full Scan Completed</h2>
+
+          <p className="text-slate-400 mb-2">
+            These results provide a complete breakdown of vulnerabilities and exposed assets.
+          </p>
+
+          {/* EVERYTHING BELOW REMAINS EXACT SAME LOGIC */}
 
             {/* Header details: target + duration */}
             <div className="bg-gray-700 p-4 rounded-lg text-gray-300 mb-4">
@@ -280,91 +307,110 @@ export default function FullScan() {
                       
                       {/* DOM XSS */}
                       <ModuleBlock keyName="dom" title="DOM XSS" found={!!v.domXss?.found}>
-                        {v.domXss?.found ? (
-                          <div className="space-y-2">
-                            <div>
-                              <strong>Parameter:</strong>{" "}
-                              <span className="text-yellow-300">
-                                {v.domXss.details?.parameter || "N/A"}
-                              </span>
-                            </div>
+                        {v.domXss?.details ? (
+                          (() => {
+                            const findings = Array.isArray(v.domXss.details.evidence) ? v.domXss.details.evidence : [];
+                            const highMedium = findings.filter(f => (f.confidence || '').toLowerCase() === 'high' || (f.confidence || '').toLowerCase() === 'medium');
+                            const lowCount = findings.length - highMedium.length;
 
-                            <div>
-                              <strong>Payload:</strong>{" "}
-                              <span className="text-green-300">
-                                {v.domXss.details?.payload || "N/A"}
-                              </span>
-                            </div>
+                            if (highMedium.length > 0) {
+                              return (
+                                <div className="space-y-3">
+                                  <div>Confirmed findings: <span className="text-red-300 font-semibold">{highMedium.length}</span></div>
+                                  <ul className="list-disc pl-5">
+                                    {highMedium.map((f, i) => (
+                                      <li key={i} className="mb-2">
+                                        <div className="font-medium">{f.type || 'DOM XSS'}</div>
+                                        <div className="text-sm text-blue-300">{f.location || 'Location unavailable'}</div>
+                                        <div className="text-xs text-gray-300">Confidence: {f.confidence || 'Unknown'}</div>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                  {lowCount > 0 && <div className="text-sm text-gray-400">{lowCount} low-confidence finding(s) suppressed from view.</div>}
+                                  <button onClick={() => setShowRawDomFindings(s => !s)} className="text-sm text-sky-400 underline">{showRawDomFindings ? 'Hide raw findings' : 'Show raw findings'}</button>
+                                  {showRawDomFindings && (
+                                    <div className="mt-2 text-xs text-gray-300">
+                                      <pre className="whitespace-pre-wrap max-h-48 overflow-auto">{JSON.stringify(findings, null, 2)}</pre>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
 
-                            <div>
-                              <strong>Evidence:</strong>{" "}
-                              <span className="text-gray-300">
-                                {v.domXss.details?.evidence || "N/A"}
-                              </span>
-                            </div>
+                            if (findings.length > 0) {
+                              return (
+                                <div className="text-sm text-gray-400">No confirmed High/Medium findings. {findings.length} low-confidence finding(s) detected and suppressed. <button onClick={() => setShowRawDomFindings(s => !s)} className="text-sm text-sky-400 underline">{showRawDomFindings ? 'Hide raw findings' : 'Show raw findings'}</button></div>
+                              );
+                            }
 
-                            <div>
-                              <strong>Confidence:</strong>{" "}
-                              <span className="text-blue-300">
-                                {v.domXss.details?.confidence || "Unknown"}
-                              </span>
-                            </div>
-                          </div>
+                            return <div>No vulnerability detected</div>;
+                          })()
                         ) : (
                           <div>No vulnerability detected</div>
                         )}
                       </ModuleBlock>
-
 
                       {/* Stored XSS */}
                       <ModuleBlock keyName="stored" title="Stored XSS" found={!!v.storedXss?.found}>
-                        {v.storedXss?.found ? (
-                          <div className="space-y-2">
-                            <div>
-                              <strong>Parameter:</strong>{" "}
-                              <span className="text-yellow-300">
-                                {v.storedXss.details?.parameter || "N/A"}
-                              </span>
-                            </div>
-
-                            <div>
-                              <strong>Payload:</strong>{" "}
-                              <span className="text-green-300">
-                                {v.storedXss.details?.payload || "N/A"}
-                              </span>
-                            </div>
-
-                            <div>
-                              <strong>Evidence:</strong>{" "}
-                              <span className="text-gray-300">
-                                {v.storedXss.details?.evidence || "N/A"}
-                              </span>
-                            </div>
-
-                            <div>
-                              <strong>Confidence:</strong>{" "}
-                              <span className="text-blue-300">
-                                {v.storedXss.details?.confidence || "Unknown"}
-                              </span>
-                            </div>
-                          </div>
+                        {v.storedXss?.details?.evidence ? (
+                          Array.isArray(v.storedXss.details.evidence) ? (
+                            <ul className="list-disc pl-5 space-y-2">
+                              {v.storedXss.details.evidence.map((finding, idx) => (
+                                <li key={idx} className="mb-3">
+                                  <div><strong>Finding {idx + 1}:</strong> <span className="text-red-300">Form Location</span></div>
+                                  <div className="ml-4 mt-1">
+                                    <div>Location: <span className="text-blue-300">{finding.location || 'N/A'}</span></div>
+                                    <div>Payload: <span className="text-yellow-300">{finding.payload ? finding.payload.substring(0, 50) : 'N/A'}...</span></div>
+                                    <div>Evidence: <span className="text-green-300">{finding.evidence || 'N/A'}</span></div>
+                                    <div>Confidence: <span className="text-orange-300">{finding.confidence || 'Unknown'}</span></div>
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <div className="text-gray-400">{v.storedXss.details.notes || "Vulnerability detected but details unavailable"}</div>
+                          )
                         ) : (
                           <div>No vulnerability detected</div>
                         )}
                       </ModuleBlock>
 
 
-                    {/* CSRF */}
-                    <ModuleBlock keyName="csrf" title="CSRF" found={!!v.csrf?.found}>
-                      {v.csrf?.found ? (
-                        <>
-                          <div className="mb-2">Vulnerable endpoints: <span className="text-yellow-300">{v.csrf.details?.vulnerableEndpoints?.length || 'N/A'}</span></div>
-                          <ul className="list-disc pl-5">
-                            {(v.csrf.details?.vulnerableEndpoints || []).map((ep, i) => (
-                              <li key={i}>{ep.endpoint || ep}</li>
-                            ))}
-                          </ul>
-                        </>
+                    {/* Module removed */}
+
+                    {/* Reflected XSS (AutoXSS) */}
+                    <ModuleBlock keyName="reflected" title="Reflected XSS" found={!!v.reflectedXss?.found}>
+                      {v.reflectedXss?.details ? (
+                        <div className="space-y-3">
+                          <div>
+                            Endpoints tested: <span className="text-blue-300 font-semibold">{v.reflectedXss.details.testedEndpoints || 0}</span>
+                          </div>
+                          <div>
+                            Vulnerable endpoints: <span className="text-red-300 font-semibold">{(v.reflectedXss.details.vulnerableEndpoints || []).length || 0}</span>
+                          </div>
+                          {v.reflectedXss.details.vulnerableEndpoints && v.reflectedXss.details.vulnerableEndpoints.length > 0 && (
+                            <div>
+                              <strong>Vulnerable URLs:</strong>
+                              <ul className="list-disc pl-5 mt-2 space-y-2">
+                                {v.reflectedXss.details.vulnerableEndpoints.slice(0, 10).map((ep, idx) => (
+                                  <li key={idx} className="mb-2">
+                                    <div className="font-medium text-yellow-300 text-sm">{ep.url || 'Unknown'}</div>
+                                    {Array.isArray(ep.findings) && ep.findings.length > 0 && (
+                                      <div className="ml-4 mt-1 text-sm">
+                                        <span className="text-green-300">Payloads detected: {ep.findings.length}</span>
+                                        <ul className="list-circle pl-4 mt-1">
+                                          {ep.findings.slice(0, 3).map((f, fIdx) => (
+                                            <li key={fIdx} className="text-gray-300 text-xs">{f.type || f || 'Finding'}</li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <div>No vulnerability detected</div>
                       )}
@@ -373,15 +419,25 @@ export default function FullScan() {
                     {/* Clickjacking */}
                     <ModuleBlock keyName="click" title="Clickjacking" found={!!v.clickjacking?.vulnerable}>
                       {v.clickjacking?.vulnerable ? (
-                        <>
-                          <div className="mb-2">Issue: <span className="text-yellow-300">{v.clickjacking.details?.issue || 'Missing frame protections'}</span></div>
-                          <div className="mb-2">Relevant headers:</div>
-                          <ul className="list-disc pl-5">
-                            {Object.entries(v.clickjacking.headers || {}).slice(0,6).map(([k, val]) => (
-                              <li key={k}><span className="font-medium">{k}</span>: {String(val)}</li>
-                            ))}
-                          </ul>
-                        </>
+                        <div className="space-y-3">
+                          <div>
+                            <strong>Issue:</strong> <span className="text-red-300">{v.clickjacking.details?.issue || 'Missing X-Frame-Options / CSP frame-ancestors'}</span>
+                          </div>
+                          {v.clickjacking.details?.headers && Object.keys(v.clickjacking.details.headers).length > 0 ? (
+                            <div>
+                              <strong>Relevant Security Headers:</strong>
+                              <ul className="list-disc pl-5 mt-2">
+                                {Object.entries(v.clickjacking.details.headers || {}).slice(0, 8).map(([k, val]) => (
+                                  <li key={k} className="text-sm">
+                                    <span className="font-medium text-yellow-300">{k}:</span> <span className="text-gray-300">{String(val).substring(0, 60)}...</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : v.clickjacking.headers ? (
+                            <div className="text-gray-400 text-sm">No security headers detected</div>
+                          ) : null}
+                        </div>
                       ) : (
                         <div>No vulnerability detected</div>
                       )}
@@ -390,14 +446,31 @@ export default function FullScan() {
                     {/* Command Injection */}
                     <ModuleBlock keyName="cmd" title="Command Injection" found={!!v.commandInjection?.found}>
                       {v.commandInjection?.found ? (
-                        <>
-                          <div className="mb-2">Evidence: <span className="text-yellow-300">{v.commandInjection.details?.evidence || v.commandInjection.details?.notes || 'Command execution indicators observed'}</span></div>
-                          {v.commandInjection.details?.endpoints && (
-                            <ul className="list-disc pl-5">
-                              {v.commandInjection.details.endpoints.map((e, i) => <li key={i}>{e}</li>)}
-                            </ul>
+                        <div className="space-y-3">
+                          <div>
+                            <strong>Confidence Level:</strong> <span className="text-orange-300 font-semibold">{v.commandInjection.details?.confidence || 'Unknown'}</span>
+                          </div>
+                          <div>
+                            <strong>Description:</strong> <span className="text-gray-300">{v.commandInjection.details?.notes || 'Command execution vulnerability confirmed'}</span>
+                          </div>
+                          {Array.isArray(v.commandInjection.details?.evidence) && v.commandInjection.details.evidence.length > 0 && (
+                            <div>
+                              <strong>Vulnerable Parameters:</strong>
+                              <ul className="list-disc pl-5 mt-2 space-y-2">
+                                {v.commandInjection.details.evidence.slice(0, 5).map((finding, idx) => (
+                                  <li key={idx} className="mb-2">
+                                    <div><strong>Finding {idx + 1}:</strong></div>
+                                    <div className="ml-4 mt-1 text-sm">
+                                      <div>Parameter: <span className="text-yellow-300">{finding.parameter || 'Unknown'}</span></div>
+                                      <div>Payload: <span className="text-green-300">{finding.payload ? finding.payload.substring(0, 40) : 'N/A'}...</span></div>
+                                      <div>Evidence: <span className="text-blue-300">{finding.evidence || 'N/A'}</span></div>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
                           )}
-                        </>
+                        </div>
                       ) : (
                         <div>No vulnerability detected</div>
                       )}
