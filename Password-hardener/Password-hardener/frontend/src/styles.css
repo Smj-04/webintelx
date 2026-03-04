@@ -1,0 +1,103 @@
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background: #f5f7fb;
+  color: #1f2937;
+}
+
+/* NAVBAR */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 40px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.nav-logo {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.nav-links a {
+  margin-left: 24px;
+  text-decoration: none;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.nav-links .active {
+  color: #2563eb;
+}
+
+/* PAGE */
+.page {
+  display: flex;
+  justify-content: center;
+  padding: 60px 20px;
+}
+
+/* CARD */
+.card {
+  width: 100%;
+  max-width: 500px;
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+/* INPUT */
+input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+
+/* BUTTON */
+button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+/* PASSWORD WRAPPER */
+.password-wrapper {
+  position: relative;
+}
+
+.eye {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  cursor: pointer;
+}
+
+/* BADGE */
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  margin-top: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+/* ERROR */
+.error {
+  color: #dc2626;
+  margin-top: 10px;
+}
