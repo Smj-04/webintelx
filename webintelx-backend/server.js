@@ -17,6 +17,7 @@ const autoXssRoute = require("./routes/autoXssRoute");
 const sqlmapRoute = require("./routes/sqlmapRoute");
 const securityTrailsRoute = require("./routes/securitytrailsRoute");
 const reportRoute = require("./routes/reportRoute");
+const phishingCheckRoute = require("./routes/phishingCheckRoute");
 
 console.log("🚀 SERVER FILE PATH:", __filename);
 
@@ -50,6 +51,7 @@ app.use("/api", require("./routes/sstiRoute"));
 app.use("/api", require("./routes/storedXssRoute"));
 app.use("/api", require("./routes/tokenAuthRoute"));
 app.use("/api", require("./routes/idorRoute"));
+app.use("/api", phishingCheckRoute);
 
 const PORT = 5000;
 

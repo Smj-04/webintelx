@@ -4,16 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "concurrently \"npm run main-frontend\" \"npm run main-backend\" \"npm run password-backend\" \"npm run password-frontend\"",
+  "start": "concurrently \"npm run main-frontend\" \"npm run main-backend\" \"npm run password-backend\" \"npm run password-frontend\"",
 
-    "main-frontend": "cd webintelx-frontend && npm start",
+  "main-frontend": "cd webintelx-frontend && npm start",
+  "main-backend": "cd webintelx-backend && node server.js",
 
-    "main-backend": "cd webintelx-backend && node server.js",
-
-    "password-backend": "cd modules/password-hardener/backend && npm run dev",
-
-    "password-frontend": "cd modules/password-hardener/frontend && npm run dev"
-  },
+  "password-backend": "cd Password-hardener/Password-hardener/backend && npm run dev",
+  "password-frontend": "cd Password-hardener/Password-hardener/frontend && npm run dev"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
