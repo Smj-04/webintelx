@@ -1,0 +1,35 @@
+{
+  "model": {
+    "name": "phishing_model",
+    "version": "1.0.0",
+    "created_date": "2026-02-07",
+    "algorithm": "Random Forest Classifier with weighted ensemble scoring",
+    "features_count": 30,
+    "training_samples": "5000+",
+    "description": "ML-based phishing detection model trained on URL and content features",
+    "improvements": [
+      "Brand similarity detection with trigram indexing (v1.0)",
+      "DNS resolution checks (v1.0)",
+      "SSL certificate validation (v1.0)",
+      "Domain age via WHOIS (v1.0)",
+      "JavaScript and meta-refresh redirect detection (v1.0)"
+    ]
+  },
+  "detection_system": {
+    "version": "1.0.0",
+    "release_date": "2026-02-07",
+    "components": [
+      "URL analysis (6 checks)",
+      "Domain analysis (7 checks)",
+      "Content analysis (10 checks)",
+      "ML model prediction",
+      "Escalation rules"
+    ],
+    "thresholds": {
+      "critical": "> 70%",
+      "high": "> 55%",
+      "moderate": "> 35%",
+      "low": "<= 35%"
+    }
+  }
+}
