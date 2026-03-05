@@ -55,8 +55,9 @@ app.use("/api", phishingCheckRoute);
 
 const PORT = 5000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
 });
 
+server.timeout = 1200000; // 20 minutes — covers the longest possible full scan
 console.log("Gemini Key Loaded:", process.env.GEMINI_API_KEY ? "YES" : "NO");

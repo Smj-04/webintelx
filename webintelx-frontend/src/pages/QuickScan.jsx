@@ -212,6 +212,13 @@ const isValidURL = (url) => {
 
   const overallRisk = results ? calculateOverallRisk(results) : null;
 
+  const techStack = results?.wappalyzer
+  ? Object.entries(results.wappalyzer).map(([tech, version]) =>
+      version !== "Unknown" ? `${tech} ${version}` : tech
+    )
+  : [];
+
+  console.log(results?.wappalyzer);
 return (
   <div className="min-h-screen bg-[#0f172a] text-white relative overflow-hidden flex flex-col">
 
@@ -324,17 +331,15 @@ return (
             <SummaryCard
               title="Technology Stack"
               icon={<FaShieldAlt className="text-green-400" />}
-              summary={`Server: ${results.headers.server}`}
-              risk={
-                results.headers["x-powered-by"]?.includes("PHP/5")
+              summary={`Server: ${results?.headers?.server || "Unknown"}`}              risk={
+                results?.headers["x-powered-by"]?.includes("PHP/5")
                   ? "HIGH"
                   : "LOW"
               }
               details={[
-                `Backend: ${
-                  results.headers["x-powered-by"] || "Unknown"
-                }`,
-                "Legacy stack increases exploit likelihood",
+                `Backend: ${results.headers["x-powered-by"] || "Unknown"}`,
+                "Detected Technologies:",
+                ...techStack.slice(0, 5)
               ]}
             />
 

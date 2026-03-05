@@ -1,3 +1,5 @@
+// This is the storedXssCheck.js file in the utils folder
+
 /**
  * Stored XSS Detection Module
  * Tests for stored/persistent XSS vulnerabilities in forms and user content
@@ -6,6 +8,7 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 const { URL } = require("url");
+const qs = require("querystring"); 
 
 const USER_AGENT = "WebIntelX-StoredXSS-Scanner/1.0";
 const TIMEOUT = 40000;
@@ -48,11 +51,11 @@ async function submitPayload(targetUrl, formData, payload) {
       }
     }
 
-    const response = await axios.post(targetUrl, submitData, {
+    const response = await axios.post(targetUrl, qs.stringify(submitData), {
       timeout: TIMEOUT,
       headers: {
         "User-Agent": USER_AGENT,
-        "Content-Type": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
       },
       validateStatus: () => true,
     });

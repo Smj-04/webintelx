@@ -1,3 +1,5 @@
+//this is the domXssCheck.js file in the utils folder
+
 /**
  * DOM-Based XSS Detection Module (Refactored)
  * Analyzes JavaScript for client-side sinks with proper source-to-sink tracking

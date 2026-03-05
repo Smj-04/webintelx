@@ -1,3 +1,5 @@
+//this is the autoXssController.js file in the controllers folder
+
 const cleanUrl = require("../utils/cleanUrl");
 const { discoverEndpoints } = require("../utils/endpointDiscovery");
 const endpointScan = require("../utils/endpointScanner");
@@ -22,7 +24,7 @@ exports.runAutoXSSScan = async (req, res) => {
 
     const baseUrl = inputUrl.startsWith("http")
       ? inputUrl
-      : `http://${base}`;
+      : `http://${inputUrl}`;
 
     const endpoints = new Set();
 
@@ -31,27 +33,44 @@ exports.runAutoXSSScan = async (req, res) => {
     endpoints.add(`${baseUrl}/search.php`);
     endpoints.add(`${baseUrl}/index.php`);
 
-    // 2️⃣ Crawl
-    try {
-      const discovered = await discoverEndpoints(baseUrl, 1);
-      discovered.forEach((e) => endpoints.add(e));
-    } catch {}
+  // 2️⃣ Crawl — adds URLs (some may have params already)
+      try {
+        const discovered = await discoverEndpoints(baseUrl, 1);
+        discovered.forEach((e) => endpoints.add(e));
+      } catch {}
 
-    // 3️⃣ Common endpoints
-    try {
-      const epResult = await endpointScan(baseUrl);
-      epResult.discoveredEndpoints.forEach((e) => {
-        endpoints.add(baseUrl + e.endpoint);
-      });
-    } catch {}
+      // 3️⃣ Common endpoints — endpointScanner returns [{ url, param }]
+      // Extract the full URLs (which already include ?param=1)
+      try {
+        const epResults = await endpointScan(baseUrl);
+        // epResults is a flat array of { url, param } — just grab the url directly
+        epResults.forEach((e) => {
+          if (e && e.url) endpoints.add(e.url);
+        });
+      } catch {}
 
-    // 4️⃣ Generate test URLs
-    const testUrls = [];
-    for (const ep of endpoints) {
-      for (const param of XSS_PARAMS) {
-        testUrls.push(`${ep}?${param}=xss_test`);
+      // 4️⃣ Generate test URLs
+      // URLs from endpointScanner already have params (e.g. listproducts.php?cat=1)
+      // URLs from endpointDiscovery may or may not — fall back to XSS_PARAMS for those
+      const testUrls = [];
+      for (const ep of endpoints) {
+        try {
+          const epUrl = new URL(ep);
+          if (epUrl.searchParams.toString()) {
+            // Already has real params — use directly
+            testUrls.push(ep);
+          } else {
+            // No params found — try common XSS param names as fallback
+            for (const param of XSS_PARAMS) {
+              testUrls.push(`${ep}?${param}=test`);
+            }
+          }
+        } catch {
+          for (const param of XSS_PARAMS) {
+            testUrls.push(`${ep}?${param}=test`);
+          }
+        }
       }
-    }
 
     // 5️⃣ Scan
     const vulnerableEndpoints = [];
@@ -68,10 +87,27 @@ exports.runAutoXSSScan = async (req, res) => {
       try {
         const findings = await scanXSS(testUrl);
         if (findings.length > 0) {
-          vulnerableEndpoints.push({
-            url: testUrl,
-            findings,
-          });
+          // Use the actual vulnerable URL from findings, not the test URL
+          // Group findings by their actual submit URL
+          const byActualUrl = {};
+          for (const finding of findings) {
+            const actualUrl = finding.url || testUrl;
+            if (!byActualUrl[actualUrl]) {
+              byActualUrl[actualUrl] = [];
+            }
+            byActualUrl[actualUrl].push(finding);
+          }
+
+          for (const [actualUrl, urlFindings] of Object.entries(byActualUrl)) {
+            // Check if this actual URL was already reported
+            const alreadyReported = vulnerableEndpoints.some(e => e.url === actualUrl);
+            if (!alreadyReported) {
+              vulnerableEndpoints.push({
+                url: actualUrl,
+                findings: urlFindings,
+              });
+            }
+          }
         }
       } catch {}
     }

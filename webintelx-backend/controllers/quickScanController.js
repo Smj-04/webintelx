@@ -3,6 +3,7 @@ const cleanUrl = require("../utils/cleanUrl");
 const { getSecurityTrailsData } = require("../utils/securitytrails");
 const dns = require("dns").promises;
 const axios = require("axios");
+const { exec } = require("child_process");
 
 // ==========================
 // 🔹 TARGET VALIDATION
@@ -33,6 +34,24 @@ async function validateTarget(url) {
       error: "Target is not reachable or does not exist",
     };
   }
+}
+
+function runWappalyzer(url) {
+  return new Promise((resolve) => {
+    exec(`python utils/wappalyzer_scan.py ${url}`, (err, stdout) => {
+      if (err) {
+        console.error("Wappalyzer Error:", err);
+        return resolve({});
+      }
+
+      try {
+        const parsed = JSON.parse(stdout);
+        resolve(parsed);
+      } catch {
+        resolve({});
+      }
+    });
+  });
 }
 
 exports.quickScan = async (req, res) => {
@@ -83,7 +102,9 @@ exports.quickScan = async (req, res) => {
       scanner.traceroute(hostname),      // 8 
       scanner.emailReputation(hostname), // 9 
     ]);
-
+  
+    // 🔹 Run Python Wappalyzer scan
+const wappalyzerResult = await runWappalyzer(cleanedUrl);
 
     // 🔹 Run SecurityTrails (PASSIVE, HOSTNAME ONLY)
     let securityTrailsResult = null;
@@ -119,6 +140,10 @@ exports.quickScan = async (req, res) => {
       whois: safe(results[7]),
       traceroute: safe(results[8]),
       emailReputation: safe(results[9]),
+
+       // 🆕 Technology detection
+      wappalyzer: wappalyzerResult,
+
       // 🆕 SecurityTrails block
       securityTrails: {
         scanType: "passive",

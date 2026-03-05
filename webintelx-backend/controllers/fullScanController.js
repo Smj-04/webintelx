@@ -144,58 +144,73 @@ if (!validation.valid) {
       }
     }
 
-    // 2) Discover endpoints for SQLMap
-    let endpoints = [];
-    try {
-      endpoints = await endpointScanner(baseUrl);
-    } catch (e) {
-      endpoints = [];
-    }
-
-    // 3) Run SQLMap sequentially per endpoint (slow) and aggregate findings
-    /*const sqlFindings = [];
-    for (const target of endpoints) {
-      // call internal SQLMap API sequentially
-      const resSql = await safePost("http://localhost:5000/api/sqlmap", { url: target.url, param: target.param }, { timeout: 40000 });
-      if (resSql.ok && resSql.data && resSql.data.vulnerable) {
-        sqlFindings.push({ url: target.url, param: target.param, databases: resSql.data.databases || [] });
+      // 2) Discover endpoints for SQLMap
+      let endpoints = [];
+      try {
+        endpoints = await endpointScanner(baseUrl);
+      } catch (e) {
+        endpoints = [];
       }
-      // continue to next endpoint regardless of result
-    }
 
-    if (sqlFindings.length > 0) {
-      fullResult.vulnerabilities.sqlInjection.found = true;
-      fullResult.vulnerabilities.sqlInjection.details = { findings: sqlFindings };
-      fullResult.summary.high += 1; // SQLi counted once
-    }
+    // 3) Run SQLMap AND all other modules in parallel simultaneously
+
+//const [sqlResult, ...moduleResults] = await Promise.allSettled([
+
+      const moduleResults = await Promise.allSettled([
+      // SQLMap — stops immediately on first vulnerability found
+/*      
+      (async () => {
+        const sqlFindings = [];
+        for (const target of endpoints) {
+          const resSql = await safePost(
+            "http://localhost:5000/api/sqlmap",
+            { url: target.url, param: target.param },
+            { timeout: 40000 }
+          );
+          if (resSql.ok && resSql.data && resSql.data.vulnerable) {
+            sqlFindings.push({
+              url: target.url,
+              param: target.param,
+              databases: resSql.data.databases || []
+            });
+            console.log(`🔥 SQLi found — stopping endpoint loop early`);
+            break; // ← STOP after first vulnerability
+          }
+        }
+        return sqlFindings;
+      })(),
 */
+      // All other modules unchanged
+      axios.post("http://localhost:5000/api/dom-xss", { url: baseUrl }, { timeout: 60000 }),
+      axios.post("http://localhost:5000/api/stored-xss", { url: baseUrl }, { timeout: 60000 }),
+      axios.post("http://localhost:5000/api/autoxss", { url: baseUrl }, { timeout: 180000 }),
+      axios.post("http://localhost:5000/api/clickjacking", { url: baseUrl }, { timeout: 10000 }),
+      axios.post("http://localhost:5000/api/command-injection", { url: baseUrl }, { timeout: 20000 })
+    ]);
 
-      // 4) Run other modules in parallel (incl. AutoXSS -> reflected XSS)
-      const moduleCalls = await Promise.allSettled([
-        // DOM XSS
-        axios.post("http://localhost:5000/api/dom-xss", { url: baseUrl }, { timeout: 20000 }),
-        // Stored XSS
-        axios.post("http://localhost:5000/api/stored-xss", { url: baseUrl }, { timeout: 20000 }),
-        // Reflected / Auto XSS
-        axios.post("http://localhost:5000/api/autoxss", { url: baseUrl }, { timeout: 30000 }),
-        // Clickjacking
-        axios.post("http://localhost:5000/api/clickjacking", { url: baseUrl }, { timeout: 10000 }),
-        // Command Injection
-        axios.post("http://localhost:5000/api/command-injection", { url: baseUrl }, { timeout: 20000 })
-      ]);
+/*      // Process SQLMap result
+      if (sqlResult.status === 'fulfilled') {
+        const sqlFindings = sqlResult.value;
+        if (sqlFindings.length > 0) {
+          fullResult.vulnerabilities.sqlInjection.found = true;
+          fullResult.vulnerabilities.sqlInjection.details = { findings: sqlFindings };
+          fullResult.summary.high += 1;
+        }
+      }
+*/
+      // Process other modules (index shifted by 1 since sqlResult is index 0)
+      const safeModule = (settled) => {
+        if (!settled) return { ok: false };
+        if (settled.status === 'fulfilled') return { ok: true, data: settled.value.data };
+        return { ok: false, error: settled.reason?.message || String(settled.reason) };
+      };
 
-    // Helper to safely extract module result
-    const safeModule = (settled) => {
-      if (!settled) return { ok: false };
-      if (settled.status === 'fulfilled') return { ok: true, data: settled.value.data };
-      return { ok: false, error: settled.reason?.message || String(settled.reason) };
-    };
+      const domRes      = safeModule(moduleResults[0]);
+      const storedRes   = safeModule(moduleResults[1]);
+      const reflectedRes = safeModule(moduleResults[2]);
+      const clickRes    = safeModule(moduleResults[3]);
+      const cmdRes      = safeModule(moduleResults[4]);
 
-    const domRes = safeModule(moduleCalls[0]);
-    const storedRes = safeModule(moduleCalls[1]);
-    const reflectedRes = safeModule(moduleCalls[2]);
-    const clickRes = safeModule(moduleCalls[3]);
-    const cmdRes = safeModule(moduleCalls[4]);
 
     if (domRes.ok && domRes.data) {
       fullResult.vulnerabilities.domXss.found = !!domRes.data.vulnerable;

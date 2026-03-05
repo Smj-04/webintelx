@@ -279,6 +279,10 @@ exports.generateQuickScanPDF = async (req, res) => {
       doc.fontSize(11).text(`• ${key}: ${value}`);
     });
 
+    Object.entries(scanData.wappalyzer).forEach(([tech, version]) => {
+  pdf.text(`${tech} ${version !== "Unknown" ? version : ""}`);
+});
+
     doc.moveDown(1.5);
 
     /* =========================

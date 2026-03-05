@@ -1,3 +1,6 @@
+// This is the domXssController.js file in the controllers folder
+
+
 const { scanDOMXSS } = require("../utils/domXssCheck");
 
 exports.scanDOMXSS = async (req, res) => {

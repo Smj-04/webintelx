@@ -4,20 +4,18 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "start": "concurrently \"npm run main-frontend\" \"npm run main-backend\" \"npm run password-backend\" \"npm run password-frontend\"",
-
-  "main-frontend": "cd webintelx-frontend && npm start",
-  "main-backend": "cd webintelx-backend && node server.js",
-
-  "password-backend": "cd Password-hardener/Password-hardener/backend && npm run dev",
-  "password-frontend": "cd Password-hardener/Password-hardener/frontend && npm run dev"
-},
+    "start": "concurrently \"npm run main-frontend\" \"npm run main-backend\" \"npm run password-backend\" \"npm run password-frontend\"",
+    "main-frontend": "cd webintelx-frontend && npm start",
+    "main-backend": "cd webintelx-backend && node server.js",
+    "password-backend": "cd Password-hardener/Password-hardener/backend && npm run dev",
+    "password-frontend": "cd Password-hardener/Password-hardener/frontend && npm run dev"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@google/genai": "^1.34.0",
-    "axios": "^1.13.2",
+    "axios": "^1.13.6",
     "axios-cookiejar-support": "^6.0.5",
     "cheerio": "^1.1.2",
     "cors": "^2.8.5",

@@ -1,3 +1,5 @@
+// This is the storedXssController.js file in the controllers folder
+
 const { scanStoredXSS } = require("../utils/storedXssCheck");
 
 exports.scanStoredXSS = async (req, res) => {
