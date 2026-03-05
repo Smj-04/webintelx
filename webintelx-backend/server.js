@@ -52,6 +52,8 @@ app.use("/api", require("./routes/storedXssRoute"));
 app.use("/api", require("./routes/tokenAuthRoute"));
 app.use("/api", require("./routes/idorRoute"));
 app.use("/api", phishingCheckRoute);
+app.use("/api/csrf", require("./routes/csrfRoutes"));
+
 
 const PORT = 5000;
 

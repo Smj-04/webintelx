@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   FaSearch,
   FaBug,
@@ -145,6 +145,7 @@ const isValidURL = (url) => {
     setError("");
     setResults(null);
     setScanDone(false);
+    setTimeout(() => loaderRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
 
     try {
       const scanRes = await fetch("http://localhost:5000/api/quickscan", {
@@ -210,8 +211,9 @@ const isValidURL = (url) => {
     setIsDownloading(false);
   };
 
+  const loaderRef = useRef(null);
   const overallRisk = results ? calculateOverallRisk(results) : null;
-
+  
   const techStack = results?.wappalyzer
   ? Object.entries(results.wappalyzer).map(([tech, version]) =>
       version !== "Unknown" ? `${tech} ${version}` : tech
@@ -246,6 +248,7 @@ return (
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleScan()}
           placeholder="example.com"
           className="w-full mt-4 px-4 py-3 rounded-lg bg-slate-900 border border-slate-700 focus:border-sky-400 outline-none text-white"
         />
@@ -264,7 +267,7 @@ return (
 
     {/* LOADER */}
     {isScanning && (
-      <div className="relative z-10 mt-16 text-center animate-pulse">
+      <div ref={loaderRef} className="relative z-10 mt-16 text-center animate-pulse">
         <h2 className="text-2xl font-semibold text-sky-400">
           Running security checks…
         </h2>

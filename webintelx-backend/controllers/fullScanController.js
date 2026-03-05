@@ -107,7 +107,8 @@ if (!validation.valid) {
       storedXss: { found: false, details: null },
       reflectedXss: { found: false, details: null },
       clickjacking: { vulnerable: false, headers: {} },
-      commandInjection: { found: false, details: null }
+      commandInjection: { found: false, details: null },
+      csrf: { found: false, details: null }
     }
   };
 
@@ -185,7 +186,8 @@ if (!validation.valid) {
       axios.post("http://localhost:5000/api/stored-xss", { url: baseUrl }, { timeout: 60000 }),
       axios.post("http://localhost:5000/api/autoxss", { url: baseUrl }, { timeout: 180000 }),
       axios.post("http://localhost:5000/api/clickjacking", { url: baseUrl }, { timeout: 10000 }),
-      axios.post("http://localhost:5000/api/command-injection", { url: baseUrl }, { timeout: 20000 })
+      axios.post("http://localhost:5000/api/command-injection", { url: baseUrl }, { timeout: 20000 }),
+      axios.post("http://localhost:5000/api/csrf", { url: baseUrl }, { timeout: 60000 })
     ]);
 
 /*      // Process SQLMap result
@@ -210,6 +212,7 @@ if (!validation.valid) {
       const reflectedRes = safeModule(moduleResults[2]);
       const clickRes    = safeModule(moduleResults[3]);
       const cmdRes      = safeModule(moduleResults[4]);
+      const csrfRes     = safeModule(moduleResults[5]);
 
 
     if (domRes.ok && domRes.data) {
@@ -270,6 +273,14 @@ if (!validation.valid) {
       }
     }
 
+     if (csrfRes.ok && csrfRes.data) {
+      const csrfVulnerable = csrfRes.data.summary?.vulnerable > 0;
+      fullResult.vulnerabilities.csrf.found = csrfVulnerable;
+      fullResult.vulnerabilities.csrf.details = csrfRes.data || null;
+      if (csrfVulnerable) {
+        fullResult.summary.high += 1;
+      }
+    }
     // Finalize summary: no CRITICAL/LOW detector available in current heuristics
     // We'll keep critical and low as 0 unless future modules provide richer severity metadata
 
@@ -328,7 +339,9 @@ exports.generateFullScanPDF = async (scanData, target, res) => {
       { name: 'Stored XSS', found: vuln.storedXss.found },
       { name: 'Reflected XSS', found: vuln.reflectedXss?.found },
       { name: 'Clickjacking', found: vuln.clickjacking.vulnerable },
-      { name: 'Command Injection', found: vuln.commandInjection.found }
+      { name: 'Command Injection', found: vuln.commandInjection.found },
+      { name: 'CSRF', found: vuln.csrf?.found }
+
     ];
 
     rows.forEach((r, i) => {
@@ -441,6 +454,27 @@ exports.generateFullScanPDF = async (scanData, target, res) => {
       }
       doc.moveDown(0.5);
     }
+
+    if (vuln.csrf && vuln.csrf.found) {
+          doc.fontSize(14).fillColor('#1f2937').text('CSRF — Details', { underline: true });
+          doc.moveDown(0.5);
+          const csrfDetails = vuln.csrf.details || {};
+          const csrfSummary = csrfDetails.summary || {};
+          doc.fontSize(11).text(`Total Endpoints Tested: ${csrfSummary.totalEndpoints || 0}`);
+          doc.fontSize(11).text(`Vulnerable: ${csrfSummary.vulnerable || 0}`);
+          doc.fontSize(11).text(`Safe: ${csrfSummary.safe || 0}`);
+          doc.moveDown(0.4);
+          const csrfVulnEndpoints = csrfDetails.vulnerableEndpoints || [];
+          if (csrfVulnEndpoints.length > 0) {
+            doc.fontSize(11).text('Vulnerable Endpoints:');
+            csrfVulnEndpoints.slice(0, 10).forEach((ep, idx) => {
+              doc.fontSize(10).text(`${idx + 1}. ${ep.endpoint || 'Unknown'} [${ep.method || 'POST'}]`);
+              doc.fontSize(9).text(`   Status: ${ep.status}  Confidence: ${ep.confidence}  Risk: ${ep.risk}`);
+              doc.moveDown(0.2);
+            });
+          }
+          doc.moveDown(0.5);
+        }
 
     // Risk Classification
     doc.fontSize(14).fillColor('#1f2937').text('Risk Classification', { underline: true });

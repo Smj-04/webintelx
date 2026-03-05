@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
   FaSearch,
@@ -18,6 +18,7 @@ export default function FullScan() {
   const [expanded, setExpanded] = useState({});
   const [error, setError] = useState(null);
   const [showRawDomFindings, setShowRawDomFindings] = useState(false);
+  const loaderRef = useRef(null);
 
   // Trigger full scan via backend API and store unified result
   const handleScan = async () => {
@@ -27,6 +28,7 @@ export default function FullScan() {
     setScanDone(false);
     setScanResult(null);
     setError(null);
+    setTimeout(() => loaderRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
 
     try {
       const resp = await axios.post(
@@ -175,6 +177,7 @@ return (
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="example.com or company"
+          onKeyDown={(e) => e.key === "Enter" && handleScan()}
           className="w-full mt-3 px-4 py-3 rounded-lg bg-slate-900 text-white outline-none placeholder-slate-500 border border-slate-700 focus:border-sky-400"
         />
 
@@ -198,7 +201,7 @@ return (
 
     {/* Loading */}
     {isScanning && (
-      <div className="relative z-10 mt-12 text-center animate-pulse">
+      <div ref={loaderRef} className="relative z-10 mt-12 text-center animate-pulse">
         <h2 className="text-2xl font-semibold text-sky-400">Running Deep Scan...</h2>
         <p className="text-slate-400 mt-2">This may take several minutes</p>
 
@@ -464,6 +467,63 @@ return (
                                       <div>Parameter: <span className="text-yellow-300">{finding.parameter || 'Unknown'}</span></div>
                                       <div>Payload: <span className="text-green-300">{finding.payload ? finding.payload.substring(0, 40) : 'N/A'}...</span></div>
                                       <div>Evidence: <span className="text-blue-300">{finding.evidence || 'N/A'}</span></div>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div>No vulnerability detected</div>
+                      )}
+                    </ModuleBlock>
+                    {/* CSRF */}
+                    <ModuleBlock keyName="csrf" title="CSRF (Cross-Site Request Forgery)" found={!!v.csrf?.found}>
+                      {v.csrf?.found ? (
+                        <div className="space-y-3">
+                          <div>
+                            Total Endpoints Tested:{" "}
+                            <span className="text-blue-300 font-semibold">
+                              {v.csrf.details?.summary?.totalEndpoints || 0}
+                            </span>
+                          </div>
+                          <div>
+                            Vulnerable Endpoints:{" "}
+                            <span className="text-red-300 font-semibold">
+                              {v.csrf.details?.summary?.vulnerable || 0}
+                            </span>
+                          </div>
+                          <div>
+                            Safe Endpoints:{" "}
+                            <span className="text-green-300 font-semibold">
+                              {v.csrf.details?.summary?.safe || 0}
+                            </span>
+                          </div>
+                          {v.csrf.details?.vulnerableEndpoints?.length > 0 && (
+                            <div>
+                              <strong>Vulnerable Endpoints:</strong>
+                              <ul className="list-disc pl-5 mt-2 space-y-2">
+                                {v.csrf.details.vulnerableEndpoints.slice(0, 10).map((ep, idx) => (
+                                  <li key={idx} className="mb-2">
+                                    <div className="font-medium text-yellow-300 text-sm">
+                                      {ep.endpoint || "Unknown"}
+                                    </div>
+                                    <div className="ml-4 mt-1 text-sm space-y-1">
+                                      <div>
+                                        Method:{" "}
+                                        <span className="text-blue-300">{ep.method || "POST"}</span>
+                                      </div>
+                                      <div>
+                                        Confidence:{" "}
+                                        <span className="text-orange-300">{ep.confidence || "Unknown"}</span>
+                                      </div>
+                                      <div>
+                                        Risk:{" "}
+                                        <span className={ep.risk === "HIGH" ? "text-red-400 font-semibold" : "text-yellow-300"}>
+                                          {ep.risk || "MEDIUM"}
+                                        </span>
+                                      </div>
                                     </div>
                                   </li>
                                 ))}
