@@ -1,3 +1,5 @@
+#this is the domain checks module for phishing detection. It includes functions to check if a domain resolves, get SSL certificate expiration, and determine domain age. These features can help identify potentially malicious domains commonly used in phishing attacks. The module also implements a simple TTL cache to optimize performance for repeated checks on the same domains.
+
 import socket
 import ssl
 import time

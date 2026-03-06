@@ -1,3 +1,5 @@
+#this is check_model.py, a script to load the trained phishing detection model and verify if the "BrandSimilarity" feature is included. It prints the model's features and their importance, helping to confirm that the new feature is integrated correctly into the model.
+
 import joblib
 import pandas as pd
 

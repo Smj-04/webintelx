@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+// PhishingPage.jsx — WebIntelX Phishing Detection Module
+
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaShieldAlt, FaSearch, FaExclamationTriangle, FaCheckCircle, FaTimesCircle, FaLink } from "react-icons/fa";
+import { FaSearch, FaExclamationTriangle, FaCheckCircle, FaTimesCircle, FaLink, FaExclamationCircle } from "react-icons/fa";
 
 const FONT_URL = "https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap";
 
-// Parse a URL into colored token segments
+/* ── URL TOKENIZER ── */
 function tokenizeURL(raw) {
   if (!raw) return [];
   try {
@@ -72,6 +74,7 @@ function URLTokenizer({ url }) {
   );
 }
 
+/* ── THREAT METER ── */
 function ThreatMeter({ probability, accent }) {
   const [animated, setAnimated] = useState(0);
   useEffect(() => {
@@ -112,6 +115,33 @@ function ThreatMeter({ probability, accent }) {
   );
 }
 
+/* ── SCORE BAR ── */
+function ScoreBar({ label, value, accent }) {
+  const [animated, setAnimated] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => setAnimated(value), 120);
+    return () => clearTimeout(t);
+  }, [value]);
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(255,255,255,0.3)" }}>{label}</span>
+        <span style={{ fontFamily: "'Orbitron', monospace", fontSize: "11px", fontWeight: 700, color: accent }}>{Math.round(value)}%</span>
+      </div>
+      <div style={{ height: 4, background: "rgba(255,255,255,0.05)", borderRadius: 2 }}>
+        <div style={{
+          height: "100%", borderRadius: 2,
+          width: `${animated}%`,
+          background: accent,
+          boxShadow: `0 0 8px ${accent}60`,
+          transition: "width 0.8s cubic-bezier(0.23,1,0.32,1)",
+        }} />
+      </div>
+    </div>
+  );
+}
+
+/* ── SIGNAL GRID ── */
 const SIGNAL_CHECKS = [
   { label: "SSL", desc: "Certificate validity & CN mismatch", icon: "🔒" },
   { label: "DOMAIN AGE", desc: "WHOIS registration recency", icon: "📅" },
@@ -121,15 +151,113 @@ const SIGNAL_CHECKS = [
   { label: "REPUTATION", desc: "Safe Browsing & threat intel feeds", icon: "🛡" },
 ];
 
-const riskAccent = (risk) => {
-  const r = (risk || "").toUpperCase();
-  if (r === "HIGH" || r === "PHISHING") return "#ff6b35";
-  if (r === "MEDIUM" || r === "SUSPICIOUS") return "#fbbf24";
+/* ── HELPERS ── */
+const riskAccent = (riskLevel, prediction) => {
+  const r = (riskLevel || "").toUpperCase();
+  const p = (prediction || "").toUpperCase();
+  if (r === "CRITICAL" || r === "HIGH" || p === "PHISHING") return "#ff6b35";
+  if (r === "MODERATE" || r === "MEDIUM" || r === "SUSPICIOUS") return "#fbbf24";
   return "#00d4a0";
 };
 
+/**
+ * THREAT PROBABILITY — always the phishing confidence score (0–1).
+ *
+ * The ML model may predict "legitimate" even when the rule engine overrides
+ * to "Potential Phishing Website" (e.g. ebay-v.com: ML=legitimate 0.83,
+ * but rules escalate to CRITICAL 78%).
+ *
+ * Strategy:
+ *   - If classification IS phishing → use final_weighted_score / 100
+ *     (reflects the full rule+ML decision, not just the raw ML value)
+ *   - If classification is LEGITIMATE → use 1 - ml_probability
+ *     (model's own phishing estimate for truly clean sites)
+ *
+ * This ensures ebay-v.com shows 78% threat (from weighted score),
+ * not 17% (which was 1 - 0.83, the ML-only legitimate confidence).
+ */
+const phishingProbability = (results) => {
+  if (!results || results.ml_probability == null) return 0;
+
+  const isPhishingClassification =
+    results.classification?.toLowerCase().includes("phishing") ||
+    ["CRITICAL", "HIGH"].includes((results.risk_level || "").toUpperCase());
+
+  if (isPhishingClassification) {
+    // Use weighted score as the primary threat indicator
+    const weightedScore = results.scores?.final_weighted_score ?? 0;
+    return Math.min(weightedScore / 100, 1);
+  }
+
+  // Legitimate site: return the ML's own phishing estimate
+  return results.prediction === "phishing"
+    ? results.ml_probability
+    : 1 - results.ml_probability;
+};
+
+/**
+ * Build the flag rows to display.
+ * Always shows: SSL, BRAND_SIMILARITY, REACHABLE
+ * Conditionally adds: FREE_HOSTING, IP_URL, TYPOSQUAT_TARGET
+ */
+const buildFlagRows = (flags) => {
+  if (!flags) return [];
+
+  const rows = [
+    {
+      label: "SSL_VALID",
+      val: flags.ssl_valid ? "✓ VALID" : "✗ INVALID",
+      ok: flags.ssl_valid,
+    },
+    {
+      label: "BRAND_SIMILARITY",
+      val: `${((flags.brand_similarity ?? 0) * 100).toFixed(0)}%`,
+      ok: (flags.brand_similarity ?? 0) < 0.5,
+    },
+    {
+      label: "REACHABLE",
+      val: flags.unreachable ? "✗ NO" : "✓ YES",
+      ok: !flags.unreachable,
+    },
+  ];
+
+  // FREE HOSTING — always show if present in response
+  if (flags.free_hosting !== undefined) {
+    rows.push({
+      label: "FREE_HOSTING",
+      val: flags.free_hosting ? "✗ YES" : "✓ NO",
+      ok: !flags.free_hosting,
+    });
+  }
+
+  // IP URL
+  if (flags.ip_url) {
+    rows.push({
+      label: "IP_URL",
+      val: "✗ DETECTED",
+      ok: false,
+    });
+  }
+
+  // TYPOSQUAT — show brand name if detected
+  if (flags.typosquat_target) {
+    const score = flags.typosquat_score != null
+      ? ` (${(flags.typosquat_score * 100).toFixed(0)}%)`
+      : "";
+    rows.push({
+      label: "TYPOSQUAT",
+      val: `✗ ${flags.typosquat_target.toUpperCase()}${score}`,
+      ok: false,
+      highlight: true,  // extra visual emphasis
+    });
+  }
+
+  return rows;
+};
+
+/* ── MAIN COMPONENT ── */
 export default function PhishingDetection() {
-  const [url, setUrl] = useState("");
+  const [url, setUrl]         = useState("");
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -146,7 +274,22 @@ export default function PhishingDetection() {
     setLoading(false);
   };
 
-  const accent = results ? riskAccent(results.risk_level || results.prediction) : "#fbbf24";
+  const threatProb = phishingProbability(results);
+  const accent = results && !results.error && !results.message
+    ? riskAccent(results.risk_level, results.prediction)
+    : "#fbbf24";
+
+  const isPhishing = results?.classification?.toLowerCase().includes("phishing") ||
+    ["CRITICAL", "HIGH"].includes((results?.risk_level || "").toUpperCase());
+
+  const flagRows = buildFlagRows(results?.flags);
+
+  // Dynamic grid columns based on how many flags we have
+  const flagCols = flagRows.length <= 3
+    ? "repeat(3, 1fr)"
+    : flagRows.length === 4
+    ? "repeat(4, 1fr)"
+    : "repeat(3, 1fr)";  // 5-6: wrap to 2 rows of 3
 
   return (
     <div style={{ backgroundColor: "#0a0b0d", minHeight: "100vh", color: "#f0f4f0" }}>
@@ -155,7 +298,6 @@ export default function PhishingDetection() {
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
         @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        @keyframes shimmer { 0%{left:-100%} 100%{left:200%} }
         * { box-sizing:border-box; margin:0; padding:0; }
         ::selection { background:rgba(251,191,36,0.2); color:#fbbf24; }
         ::-webkit-scrollbar { width:2px; }
@@ -164,7 +306,6 @@ export default function PhishingDetection() {
         input::placeholder { color: rgba(251,191,36,0.25); }
       `}</style>
 
-      {/* Subtle top gradient wash */}
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "280px", background: "radial-gradient(ellipse 80% 200px at 50% 0%, rgba(251,191,36,0.04) 0%, transparent 100%)", pointerEvents: "none", zIndex: 0 }} />
 
       {/* NAVBAR */}
@@ -186,9 +327,8 @@ export default function PhishingDetection() {
           </svg>
           <span style={{ fontFamily: "'Orbitron', monospace", fontWeight: 900, fontSize: "13px", letterSpacing: "0.14em", color: "#00ff88" }}>WEBINTELX</span>
         </div>
-
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.2em", color: "rgba(251,191,36,0.35)", padding: "4px 10px", border: "1px solid rgba(251,191,36,0.12)", }}>MODULE_03</span>
+          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.2em", color: "rgba(251,191,36,0.35)", padding: "4px 10px", border: "1px solid rgba(251,191,36,0.12)" }}>MODULE_03</span>
           <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: loading ? "#fbbf24" : "#00ff88", boxShadow: `0 0 8px ${loading ? "#fbbf24" : "#00ff88"}`, animation: "pulse 2s ease-in-out infinite" }} />
           <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", color: loading ? "#fbbf24" : "rgba(0,255,136,0.5)", letterSpacing: "0.15em" }}>
             {loading ? "SCANNING" : "READY"}
@@ -198,11 +338,9 @@ export default function PhishingDetection() {
 
       <div style={{ position: "relative", zIndex: 2, maxWidth: "860px", margin: "0 auto", padding: "96px 32px 80px" }}>
 
-        {/* ── PAGE HEADER ── */}
+        {/* PAGE HEADER */}
         <div style={{ marginBottom: "56px", animation: "fadeUp 0.5s ease 0.1s both" }}>
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.35em", color: "rgba(251,191,36,0.4)", marginBottom: "16px" }}>
-            {"// PHISHING_DETECTION"}
-          </div>
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.35em", color: "rgba(251,191,36,0.4)", marginBottom: "16px" }}>{"// PHISHING_DETECTION"}</div>
           <h1 style={{ fontFamily: "'Orbitron', monospace", fontWeight: 900, fontSize: "clamp(30px, 4.5vw, 54px)", letterSpacing: "0.02em", lineHeight: 1, color: "#f0f4f0", marginBottom: "20px" }}>
             PHISHING<br />
             <span style={{ color: "#fbbf24", textShadow: "0 0 40px rgba(251,191,36,0.3)" }}>DETECTOR</span>
@@ -212,18 +350,12 @@ export default function PhishingDetection() {
           </p>
         </div>
 
-        {/* ── INPUT SECTION ── */}
+        {/* INPUT */}
         <div style={{ marginBottom: "48px", animation: "fadeUp 0.5s ease 0.2s both" }}>
-          <label style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.3em", color: "rgba(251,191,36,0.45)", display: "block", marginBottom: "10px" }}>
-            TARGET URL
-          </label>
-
+          <label style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.3em", color: "rgba(251,191,36,0.45)", display: "block", marginBottom: "10px" }}>TARGET URL</label>
           <div style={{ display: "flex", gap: "10px" }}>
             <div style={{ flex: 1, position: "relative" }}>
-              <FaLink style={{
-                position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)",
-                color: "rgba(251,191,36,0.3)", fontSize: "13px", pointerEvents: "none",
-              }} />
+              <FaLink style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "rgba(251,191,36,0.3)", fontSize: "13px", pointerEvents: "none" }} />
               <input
                 type="text"
                 value={url}
@@ -263,24 +395,16 @@ export default function PhishingDetection() {
               {loading ? "SCANNING" : "ANALYZE"}
             </button>
           </div>
-
-          {/* Live URL tokenizer */}
           {url && <URLTokenizer url={url} />}
         </div>
 
-        {/* ── SIGNAL GRID ── */}
+        {/* SIGNAL GRID — shown only before any result */}
         {!results && (
           <div style={{ marginBottom: "60px", animation: "fadeUp 0.5s ease 0.3s both" }}>
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.3em", color: "rgba(255,255,255,0.15)", marginBottom: "20px" }}>
-              {"// ACTIVE_SIGNALS"}
-            </div>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.3em", color: "rgba(255,255,255,0.15)", marginBottom: "20px" }}>{"// ACTIVE_SIGNALS"}</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "1px", background: "rgba(255,255,255,0.04)" }}>
               {SIGNAL_CHECKS.map((c, i) => (
-                <div key={i} style={{
-                  background: "#0a0b0d", padding: "20px 24px",
-                  transition: "background 0.2s",
-                  cursor: "default",
-                }}
+                <div key={i} style={{ background: "#0a0b0d", padding: "20px 24px", transition: "background 0.2s", cursor: "default" }}
                   onMouseEnter={e => e.currentTarget.style.background = "rgba(251,191,36,0.03)"}
                   onMouseLeave={e => e.currentTarget.style.background = "#0a0b0d"}
                 >
@@ -293,52 +417,76 @@ export default function PhishingDetection() {
           </div>
         )}
 
-        {/* ── RESULTS ── */}
-        {results && !results.error && (
-          <div style={{ animation: "fadeUp 0.5s ease both" }}>
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.3em", color: "rgba(255,255,255,0.15)", marginBottom: "20px" }}>
-              {"// ANALYSIS_COMPLETE"}
+        {/* ── "message" response — site unreachable / doesn't exist ── */}
+        {results && results.message && !results.error && (
+          <div style={{ animation: "fadeUp 0.4s ease both" }}>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.3em", color: "rgba(255,255,255,0.15)", marginBottom: "20px" }}>{"// ANALYSIS_COMPLETE"}</div>
+            <div style={{
+              padding: "28px 32px",
+              background: "rgba(251,191,36,0.04)",
+              border: "1px solid rgba(251,191,36,0.15)",
+              borderTop: "3px solid #fbbf24",
+              display: "flex", alignItems: "flex-start", gap: "16px",
+            }}>
+              <FaExclamationCircle style={{ color: "#fbbf24", fontSize: "22px", flexShrink: 0, marginTop: "2px" }} />
+              <div>
+                <div style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "14px", color: "#fbbf24", letterSpacing: "0.08em", marginBottom: "8px" }}>SITE UNREACHABLE</div>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: "15px", color: "rgba(200,220,200,0.55)", lineHeight: 1.7 }}>{results.message}</div>
+                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(251,191,36,0.35)", marginTop: "10px", letterSpacing: "0.1em" }}>
+                  TARGET: {results.url || url}
+                </div>
+              </div>
             </div>
+            <button onClick={() => { setResults(null); setUrl(""); }} style={{ marginTop: "16px", fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.2em", color: "rgba(255,255,255,0.3)", background: "transparent", border: "1px solid rgba(255,255,255,0.07)", padding: "10px 20px", cursor: "pointer", transition: "all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#fbbf24"; e.currentTarget.style.borderColor = "rgba(251,191,36,0.3)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.3)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; }}
+            >← SCAN ANOTHER URL</button>
+          </div>
+        )}
 
-            {/* Main result card */}
+        {/* ── FULL RESULTS ── */}
+        {results && !results.error && !results.message && results.prediction && (
+          <div style={{ animation: "fadeUp 0.5s ease both" }}>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.3em", color: "rgba(255,255,255,0.15)", marginBottom: "20px" }}>{"// ANALYSIS_COMPLETE"}</div>
+
+            {/* Main verdict card */}
             <div style={{
               background: "rgba(0,0,0,0.5)",
               border: `1px solid ${accent}20`,
               borderTop: `3px solid ${accent}`,
               padding: "36px",
               position: "relative", overflow: "hidden",
-              marginBottom: "16px",
+              marginBottom: "12px",
             }}>
-              {/* Corner accent */}
               <div style={{ position: "absolute", top: 0, right: 0, width: 0, height: 0, borderStyle: "solid", borderWidth: "0 56px 56px 0", borderColor: `transparent ${accent}12 transparent transparent` }} />
 
               {/* Verdict row */}
               <div style={{ display: "flex", alignItems: "center", gap: "20px", marginBottom: "28px", flexWrap: "wrap" }}>
                 <div>
-                  {(results.prediction || "").toUpperCase() === "PHISHING" || (results.risk_level || "").toUpperCase() === "HIGH"
+                  {isPhishing
                     ? <FaTimesCircle style={{ fontSize: "28px", color: accent, filter: `drop-shadow(0 0 8px ${accent})` }} />
                     : <FaCheckCircle style={{ fontSize: "28px", color: accent, filter: `drop-shadow(0 0 8px ${accent})` }} />
                   }
                 </div>
                 <div>
-                  <div style={{ fontFamily: "'Orbitron', monospace", fontWeight: 900, fontSize: "clamp(22px, 3vw, 36px)", color: accent, letterSpacing: "0.06em", lineHeight: 1 }}>
-                    {(results.prediction || "UNKNOWN").toUpperCase()}
+                  <div style={{ fontFamily: "'Orbitron', monospace", fontWeight: 900, fontSize: "clamp(18px, 2.5vw, 28px)", color: accent, letterSpacing: "0.06em", lineHeight: 1.1 }}>
+                    {results.classification || results.prediction.toUpperCase()}
                   </div>
-                  <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", marginTop: "4px" }}>
-                    {(results.risk_level || "").toUpperCase()} RISK LEVEL
+                  <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", marginTop: "6px" }}>
+                    ML: {results.prediction.toUpperCase()} &nbsp;·&nbsp; RISK: {(results.risk_level || "N/A").toUpperCase()}
                   </div>
                 </div>
               </div>
 
-              {/* Threat meter */}
-              <ThreatMeter probability={results.ml_probability || 0} accent={accent} />
+              {/* Threat meter — always shows phishing threat probability */}
+              <ThreatMeter probability={threatProb} accent={accent} />
 
-              {/* Stat row */}
+              {/* Stat grid */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1px", background: "rgba(255,255,255,0.04)", marginTop: "28px" }}>
                 {[
-                  { label: "ML CONFIDENCE", val: `${((results.ml_probability || 0) * 100).toFixed(1)}%` },
-                  { label: "RISK LEVEL", val: results.risk_level || "N/A" },
-                  { label: "VERDICT", val: results.prediction || "N/A" },
+                  { label: "THREAT_PROB", val: `${(threatProb * 100).toFixed(1)}%` },
+                  { label: "RISK_LEVEL",  val: results.risk_level || "N/A" },
+                  { label: "ML_VERDICT",  val: results.prediction || "N/A" },
                 ].map((item, i) => (
                   <div key={i} style={{ background: "#0a0b0d", padding: "16px 20px" }}>
                     <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "8px", letterSpacing: "0.2em", color: "rgba(255,255,255,0.2)", marginBottom: "6px" }}>{item.label}</div>
@@ -346,30 +494,66 @@ export default function PhishingDetection() {
                   </div>
                 ))}
               </div>
-
-              {/* Notes */}
-              {results.details && (
-                <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                  <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "8px", letterSpacing: "0.25em", color: "rgba(255,255,255,0.2)", marginBottom: "10px" }}>ANALYST_NOTES</div>
-                  <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: "15px", color: "rgba(200,220,200,0.5)", lineHeight: 1.8 }}>{results.details}</p>
-                </div>
-              )}
             </div>
 
-            {/* Scan another */}
-            <button
-              onClick={() => { setResults(null); setUrl(""); }}
-              style={{
-                fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.2em",
-                color: "rgba(255,255,255,0.3)", background: "transparent",
-                border: "1px solid rgba(255,255,255,0.07)", padding: "10px 20px",
-                cursor: "pointer", transition: "all 0.2s",
-              }}
+            {/* Score breakdown card */}
+            {results.scores && (
+              <div style={{
+                background: "rgba(0,0,0,0.4)", border: `1px solid ${accent}12`,
+                padding: "28px 32px", marginBottom: "12px",
+              }}>
+                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.25em", color: "rgba(255,255,255,0.2)", marginBottom: "18px" }}>{"// SCORE_BREAKDOWN"}</div>
+                <ScoreBar label="URL_SCORE"      value={results.scores.url_score     ?? 0} accent={accent} />
+                <ScoreBar label="DOMAIN_SCORE"   value={results.scores.domain_score  ?? 0} accent={accent} />
+                <ScoreBar label="CONTENT_SCORE"  value={results.scores.content_score ?? 0} accent={accent} />
+                <ScoreBar label="WEIGHTED_FINAL" value={results.scores.final_weighted_score ?? 0} accent={accent} />
+              </div>
+            )}
+
+            {/* Flags card — dynamic, shows all available flags */}
+            {flagRows.length > 0 && (
+              <div style={{
+                background: "rgba(0,0,0,0.4)", border: `1px solid ${accent}12`,
+                padding: "24px 32px", marginBottom: "12px",
+              }}>
+                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.25em", color: "rgba(255,255,255,0.2)", marginBottom: "18px" }}>{"// THREAT_FLAGS"}</div>
+                <div style={{ display: "grid", gridTemplateColumns: flagCols, gap: "1px", background: "rgba(255,255,255,0.04)" }}>
+                  {flagRows.map((f, i) => (
+                    <div key={i} style={{
+                      background: f.highlight ? `${accent}10` : "#0a0b0d",
+                      padding: "14px 18px",
+                      border: f.highlight ? `1px solid ${accent}30` : "none",
+                    }}>
+                      <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(255,255,255,0.2)", marginBottom: "6px" }}>{f.label}</div>
+                      <div style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "12px", color: f.ok ? "#00d4a0" : accent }}>
+                        {f.val}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Analyst notes */}
+            {results.details && (
+              <div style={{
+                background: "rgba(0,0,0,0.4)", border: `1px solid ${accent}12`,
+                padding: "24px 32px", marginBottom: "16px",
+              }}>
+                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "8px", letterSpacing: "0.25em", color: "rgba(255,255,255,0.2)", marginBottom: "10px" }}>ANALYST_NOTES</div>
+                <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: "15px", color: "rgba(200,220,200,0.5)", lineHeight: 1.8 }}>{results.details}</p>
+              </div>
+            )}
+
+            <button onClick={() => { setResults(null); setUrl(""); }} style={{
+              fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.2em",
+              color: "rgba(255,255,255,0.3)", background: "transparent",
+              border: "1px solid rgba(255,255,255,0.07)", padding: "10px 20px",
+              cursor: "pointer", transition: "all 0.2s",
+            }}
               onMouseEnter={e => { e.currentTarget.style.color = "#fbbf24"; e.currentTarget.style.borderColor = "rgba(251,191,36,0.3)"; }}
               onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.3)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; }}
-            >
-              ← SCAN ANOTHER URL
-            </button>
+            >← SCAN ANOTHER URL</button>
           </div>
         )}
 
