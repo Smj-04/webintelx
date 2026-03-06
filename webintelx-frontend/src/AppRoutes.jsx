@@ -5,6 +5,7 @@ import CustomScanPage from './pages/CustomScan';
 import QuickScanPage from './pages/QuickScan';
 import PhishingPage from './pages/PhishingPage';
 import FullScanPage from './pages/FullScan';
+import PasswordChecker from './pages/PasswordChecker'; // add this
 
 export default function AppRoutes() {
   return (
@@ -14,6 +15,7 @@ export default function AppRoutes() {
       <Route path="/full" element={<FullScanPage />} />
       <Route path="/custom" element={<FullScanPage />} />
       <Route path="/phishing" element={<PhishingPage />} />
+      <Route path="/password-checker" element={<PasswordChecker />} /> {/* add this */}
     </Routes>
   );
 }

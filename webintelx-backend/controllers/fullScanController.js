@@ -155,11 +155,11 @@ if (!validation.valid) {
 
     // 3) Run SQLMap AND all other modules in parallel simultaneously
 
-//const [sqlResult, ...moduleResults] = await Promise.allSettled([
+      const [sqlResult, ...moduleResults] = await Promise.allSettled([
 
-      const moduleResults = await Promise.allSettled([
+      //const moduleResults = await Promise.allSettled([
       // SQLMap — stops immediately on first vulnerability found
-/*      
+      
       (async () => {
         const sqlFindings = [];
         for (const target of endpoints) {
@@ -180,7 +180,7 @@ if (!validation.valid) {
         }
         return sqlFindings;
       })(),
-*/
+
       // All other modules unchanged
       axios.post("http://localhost:5000/api/dom-xss", { url: baseUrl }, { timeout: 60000 }),
       axios.post("http://localhost:5000/api/stored-xss", { url: baseUrl }, { timeout: 60000 }),
@@ -190,7 +190,7 @@ if (!validation.valid) {
       axios.post("http://localhost:5000/api/csrf", { url: baseUrl }, { timeout: 60000 })
     ]);
 
-/*      // Process SQLMap result
+      // Process SQLMap result
       if (sqlResult.status === 'fulfilled') {
         const sqlFindings = sqlResult.value;
         if (sqlFindings.length > 0) {
@@ -199,7 +199,7 @@ if (!validation.valid) {
           fullResult.summary.high += 1;
         }
       }
-*/
+
       // Process other modules (index shifted by 1 since sqlResult is index 0)
       const safeModule = (settled) => {
         if (!settled) return { ok: false };
