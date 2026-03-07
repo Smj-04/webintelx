@@ -33,7 +33,14 @@ app.use("/api/portscan", portscanRoute);
 app.use("/api/headers", headersRoute);
 app.use("/api/ssl", sslRoute);
 app.use("/api/quickscan", quickScanRoute);
+
+// ── FullScan routes (pause/resume must come BEFORE the generic /api/fullscan mount) ──
+const { pauseScan, resumeScan } = require('./controllers/fullScanController');
+app.post('/api/fullscan/pause', pauseScan);
+app.post('/api/fullscan/resume', resumeScan);
 app.use("/api/fullscan", require("./routes/fullScanRoute"));
+// ──────────────────────────────────────────────────────────────────────────────────────
+
 app.use("/api", xssRoutes);
 app.use("/api", autoXssRoute);
 app.use("/api", sqlmapRoute);
@@ -41,7 +48,6 @@ app.use("/api/report", reportRoute);
 app.use("/api/wordpress", wordpressRoute);
 
 app.use("/api", require("./routes/aiReportRoute"));
-
 app.use("/api", require("./routes/clickjackingRoute"));
 app.use("/api", require("./routes/leakcheckRoute"));
 app.use("/api", require("./routes/emailRepRoute"));
@@ -60,10 +66,9 @@ app.use("/api/open-redirect", require("./routes/openRedirectRoute"));
 app.use("/api/cors", require("./routes/corsRoute"));
 
 const PORT = 5000;
-
 const server = app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
 });
 
-server.timeout = 1500000; // 25 minutes — covers the longest possible full scan
+server.timeout = 1500000;
 console.log("Gemini Key Loaded:", process.env.GEMINI_API_KEY ? "YES" : "NO");

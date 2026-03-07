@@ -8,15 +8,6 @@ const sensitiveFileCheck = require("../utils/sensitiveFileCheck");
 const openRedirectCheck = require("../utils/openRedirectCheck");
 const corsCheck = require("../utils/corsCheck");
 
-/*
-  FullScan orchestration controller
-  - Runs a QuickScan (summary extraction only)
-  - Runs SQLMap sequentially across discovered endpoints
-  - Runs other vulnerability modules in parallel
-  - Aggregates results into the required unified output schema
-  - Exposes `generateFullScanPDF` for PDF generation (same style as QuickScan)
-*/
-
 // Helper: safe axios POST wrapper that returns settled result
 async function safePost(url, body, opts = {}) {
   try {
@@ -27,36 +18,34 @@ async function safePost(url, body, opts = {}) {
   }
 }
 
+const scanStates = {};
+
+async function waitIfPaused(scanId) {
+  while (scanStates[scanId] === 'paused') {
+    await new Promise(r => setTimeout(r, 500));
+  }
+}
+
 // ==========================
 // 🔹 TARGET VALIDATION
 // ==========================
 
 async function validateTarget(url) {
   try {
-    const formatted = url.startsWith("http")
-      ? url
-      : `http://${url}`;
-
+    const formatted = url.startsWith("http") ? url : `http://${url}`;
     const hostname = new URL(formatted).hostname;
-
-    // 1️⃣ DNS resolution check
     await dns.lookup(hostname);
-
-    // 2️⃣ Try HTTPS first, fallback to HTTP
     try {
       await axios.get(`https://${hostname}`, { timeout: 5000 });
     } catch {
       await axios.get(`http://${hostname}`, { timeout: 5000 });
     }
-
     return { valid: true };
   } catch (err) {
-    return {
-      valid: false,
-      error: "Target is not reachable or does not exist",
-    };
+    return { valid: false, error: "Target is not reachable or does not exist" };
   }
 }
+
 exports.fullScan = async (req, res) => {
   console.log("🔥 FULLSCAN CONTROLLER LOADED");
 
@@ -65,43 +54,24 @@ exports.fullScan = async (req, res) => {
 
   const startedAt = new Date().toISOString();
   const baseUrl = cleanUrl(url);
+  const scanId = Date.now().toString();
+  scanStates[scanId] = 'running';
 
-  // ==========================
-// 🔹 VALIDATE TARGET HERE
-// ==========================
-const validation = await validateTarget(baseUrl);
+  const validation = await validateTarget(baseUrl);
+  if (!validation.valid) {
+    delete scanStates[scanId];
+    return res.status(400).json({ success: false, error: validation.error });
+  }
 
-if (!validation.valid) {
-  return res.status(400).json({
-    success: false,
-    error: validation.error
-  });
-}
-  // Prepare the unified response skeleton
   const fullResult = {
     success: true,
     target: null,
     scanType: "FULL",
-    meta: {
-      startedAt,
-      completedAt: null
-    },
-    summary: {
-      critical: 0,
-      high: 0,
-      medium: 0,
-      low: 0
-    },
+    meta: { startedAt, completedAt: null },
+    summary: { critical: 0, high: 0, medium: 0, low: 0 },
     quickscan: {
-      attackSurface: {
-        subdomainCount: 0,
-        endpointCount: 0,
-        openPorts: 0
-      },
-      technology: {
-        backend: null,
-        ssl: false
-      }
+      attackSurface: { subdomainCount: 0, endpointCount: 0, openPorts: 0 },
+      technology: { backend: null, ssl: false }
     },
     vulnerabilities: {
       sqlInjection: { found: false, details: null },
@@ -119,31 +89,24 @@ if (!validation.valid) {
   };
 
   try {
-    // 1) Run QuickScan (summary only)
+    // 1) Run QuickScan
     const quick = await safePost("http://localhost:5000/api/quickscan", { url: baseUrl }, { timeout: 30000 });
 
     if (quick.ok && quick.data && quick.data.success) {
       const qs = quick.data.data || {};
       try {
-        const parsedTarget = new URL(baseUrl).hostname;
-        fullResult.target = parsedTarget;
+        fullResult.target = new URL(baseUrl).hostname;
       } catch (e) {
         fullResult.target = baseUrl;
       }
-
       fullResult.quickscan.attackSurface.subdomainCount = qs.securityTrails?.subdomainCount || 0;
       fullResult.quickscan.attackSurface.endpointCount = Array.isArray(qs.endpoints) ? qs.endpoints.length : 0;
       fullResult.quickscan.attackSurface.openPorts = Array.isArray(qs.openPorts) ? qs.openPorts.length : 0;
-
-      // Backend technology from headers
       const headers = qs.headers && typeof qs.headers === 'object' ? qs.headers : {};
       fullResult.quickscan.technology.backend = headers['x-powered-by'] || headers['server'] || null;
       fullResult.quickscan.technology.ssl = !!(qs.ssl && !qs.ssl.error);
-
-      // Keep clickjacking headers fallback
       fullResult.vulnerabilities.clickjacking.headers = headers;
     } else {
-      // QuickScan failed: set target and continue
       try {
         fullResult.target = new URL(baseUrl).hostname;
       } catch (e) {
@@ -151,24 +114,22 @@ if (!validation.valid) {
       }
     }
 
-      // 2) Discover endpoints for SQLMap
-      let endpoints = [];
-      try {
-        endpoints = await endpointScanner(baseUrl);
-      } catch (e) {
-        endpoints = [];
-      }
+    // 2) Discover endpoints for SQLMap
+    let endpoints = [];
+    try {
+      endpoints = await endpointScanner(baseUrl);
+    } catch (e) {
+      endpoints = [];
+    }
 
-    // 3) Run SQLMap AND all other modules in parallel simultaneously
+    // 3) Run all modules in parallel
+    const [sqlResult, ...moduleResults] = await Promise.allSettled([
 
-      const [sqlResult, ...moduleResults] = await Promise.allSettled([
-
-      //const moduleResults = await Promise.allSettled([
-      // SQLMap — stops immediately on first vulnerability found
-      
+      // SQLMap with pause support between endpoint iterations
       (async () => {
         const sqlFindings = [];
         for (const target of endpoints) {
+          await waitIfPaused(scanId); // ← pause checkpoint
           const resSql = await safePost(
             "http://localhost:5000/api/sqlmap",
             { url: target.url, param: target.param },
@@ -181,13 +142,12 @@ if (!validation.valid) {
               databases: resSql.data.databases || []
             });
             console.log(`🔥 SQLi found — stopping endpoint loop early`);
-            break; // ← STOP after first vulnerability
+            break;
           }
         }
         return sqlFindings;
       })(),
 
-      // All other modules unchanged
       axios.post("http://localhost:5000/api/dom-xss", { url: baseUrl }, { timeout: 300000 }),
       axios.post("http://localhost:5000/api/stored-xss", { url: baseUrl }, { timeout: 180000 }),
       axios.post("http://localhost:5000/api/autoxss", { url: baseUrl }, { timeout: 180000 }),
@@ -196,76 +156,60 @@ if (!validation.valid) {
       axios.post("http://localhost:5000/api/csrf", { url: baseUrl }, { timeout: 180000 }),
       axios.post("http://localhost:5000/api/sensitive-files", { url: baseUrl }, { timeout: 180000 }),
       axios.post("http://localhost:5000/api/open-redirect", { url: baseUrl }, { timeout: 60000 }),
-      axios.post("http://localhost:5000/api/cors",{ url: baseUrl }, { timeout: 60000 }),
+      axios.post("http://localhost:5000/api/cors", { url: baseUrl }, { timeout: 60000 }),
       axios.post("http://localhost:5000/api/wordpress/scan", { url: baseUrl }, { timeout: 60000 }),
     ]);
 
-      // Process SQLMap result
-      if (sqlResult.status === 'fulfilled') {
-        const sqlFindings = sqlResult.value;
-        if (sqlFindings.length > 0) {
-          fullResult.vulnerabilities.sqlInjection.found = true;
-          fullResult.vulnerabilities.sqlInjection.details = { findings: sqlFindings };
-          fullResult.summary.high += 1;
-        }
-      }
-
-      // Process other modules (index shifted by 1 since sqlResult is index 0)
-      const safeModule = (settled) => {
-        if (!settled) return { ok: false };
-        if (settled.status === 'fulfilled') return { ok: true, data: settled.value.data };
-        return { ok: false, error: settled.reason?.message || String(settled.reason) };
-      };
-
-      const domRes      = safeModule(moduleResults[0]);
-      const storedRes   = safeModule(moduleResults[1]);
-      const reflectedRes = safeModule(moduleResults[2]);
-      const clickRes    = safeModule(moduleResults[3]);
-      const cmdRes      = safeModule(moduleResults[4]);
-      const csrfRes     = safeModule(moduleResults[5]);
-      const sensitiveRes = safeModule(moduleResults[6]);
-      const openRedirectRes = safeModule(moduleResults[7]);
-      const corsRes = safeModule(moduleResults[8]);
-      const wordpressRes = safeModule(moduleResults[9]);
-
-
-
-
-
-    if (domRes.ok && domRes.data) {
-      fullResult.vulnerabilities.domXss.found = !!domRes.data.vulnerable;
-      fullResult.vulnerabilities.domXss.details = domRes.data || null;
-      if (domRes.data.vulnerable) {
-        fullResult.summary.medium += 1;
-      }
-    }
-
-
-    if (storedRes.ok && storedRes.data) {
-      fullResult.vulnerabilities.storedXss.found = !!storedRes.data.vulnerable;
-      fullResult.vulnerabilities.storedXss.details = storedRes.data || null;
-      if (storedRes.data.vulnerable) {
+    // Process SQLMap result
+    if (sqlResult.status === 'fulfilled') {
+      const sqlFindings = sqlResult.value;
+      if (sqlFindings.length > 0) {
+        fullResult.vulnerabilities.sqlInjection.found = true;
+        fullResult.vulnerabilities.sqlInjection.details = { findings: sqlFindings };
         fullResult.summary.high += 1;
       }
     }
 
-    // Reflected / Auto XSS
+    const safeModule = (settled) => {
+      if (!settled) return { ok: false };
+      if (settled.status === 'fulfilled') return { ok: true, data: settled.value.data };
+      return { ok: false, error: settled.reason?.message || String(settled.reason) };
+    };
+
+    const domRes         = safeModule(moduleResults[0]);
+    const storedRes      = safeModule(moduleResults[1]);
+    const reflectedRes   = safeModule(moduleResults[2]);
+    const clickRes       = safeModule(moduleResults[3]);
+    const cmdRes         = safeModule(moduleResults[4]);
+    const csrfRes        = safeModule(moduleResults[5]);
+    const sensitiveRes   = safeModule(moduleResults[6]);
+    const openRedirectRes = safeModule(moduleResults[7]);
+    const corsRes        = safeModule(moduleResults[8]);
+    const wordpressRes   = safeModule(moduleResults[9]);
+
+    if (domRes.ok && domRes.data) {
+      fullResult.vulnerabilities.domXss.found = !!domRes.data.vulnerable;
+      fullResult.vulnerabilities.domXss.details = domRes.data || null;
+      if (domRes.data.vulnerable) fullResult.summary.medium += 1;
+    }
+
+    if (storedRes.ok && storedRes.data) {
+      fullResult.vulnerabilities.storedXss.found = !!storedRes.data.vulnerable;
+      fullResult.vulnerabilities.storedXss.details = storedRes.data || null;
+      if (storedRes.data.vulnerable) fullResult.summary.high += 1;
+    }
+
     if (reflectedRes.ok && reflectedRes.data) {
       const vulnerableEndpoints = reflectedRes.data.vulnerableEndpoints || [];
       const vulnerableCount = Array.isArray(vulnerableEndpoints) ? vulnerableEndpoints.length : 0;
       fullResult.vulnerabilities.reflectedXss.found = vulnerableCount > 0;
-      // Store all AutoXSS data: testedEndpoints, vulnerableEndpoints
       fullResult.vulnerabilities.reflectedXss.details = {
         testedEndpoints: reflectedRes.data.testedEndpoints || 0,
-        vulnerableEndpoints: vulnerableEndpoints,
+        vulnerableEndpoints,
         base: reflectedRes.data.base || null
       };
-      if (vulnerableCount > 0) {
-        fullResult.summary.medium += 1;
-      }
+      if (vulnerableCount > 0) fullResult.summary.medium += 1;
     }
-
-
 
     if (clickRes.ok && clickRes.data) {
       fullResult.vulnerabilities.clickjacking = {
@@ -275,87 +219,70 @@ if (!validation.valid) {
           headers: fullResult.vulnerabilities.clickjacking.headers || {}
         }
       };
-
-      if (clickRes.data.vulnerable) {
-        fullResult.summary.low += 1;
-      }
+      if (clickRes.data.vulnerable) fullResult.summary.low += 1;
     }
-
 
     if (cmdRes.ok && cmdRes.data) {
       fullResult.vulnerabilities.commandInjection.found = !!cmdRes.data.vulnerable;
       fullResult.vulnerabilities.commandInjection.details = cmdRes.data || null;
-      if (cmdRes.data.vulnerable) {
-        fullResult.summary.high += 1;
-      }
+      if (cmdRes.data.vulnerable) fullResult.summary.high += 1;
     }
 
-     if (csrfRes.ok && csrfRes.data) {
+    if (csrfRes.ok && csrfRes.data) {
       const csrfVulnerable = csrfRes.data.summary?.vulnerable > 0;
       fullResult.vulnerabilities.csrf.found = csrfVulnerable;
       fullResult.vulnerabilities.csrf.details = csrfRes.data || null;
-      if (csrfVulnerable) {
-        fullResult.summary.high += 1;
-      }
+      if (csrfVulnerable) fullResult.summary.high += 1;
     }
 
     if (sensitiveRes.ok && sensitiveRes.data) {
       fullResult.vulnerabilities.sensitiveFiles.found = !!sensitiveRes.data.vulnerable;
       fullResult.vulnerabilities.sensitiveFiles.details = sensitiveRes.data || null;
-      if (sensitiveRes.data.summary?.critical > 0) {
-        fullResult.summary.critical += 1;
-      } else if (sensitiveRes.data.summary?.high > 0) {
-        fullResult.summary.high += 1;
-      } else if (sensitiveRes.data.vulnerable) {
-        fullResult.summary.medium += 1;
+      if (sensitiveRes.data.summary?.critical > 0) fullResult.summary.critical += 1;
+      else if (sensitiveRes.data.summary?.high > 0) fullResult.summary.high += 1;
+      else if (sensitiveRes.data.vulnerable) fullResult.summary.medium += 1;
+    }
+
+    if (openRedirectRes.ok && openRedirectRes.data) {
+      fullResult.vulnerabilities.openRedirect.found = !!openRedirectRes.data.vulnerable;
+      fullResult.vulnerabilities.openRedirect.details = openRedirectRes.data || null;
+      if (openRedirectRes.data.vulnerable) fullResult.summary.high += 1;
+    }
+
+    if (corsRes.ok && corsRes.data) {
+      fullResult.vulnerabilities.cors.found = !!corsRes.data.vulnerable;
+      fullResult.vulnerabilities.cors.details = corsRes.data || null;
+      if (corsRes.data.vulnerable) {
+        const hasCritical = corsRes.data.summary?.critical > 0;
+        const hasHigh = corsRes.data.summary?.high > 0;
+        if (hasCritical) fullResult.summary.critical += 1;
+        else if (hasHigh) fullResult.summary.high += 1;
+        else fullResult.summary.medium += 1;
       }
     }
 
-      // --- Open Redirect --- (moduleResults[7])
-      if (openRedirectRes.ok && openRedirectRes.data) {
-        fullResult.vulnerabilities.openRedirect.found = !!openRedirectRes.data.vulnerable;
-        fullResult.vulnerabilities.openRedirect.details = openRedirectRes.data || null;
-        if (openRedirectRes.data.vulnerable) {
-          fullResult.summary.high += 1;
-        }
+    if (wordpressRes.ok && wordpressRes.data) {
+      const wp = wordpressRes.data;
+      if (wp.isWordPress) {
+        fullResult.vulnerabilities.wordpress.found = true;
+        fullResult.vulnerabilities.wordpress.details = wp;
+        const score = wp.riskScore?.level;
+        if (score === "CRITICAL") fullResult.summary.critical += 1;
+        else if (score === "HIGH") fullResult.summary.high += 1;
+        else if (score === "MEDIUM") fullResult.summary.medium += 1;
+        else fullResult.summary.low += 1;
       }
-
-      // --- CORS --- (moduleResults[8])
-      if (corsRes.ok && corsRes.data) {
-        fullResult.vulnerabilities.cors.found = !!corsRes.data.vulnerable;
-        fullResult.vulnerabilities.cors.details = corsRes.data || null;
-        if (corsRes.data.vulnerable) {
-          const hasCritical = corsRes.data.summary?.critical > 0;
-          const hasHigh = corsRes.data.summary?.high > 0;
-          if (hasCritical) fullResult.summary.critical += 1;
-          else if (hasHigh) fullResult.summary.high += 1;
-          else fullResult.summary.medium += 1;
-        }
-      }
-
-      // --- WordPress --- (moduleResults[9])
-      if (wordpressRes.ok && wordpressRes.data) {
-        const wp = wordpressRes.data;
-        if (wp.isWordPress) {
-          fullResult.vulnerabilities.wordpress.found = true;
-          fullResult.vulnerabilities.wordpress.details = wp;
-
-          const score = wp.riskScore?.level;
-          if (score === "CRITICAL") fullResult.summary.critical += 1;
-          else if (score === "HIGH") fullResult.summary.high += 1;
-          else if (score === "MEDIUM") fullResult.summary.medium += 1;
-          else fullResult.summary.low += 1;
-        }
-      }
-    // Finalize summary: no CRITICAL/LOW detector available in current heuristics
-    // We'll keep critical and low as 0 unless future modules provide richer severity metadata
+    }
 
     fullResult.meta.completedAt = new Date().toISOString();
+    delete scanStates[scanId];
 
-    return res.json(fullResult);
+    return res.json({ ...fullResult, scanId });
+
   } catch (err) {
     console.error("FullScan orchestration failed:", err);
     fullResult.meta.completedAt = new Date().toISOString();
+    delete scanStates[scanId];
     return res.status(500).json({
       success: false,
       error: "FullScan failed to complete",
@@ -365,7 +292,34 @@ if (!validation.valid) {
   }
 };
 
-// Minimal FullScan PDF generator matching QuickScan style
+// ==========================
+// 🔹 PAUSE / RESUME
+// ==========================
+
+exports.pauseScan = (req, res) => {
+  const { scanId } = req.body;
+  if (scanId && scanStates[scanId] !== undefined) {
+    scanStates[scanId] = 'paused';
+    console.log(`⏸ Scan ${scanId} paused`);
+    return res.json({ status: 'paused', scanId });
+  }
+  return res.status(404).json({ error: 'Scan not found or already completed' });
+};
+
+exports.resumeScan = (req, res) => {
+  const { scanId } = req.body;
+  if (scanId && scanStates[scanId] !== undefined) {
+    scanStates[scanId] = 'running';
+    console.log(`▶ Scan ${scanId} resumed`);
+    return res.json({ status: 'running', scanId });
+  }
+  return res.status(404).json({ error: 'Scan not found or already completed' });
+};
+
+// ==========================
+// 🔹 PDF GENERATOR
+// ==========================
+
 exports.generateFullScanPDF = async (scanData, target, res) => {
   try {
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
@@ -373,19 +327,16 @@ exports.generateFullScanPDF = async (scanData, target, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="FullScan-${target}.pdf"`);
     doc.pipe(res);
 
-    // Cover
     doc.fontSize(22).fillColor('#1e40af').text('WebIntelX – Full Scan Security Report', { align: 'center' });
     doc.moveDown(1.5);
     doc.fontSize(12).fillColor('black').text(`Target: ${target}`).text('Scan Type: Full Scan').text(`Generated On: ${new Date().toUTCString()}`);
     doc.moveDown(1.5);
 
-    // Executive Summary
     doc.fontSize(16).fillColor('#111827').text('Executive Summary', { underline: true });
     doc.moveDown(0.5);
     doc.fontSize(11).fillColor('black').text('This Full Scan aggregates QuickScan reconnaissance and targeted vulnerability tests (SQLi, DOM XSS, Stored XSS, Reflected XSS, Clickjacking, Command Injection). Findings are risk-classified for prioritization.');
     doc.moveDown(1);
 
-    // Attack Surface Summary
     doc.fontSize(14).fillColor('#1f2937').text('Attack Surface Summary', { underline: true });
     doc.moveDown(0.5);
     doc.fontSize(11).fillColor('black').text(
@@ -395,7 +346,6 @@ exports.generateFullScanPDF = async (scanData, target, res) => {
     );
     doc.moveDown(1);
 
-    // Vulnerability Summary Table (simple list)
     doc.fontSize(14).fillColor('#1f2937').text('Vulnerability Summary', { underline: true });
     doc.moveDown(0.6);
     const vuln = scanData.vulnerabilities;
@@ -407,17 +357,16 @@ exports.generateFullScanPDF = async (scanData, target, res) => {
       { name: 'Clickjacking', found: vuln.clickjacking.vulnerable },
       { name: 'Command Injection', found: vuln.commandInjection.found },
       { name: 'CSRF', found: vuln.csrf?.found },
-      { name: 'Sensitive File Exposure', found: vuln.sensitiveFiles?.found }
-
+      { name: 'Sensitive File Exposure', found: vuln.sensitiveFiles?.found },
+      { name: 'Open Redirect', found: vuln.openRedirect?.found },
+      { name: 'CORS Misconfiguration', found: vuln.cors?.found },
+      { name: 'WordPress Security', found: vuln.wordpress?.found },
     ];
-
     rows.forEach((r, i) => {
       doc.fontSize(11).text(`${i + 1}. ${r.name} — ${r.found ? 'Detected' : 'Not Detected'}`);
     });
-
     doc.moveDown(1);
 
-    // Detailed Vulnerability Sections
     if (vuln.sqlInjection.found) {
       doc.fontSize(14).fillColor('#1f2937').text('SQL Injection — Details', { underline: true });
       doc.moveDown(0.5);
@@ -471,18 +420,15 @@ exports.generateFullScanPDF = async (scanData, target, res) => {
       doc.fontSize(11).text(`Endpoints tested: ${refDetails.testedEndpoints || 0}`);
       doc.fontSize(11).text(`Vulnerable endpoints found: ${(refDetails.vulnerableEndpoints || []).length || 0}`);
       doc.moveDown(0.5);
-      const vulnEndpoints = refDetails.vulnerableEndpoints || [];
-      if (vulnEndpoints.length > 0) {
-        vulnEndpoints.slice(0, 10).forEach((ep, idx) => {
-          doc.fontSize(10).text(`${idx + 1}. URL: ${ep.url || 'Unknown'}`);
-          if (Array.isArray(ep.findings) && ep.findings.length > 0) {
-            ep.findings.slice(0, 3).forEach((f) => {
-              doc.fontSize(9).text(`   - ${f.type || 'Finding'}: ${f.evidence || 'Detected'} (${f.confidence || 'unknown'})`);
-            });
-          }
-          doc.moveDown(0.2);
-        });
-      }
+      (refDetails.vulnerableEndpoints || []).slice(0, 10).forEach((ep, idx) => {
+        doc.fontSize(10).text(`${idx + 1}. URL: ${ep.url || 'Unknown'}`);
+        if (Array.isArray(ep.findings) && ep.findings.length > 0) {
+          ep.findings.slice(0, 3).forEach((f) => {
+            doc.fontSize(9).text(`   - ${f.type || 'Finding'}: ${f.evidence || 'Detected'} (${f.confidence || 'unknown'})`);
+          });
+        }
+        doc.moveDown(0.2);
+      });
       doc.moveDown(0.5);
     }
 
@@ -523,38 +469,36 @@ exports.generateFullScanPDF = async (scanData, target, res) => {
     }
 
     if (vuln.csrf && vuln.csrf.found) {
-          doc.fontSize(14).fillColor('#1f2937').text('CSRF — Details', { underline: true });
-          doc.moveDown(0.5);
-          const csrfDetails = vuln.csrf.details || {};
-          const csrfSummary = csrfDetails.summary || {};
-          doc.fontSize(11).text(`Total Endpoints Tested: ${csrfSummary.totalEndpoints || 0}`);
-          doc.fontSize(11).text(`Vulnerable: ${csrfSummary.vulnerable || 0}`);
-          doc.fontSize(11).text(`Safe: ${csrfSummary.safe || 0}`);
-          doc.moveDown(0.4);
-          const csrfVulnEndpoints = csrfDetails.vulnerableEndpoints || [];
-          if (csrfVulnEndpoints.length > 0) {
-            doc.fontSize(11).text('Vulnerable Endpoints:');
-            csrfVulnEndpoints.slice(0, 10).forEach((ep, idx) => {
-              doc.fontSize(10).text(`${idx + 1}. ${ep.endpoint || 'Unknown'} [${ep.method || 'POST'}]`);
-              doc.fontSize(9).text(`   Status: ${ep.status}  Confidence: ${ep.confidence}  Risk: ${ep.risk}`);
-              doc.moveDown(0.2);
-            });
-          }
-          doc.moveDown(0.5);
-        }
+      doc.fontSize(14).fillColor('#1f2937').text('CSRF — Details', { underline: true });
+      doc.moveDown(0.5);
+      const csrfDetails = vuln.csrf.details || {};
+      const csrfSummary = csrfDetails.summary || {};
+      doc.fontSize(11).text(`Total Endpoints Tested: ${csrfSummary.totalEndpoints || 0}`);
+      doc.fontSize(11).text(`Vulnerable: ${csrfSummary.vulnerable || 0}`);
+      doc.fontSize(11).text(`Safe: ${csrfSummary.safe || 0}`);
+      doc.moveDown(0.4);
+      const csrfVulnEndpoints = csrfDetails.vulnerableEndpoints || [];
+      if (csrfVulnEndpoints.length > 0) {
+        doc.fontSize(11).text('Vulnerable Endpoints:');
+        csrfVulnEndpoints.slice(0, 10).forEach((ep, idx) => {
+          doc.fontSize(10).text(`${idx + 1}. ${ep.endpoint || 'Unknown'} [${ep.method || 'POST'}]`);
+          doc.fontSize(9).text(`   Status: ${ep.status}  Confidence: ${ep.confidence}  Risk: ${ep.risk}`);
+          doc.moveDown(0.2);
+        });
+      }
+      doc.moveDown(0.5);
+    }
 
-    // Risk Classification
     doc.fontSize(14).fillColor('#1f2937').text('Risk Classification', { underline: true });
     doc.moveDown(0.6);
     doc.fontSize(11).fillColor('black').text(
       `Critical: ${scanData.summary.critical}  High: ${scanData.summary.high}  Medium: ${scanData.summary.medium}  Low: ${scanData.summary.low}`
     );
-
     doc.moveDown(1.2);
     doc.fontSize(10).fillColor('gray').text('Generated by WebIntelX – For security assessment purposes only', { align: 'center' });
     doc.end();
   } catch (err) {
     console.error('FullScan PDF generation failed:', err);
-    try { res.status(500).json({ error: 'PDF generation failed' }); } catch(e){}
+    try { res.status(500).json({ error: 'PDF generation failed' }); } catch(e) {}
   }
 };

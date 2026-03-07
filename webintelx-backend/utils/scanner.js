@@ -27,6 +27,12 @@ const portNames = {
   993: "IMAPS",
   995: "POP3S",
   3306: "MySQL",
+  3389: "RDP",
+  5432: "PostgreSQL",
+  6379: "Redis",
+  8080: "HTTP-Alt",
+  8443: "HTTPS-Alt",
+  27017: "MongoDB",
 };
 
 // ------------------------------------------------------
@@ -51,45 +57,51 @@ module.exports = {
   // -------------------------------------
   // Traceroute / Tracert
   // -------------------------------------
-  traceroute: (target) => runCommand(`tracert ${target}`),
+  traceroute: (target) => {
+    return new Promise((resolve) => {
+      const { exec } = require("child_process");
+      const cmd = process.platform === "win32"
+        ? `tracert -h 15 -w 500 ${target}`
+        : `traceroute -m 15 -w 1 ${target}`;
+      exec(cmd, { timeout: 25000 }, (err, stdout) => {
+        resolve(stdout || (err ? err.message : "Traceroute timed out"));
+      });
+    });
+  },
 
   // -------------------------------------
-  // Quick Port Scan (returns PORT + NAME)
+  // Quick Port Scan — parallel, 3s timeout
   // -------------------------------------
   portScan: async (host) => {
-    const ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 3306];
-    const results = [];
+    const ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 587, 993, 995, 3306, 3389, 5432, 6379, 8080, 8443, 27017];
 
     const checkPort = (port) => {
       return new Promise((resolve) => {
         const socket = new net.Socket();
-        socket.setTimeout(700);
+        let settled = false;
 
-        socket.on("connect", () => {
-          results.push({
-            port,
-            name: portNames[port] || "Unknown Service",
-          });
+        const done = (open) => {
+          if (settled) return;
+          settled = true;
           socket.destroy();
-          resolve();
-        });
+          if (open) {
+            resolve({ port, name: portNames[port] || "Unknown Service" });
+          } else {
+            resolve(null);
+          }
+        };
 
-        socket.on("timeout", () => {
-          socket.destroy();
-          resolve();
-        });
-
-        socket.on("error", () => resolve());
-
+        socket.setTimeout(3000); // 3s — enough for remote hosts
+        socket.on("connect", () => done(true));
+        socket.on("timeout", () => done(false));
+        socket.on("error", () => done(false));
         socket.connect(port, host);
       });
     };
 
-    for (let p of ports) {
-      await checkPort(p);
-    }
-
-    return results;
+    // Run ALL ports in parallel — much faster than sequential
+    const results = await Promise.all(ports.map(checkPort));
+    return results.filter(Boolean); // remove nulls (closed ports)
   },
 
   // -------------------------------------
@@ -115,14 +127,13 @@ module.exports = {
       return { error: "SSL scan failed" };
     }
   },
+
   // -------------------------------------
-  // XSS Vulnerability Scan (Standalone)
+  // XSS Vulnerability Scan
   // -------------------------------------
   xssScan: async (target) => {
     try {
-      const url = target.startsWith("http")
-        ? target
-        : `https://${target}`;
+      const url = target.startsWith("http") ? target : `https://${target}`;
       return await scanXSS(url);
     } catch (err) {
       return { error: "XSS scan failed" };
@@ -130,45 +141,38 @@ module.exports = {
   },
 
   // -------------------------------------
-  // ✅ WHATWEB (RUNS VIA WSL)
+  // WhatWeb (via WSL)
   // -------------------------------------
   whatweb: async (target) => {
     try {
-      // --log-json=- sends JSON output to stdout
       const command = `wsl whatweb ${target} --log-json=-`;
       return await runCommand(command);
     } catch (err) {
       return "WhatWeb scan failed";
     }
   },
+
   // -------------------------------------
   // Endpoint & SQLi Detection
   // -------------------------------------
   endpointScan: (target) => endpointScan(target),
 
-
   // -------------------------------------
-// Email / Domain Reputation (QuickScan)
-// -------------------------------------
-emailReputation: async (domain) => {
-  try {
-    // Basic heuristic-based reputation
-    const suspiciousTLDs = [".tk", ".ml", ".ga", ".cf"];
-    const isSuspiciousTLD = suspiciousTLDs.some(tld =>
-      domain.endsWith(tld)
-    );
-
-    return {
-      domain,
-      disposable: false, // placeholder (future API)
-      suspiciousTLD: isSuspiciousTLD,
-      risk: isSuspiciousTLD ? "MEDIUM" : "LOW",
-      note: "Heuristic-based domain reputation (QuickScan)",
-    };
-  } catch (err) {
-    return { error: "Email reputation check failed" };
-  }
-}
-
-  
+  // Email / Domain Reputation (legacy stub — replaced by emailRepCheck.js)
+  // -------------------------------------
+  emailReputation: async (domain) => {
+    try {
+      const suspiciousTLDs = [".tk", ".ml", ".ga", ".cf"];
+      const isSuspiciousTLD = suspiciousTLDs.some(tld => domain.endsWith(tld));
+      return {
+        domain,
+        disposable: false,
+        suspiciousTLD: isSuspiciousTLD,
+        risk: isSuspiciousTLD ? "MEDIUM" : "LOW",
+        note: "Heuristic-based domain reputation (QuickScan)",
+      };
+    } catch (err) {
+      return { error: "Email reputation check failed" };
+    }
+  },
 };

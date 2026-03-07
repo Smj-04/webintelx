@@ -45,7 +45,6 @@ const riskAccent = (risk) => {
   return "#00ff88";
 };
 
-/* ── CAPABILITY CARD ── */
 const CapabilityCard = ({ icon, title, desc, accent }) => (
   <div style={{
     background: "rgba(0,0,0,0.55)", border: "1px solid rgba(0,255,136,0.08)",
@@ -62,7 +61,6 @@ const CapabilityCard = ({ icon, title, desc, accent }) => (
   </div>
 );
 
-/* ── MODULE BLOCK ── */
 const ModuleBlock = ({ keyName, title, found, expanded, onToggle, children }) => (
   <div style={{
     background: "rgba(0,0,0,0.55)",
@@ -115,19 +113,39 @@ export default function FullScan() {
   const [expanded, setExpanded] = useState({});
   const [error, setError] = useState(null);
   const [showRawDomFindings, setShowRawDomFindings] = useState(false);
+  const [scanId, setScanId] = useState(null);
+  const [isPaused, setIsPaused] = useState(false);
   const loaderRef = useRef(null);
 
   const handleScan = async () => {
     if (!input.trim()) return alert("Please enter a domain or company name");
-    setIsScanning(true); setScanDone(false); setScanResult(null); setError(null);
+    setIsScanning(true);
+    setScanDone(false);
+    setScanResult(null);
+    setError(null);
+    setIsPaused(false);
+    setScanId(null);
     setTimeout(() => loaderRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     try {
       const resp = await axios.post("http://localhost:5000/api/fullscan", { url: input }, { timeout: 0 });
-      setScanResult(resp.data); setScanDone(true);
+      setScanId(resp.data.scanId || null);
+      setScanResult(resp.data);
+      setScanDone(true);
     } catch (err) {
       setError(err.response ? err.response.data.error || "Invalid target" : "Backend not reachable or network error.");
-    } finally { setIsScanning(false); }
+    } finally {
+      setIsScanning(false);
+      setIsPaused(false);
+    }
   };
+
+    const handlePause = () => {
+      setIsPaused(true);
+    };
+
+    const handleResume = () => {
+      setIsPaused(false);
+    };
 
   const downloadPDF = async () => {
     const resp = await axios.post("/api/fullscan/pdf", { scanData: scanResult, target: scanResult.target }, { responseType: "blob" });
@@ -157,6 +175,7 @@ export default function FullScan() {
         @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
         @keyframes scanPulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
         @keyframes flicker { 0%,89%,91%,96%,100%{opacity:1} 90%{opacity:0.5} 95%{opacity:0.75} }
+        @keyframes pauseBlink { 0%,100%{opacity:1} 50%{opacity:0.3} }
         * { box-sizing:border-box; margin:0; padding:0; }
         ::selection { background:rgba(0,255,136,0.2); color:#00ff88; }
         ::-webkit-scrollbar { width:3px; }
@@ -188,9 +207,14 @@ export default function FullScan() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(255,107,53,0.6)", letterSpacing: "0.15em" }}>FULL_SCAN // MODULE_02</span>
-          <div style={{ width: "7px", height: "7px", background: isScanning ? "#fbbf24" : "#ff6b35", borderRadius: "50%", boxShadow: `0 0 10px ${isScanning ? "#fbbf24" : "#ff6b35"}`, animation: "pulse 2s ease-in-out infinite" }} />
-          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: isScanning ? "#fbbf24" : "#ff6b35", letterSpacing: "0.15em" }}>
-            {isScanning ? "DEEP_SCANNING..." : "READY"}
+          <div style={{
+            width: "7px", height: "7px", borderRadius: "50%",
+            background: isPaused ? "#fbbf24" : isScanning ? "#fbbf24" : "#ff6b35",
+            boxShadow: `0 0 10px ${isPaused ? "#fbbf24" : isScanning ? "#fbbf24" : "#ff6b35"}`,
+            animation: isPaused ? "pauseBlink 1s ease infinite" : "pulse 2s ease-in-out infinite"
+          }} />
+          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.15em", color: isPaused ? "#fbbf24" : isScanning ? "#fbbf24" : "#ff6b35" }}>
+            {isPaused ? "PAUSED" : isScanning ? "DEEP_SCANNING..." : "READY"}
           </span>
         </div>
       </nav>
@@ -268,17 +292,90 @@ export default function FullScan() {
         {/* Loader */}
         {isScanning && (
           <div ref={loaderRef} style={{ marginBottom: "40px" }}>
-            <div style={{ background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,107,53,0.2)", borderLeft: "3px solid #ff6b35", padding: "28px 32px", maxWidth: "600px" }}>
+            <div style={{
+              background: "rgba(0,0,0,0.6)",
+              border: `1px solid ${isPaused ? "rgba(251,191,36,0.3)" : "rgba(255,107,53,0.2)"}`,
+              borderLeft: `3px solid ${isPaused ? "#fbbf24" : "#ff6b35"}`,
+              padding: "28px 32px", maxWidth: "600px",
+              transition: "border-color 0.3s",
+            }}>
+              {/* Header row */}
               <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "18px" }}>
-                <div style={{ width: "20px", height: "20px", border: "2px solid rgba(255,107,53,0.2)", borderTop: "2px solid #ff6b35", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-                <span style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "14px", color: "#ff6b35", letterSpacing: "0.1em" }}>RUNNING DEEP SCAN</span>
+                <div style={{
+                  width: "20px", height: "20px",
+                  border: `2px solid ${isPaused ? "rgba(251,191,36,0.2)" : "rgba(255,107,53,0.2)"}`,
+                  borderTop: `2px solid ${isPaused ? "#fbbf24" : "#ff6b35"}`,
+                  borderRadius: "50%",
+                  animation: isPaused ? "none" : "spin 0.8s linear infinite",
+                }} />
+                <span style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "14px", color: isPaused ? "#fbbf24" : "#ff6b35", letterSpacing: "0.1em" }}>
+                  {isPaused ? "SCAN PAUSED" : "RUNNING DEEP SCAN"}
+                </span>
               </div>
-              <p style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "rgba(0,255,136,0.4)", marginBottom: "16px", letterSpacing: "0.1em" }}>This may take several minutes</p>
+
+              <p style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "rgba(0,255,136,0.4)", marginBottom: "16px", letterSpacing: "0.1em" }}>
+                {isPaused ? "Scan is paused — press RESUME to continue" : "This may take several minutes"}
+              </p>
+
+              {/* Scan steps */}
               {["Enumerating subdomains & infrastructure...", "Running OSINT correlation...", "Testing for SQL injection vectors...", "Scanning XSS attack surfaces...", "Checking CSRF, clickjacking, command injection...", "Generating vulnerability report..."].map((line, i) => (
-                <div key={i} style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "rgba(255,107,53,0.5)", lineHeight: 1.9, letterSpacing: "0.08em", animation: `scanPulse 2s ease ${i * 0.4}s infinite` }}>
+                <div key={i} style={{
+                  fontFamily: "'Share Tech Mono', monospace", fontSize: "11px",
+                  color: isPaused ? "rgba(251,191,36,0.25)" : "rgba(255,107,53,0.5)",
+                  lineHeight: 1.9, letterSpacing: "0.08em",
+                  animation: isPaused ? "none" : `scanPulse 2s ease ${i * 0.4}s infinite`,
+                  transition: "color 0.3s",
+                }}>
                   › {line}
                 </div>
               ))}
+
+              {/* ── PAUSE / RESUME CONTROLS ── */}
+              <div style={{ display: "flex", gap: "12px", marginTop: "24px", alignItems: "center" }}>
+                {!isPaused ? (
+                  <button
+                    onClick={handlePause}
+                    style={{
+                      fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "10px",
+                      letterSpacing: "0.15em", color: "#020804", background: "#fbbf24",
+                      border: "none", padding: "10px 22px", cursor: "pointer",
+                      boxShadow: "0 0 14px rgba(251,191,36,0.35)", transition: "all 0.2s",
+                      display: "flex", alignItems: "center", gap: "7px",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 22px rgba(251,191,36,0.6)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 14px rgba(251,191,36,0.35)"; }}
+                  >
+                    ⏸ PAUSE SCAN
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleResume}
+                    style={{
+                      fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "10px",
+                      letterSpacing: "0.15em", color: "#020804", background: "#00ff88",
+                      border: "none", padding: "10px 22px", cursor: "pointer",
+                      boxShadow: "0 0 14px rgba(0,255,136,0.35)", transition: "all 0.2s",
+                      display: "flex", alignItems: "center", gap: "7px",
+                      animation: "pauseBlink 1.5s ease infinite",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 22px rgba(0,255,136,0.6)"; e.currentTarget.style.animation = "none"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 14px rgba(0,255,136,0.35)"; e.currentTarget.style.animation = "pauseBlink 1.5s ease infinite"; }}
+                  >
+                    ▶ RESUME SCAN
+                  </button>
+                )}
+              </div>
+
+              {/* Paused status text */}
+              {isPaused && (
+                <div style={{
+                  marginTop: "14px", display: "flex", alignItems: "center", gap: "10px",
+                  fontFamily: "'Share Tech Mono', monospace", fontSize: "11px",
+                  color: "#fbbf24", letterSpacing: "0.12em",
+                }}>
+                  ⏸ SCAN PAUSED
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -536,8 +633,6 @@ export default function FullScan() {
                     ) : <DetailText>No sensitive files detected</DetailText>}
                   </ModuleBlock>
 
-                  
- 
                   {/* Open Redirect */}
                   <ModuleBlock keyName="openRedirect" title="OPEN REDIRECT" found={!!v.openRedirect?.found} expanded={expanded.openRedirect} onToggle={toggle}>
                     {v.openRedirect?.details?.evidence?.length > 0 ? (
@@ -566,8 +661,6 @@ export default function FullScan() {
                       </div>
                     ) : <DetailText>No open redirect vulnerabilities detected</DetailText>}
                   </ModuleBlock>
-
-
 
                   {/* CORS Misconfiguration */}
                   <ModuleBlock keyName="cors" title="CORS MISCONFIGURATION" found={!!v.cors?.found} expanded={expanded.cors} onToggle={toggle}>
@@ -601,18 +694,10 @@ export default function FullScan() {
                     ) : <DetailText>No CORS misconfigurations detected</DetailText>}
                   </ModuleBlock>
 
-
-                  {/* WordPress Security Scanner */}
-                  <ModuleBlock
-                    keyName="wordpress"
-                    title="WORDPRESS SECURITY"
-                    found={!!v.wordpress?.found}
-                    expanded={!!expanded.wordpress}
-                    onToggle={toggle}
-                  >
+                  {/* WordPress Security */}
+                  <ModuleBlock keyName="wordpress" title="WORDPRESS SECURITY" found={!!v.wordpress?.found} expanded={!!expanded.wordpress} onToggle={toggle}>
                     {v.wordpress?.found ? (
                       <div>
-                        {/* Risk Score */}
                         <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,107,53,0.3)" }}>
                           <DetailMono>› Risk Score: <Label color={riskAccent(v.wordpress.details?.riskScore?.level)}>
                             {v.wordpress.details?.riskScore?.score ?? "?"}/100 ({v.wordpress.details?.riskScore?.level ?? "UNKNOWN"})
@@ -623,7 +708,6 @@ export default function FullScan() {
                           </Label></DetailMono>
                         </div>
 
-                        {/* WP Core Version */}
                         <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(0,255,136,0.3)" }}>
                           <DetailMono>› WP Version: <Label color="#00ff88">
                             {v.wordpress.details?.results?.coreVersion?.version || "Not detected"}
@@ -633,7 +717,6 @@ export default function FullScan() {
                           ))}
                         </div>
 
-                        {/* Vulnerable Plugins */}
                         {(v.wordpress.details?.results?.plugins || []).filter(p => p.vulnerabilities?.length > 0).length > 0 && (
                           <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,34,34,0.4)" }}>
                             <DetailMono>› Vulnerable Plugins: <Label color="#ff2222">
@@ -652,7 +735,6 @@ export default function FullScan() {
                           </div>
                         )}
 
-                        {/* Theme */}
                         {v.wordpress.details?.results?.theme?.name && (
                           <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(0,255,136,0.2)" }}>
                             <DetailMono>› Active Theme: <Label color="#00ff88">{v.wordpress.details.results.theme.name}</Label>
@@ -663,7 +745,6 @@ export default function FullScan() {
                           </div>
                         )}
 
-                        {/* User Enumeration */}
                         {v.wordpress.details?.results?.userEnumeration?.exposed && (
                           <div style={{ marginBottom: "10px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,34,34,0.4)" }}>
                             <DetailMono>› <Label color="#ff2222">[HIGH]</Label> User Enumeration: <Label color="#ff6b35">
@@ -675,7 +756,6 @@ export default function FullScan() {
                           </div>
                         )}
 
-                        {/* Login Exposure */}
                         {v.wordpress.details?.results?.loginExposure?.wpLoginExposed && (
                           <DetailMono style={{ marginBottom: "10px" }}>
                             › <Label color="#ff6b35">[MEDIUM]</Label> wp-login.php publicly accessible
@@ -685,7 +765,6 @@ export default function FullScan() {
                           </DetailMono>
                         )}
 
-                        {/* XML-RPC */}
                         {v.wordpress.details?.results?.xmlRpc?.enabled && (
                           <DetailMono style={{ marginBottom: "10px" }}>
                             › <Label color={v.wordpress.details.results.xmlRpc.multicallEnabled ? "#ff2222" : "#ff6b35"}>
@@ -695,7 +774,6 @@ export default function FullScan() {
                           </DetailMono>
                         )}
 
-                        {/* Security Headers */}
                         {(v.wordpress.details?.results?.securityHeaders?.missing || []).length > 0 && (
                           <div style={{ paddingLeft: "12px", borderLeft: "2px solid rgba(251,191,36,0.3)" }}>
                             <DetailMono>› Missing security headers: <Label color="#fbbf24">
