@@ -53,7 +53,7 @@ app.use("/api", require("./routes/tokenAuthRoute"));
 app.use("/api", require("./routes/idorRoute"));
 app.use("/api", phishingCheckRoute);
 app.use("/api/csrf", require("./routes/csrfRoutes"));
-
+app.use("/api/sensitive-files", require("./routes/sensitiveFilesRoute"));
 
 const PORT = 5000;
 
@@ -61,5 +61,5 @@ const server = app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
 });
 
-server.timeout = 1200000; // 20 minutes — covers the longest possible full scan
+server.timeout = 1500000; // 25 minutes — covers the longest possible full scan
 console.log("Gemini Key Loaded:", process.env.GEMINI_API_KEY ? "YES" : "NO");

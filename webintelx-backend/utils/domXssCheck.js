@@ -1,77 +1,75 @@
-//this is the domXssCheck.js file in the utils folder
-
 /**
- * DOM-Based XSS Detection Module (Refactored)
- * Analyzes JavaScript for client-side sinks with proper source-to-sink tracking
- * Reduces false positives by:
- * - Ignoring third-party and minified libraries
- * - Validating source-to-sink data flows
- * - Detecting sanitization functions
- * - Improving confidence scoring
+ * DOM-Based XSS Detection Module — Puppeteer Edition
+ *
+ * Uses a real headless Chrome browser to:
+ * 1. Inject payloads into URL sources (location.search, location.hash, query params)
+ * 2. Detect actual alert()/confirm()/prompt() execution in the browser
+ * 3. Monitor DOM mutations caused by injected payloads
+ * 4. Fall back to static JS analysis for source/sink pattern detection
+ *
+ * This approach eliminates false positives from static analysis and
+ * correctly handles location.hash (which axios-based scanners cannot test).
  */
 
+const puppeteer = require("puppeteer");
 const axios = require("axios");
 const { JSDOM } = require("jsdom");
 const { URL } = require("url");
 
-const USER_AGENT = "WebIntelX-DOMXSS-Scanner/1.0";
-const TIMEOUT = 40000;
+const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36";
+const PAGE_TIMEOUT = 8000;   // 8s per page — fast enough, generous enough
+const SCAN_TIMEOUT = 150000; // 2.5 min total — covers crawler + multi-page puppeteer
 
-// === THIRD-PARTY LIBRARY PATTERNS ===
+// Focused payload list — best coverage, minimal count
+// Each tests a different sink type
+const DOM_XSS_PAYLOADS = [
+  `<img src=x onerror=alert('DOMXSS')>`,  // innerHTML / document.write
+  `<svg onload=alert('DOMXSS')>`,          // innerHTML variant
+  `javascript:alert('DOMXSS')`,            // href/src sinks
+  `'onmouseover='alert('DOMXSS')`,         // attribute injection
+];
+
+// Static analysis patterns (fallback)
 const THIRD_PARTY_PATTERNS = [
-  /jquery\.min\.js/i,
-  /jquery-migrate\.min\.js/i,
-  /bootstrap\.min\.js/i,
-  /mootools-core\.js/i,
-  /mootools-more\.js/i,
-  /google.*maps.*api/i,
-  /\.min\.js$/i, // Any minified JS file
+  /jquery[.-](\d+\.)*\d+(\.min)?\.js/i,
+  /bootstrap[.-](\d+\.)*\d+(\.min)?\.js/i,
   /cdnjs\.cloudflare\.com/i,
   /cdn\.jsdelivr\.net/i,
   /unpkg\.com/i,
-  /jsdelivr\.net/i,
+  /ajax\.googleapis\.com/i,
+  /code\.jquery\.com/i,
 ];
 
-// === SANITIZATION & ENCODING FUNCTIONS ===
-const SANITIZATION_FUNCTIONS = [
-  /encodeURI(?:Component)?\s*\(/gi,
-  /escape\s*\(/gi,
-  /htmlEscape\s*\(/gi,
-  /sanitize\s*\(/gi,
-  /DOMPurify\.sanitize\s*\(/gi,
-  /xss\s*\(/gi,
-  /escape(?:HTML)?\s*\(/gi,
-  /strip(?:Tags|HTML)\s*\(/gi,
-  /textContent\s*=/gi, // textContent is safe (doesn't parse HTML)
-];
-
-// === DANGEROUS SINKS ===
 const DANGEROUS_SINKS = [
-  { pattern: /document\.write\s*\(/gi, name: "document.write()", severity: "high" },
-  { pattern: /document\.writeln\s*\(/gi, name: "document.writeln()", severity: "high" },
-  { pattern: /\.innerHTML\s*=/gi, name: ".innerHTML =", severity: "high" },
-  { pattern: /\.outerHTML\s*=/gi, name: ".outerHTML =", severity: "high" },
-  { pattern: /\.insertAdjacentHTML\s*\(/gi, name: ".insertAdjacentHTML()", severity: "high" },
-  { pattern: /eval\s*\(/gi, name: "eval()", severity: "critical" },
-  { pattern: /Function\s*\(/gi, name: "Function()", severity: "high" },
-  { pattern: /setTimeout\s*\(/gi, name: "setTimeout()", severity: "medium" },
-  { pattern: /setInterval\s*\(/gi, name: "setInterval()", severity: "medium" },
-  { pattern: /\.src\s*=/gi, name: ".src =", severity: "medium" },
-  { pattern: /\.setAttribute\s*\(/gi, name: ".setAttribute()", severity: "medium" },
+  { pattern: /document\.write\s*\(/i, name: "document.write()", severity: "high" },
+  { pattern: /\.innerHTML\s*=/i, name: ".innerHTML =", severity: "high" },
+  { pattern: /\.outerHTML\s*=/i, name: ".outerHTML =", severity: "high" },
+  { pattern: /\.insertAdjacentHTML\s*\(/i, name: ".insertAdjacentHTML()", severity: "high" },
+  { pattern: /\beval\s*\(/i, name: "eval()", severity: "critical" },
+  { pattern: /\bFunction\s*\(/i, name: "Function()", severity: "high" },
+  { pattern: /\.src\s*=/i, name: ".src =", severity: "medium" },
+  { pattern: /\.setAttribute\s*\(\s*['"](?:src|href|on\w+)['"]/i, name: ".setAttribute()", severity: "medium" },
 ];
 
-// === USER-CONTROLLED SOURCES ===
 const USER_SOURCES = [
-  { pattern: /location\.search/gi, name: "location.search", type: "url" },
-  { pattern: /location\.hash/gi, name: "location.hash", type: "url" },
-  { pattern: /location\.href/gi, name: "location.href", type: "url" },
-  { pattern: /document\.URL/gi, name: "document.URL", type: "url" },
-  { pattern: /document\.location/gi, name: "document.location", type: "url" },
-  { pattern: /document\.referrer/gi, name: "document.referrer", type: "url" },
-  { pattern: /window\.name/gi, name: "window.name", type: "storage" },
-  { pattern: /document\.cookie/gi, name: "document.cookie", type: "storage" },
-  { pattern: /window\.location/gi, name: "window.location", type: "url" },
-  { pattern: /URLSearchParams/gi, name: "URLSearchParams", type: "url" },
+  { pattern: /location\.search/i, name: "location.search" },
+  { pattern: /location\.hash/i, name: "location.hash" },
+  { pattern: /location\.href/i, name: "location.href" },
+  { pattern: /document\.URL/i, name: "document.URL" },
+  { pattern: /document\.referrer/i, name: "document.referrer" },
+  { pattern: /window\.name/i, name: "window.name" },
+  { pattern: /document\.cookie/i, name: "document.cookie" },
+  { pattern: /window\.location/i, name: "window.location" },
+  { pattern: /URLSearchParams/i, name: "URLSearchParams" },
+];
+
+const DIRECT_FLOW_PATTERNS = [
+  /eval\s*\(\s*(?:window\.|document\.)?location[\.\w]*/i,
+  /\.innerHTML\s*=\s*(?:window\.|document\.)?location[\.\w]*/i,
+  /document\.write(?:ln)?\s*\(\s*(?:window\.|document\.)?location[\.\w]*/i,
+  /\.src\s*=\s*(?:window\.|document\.)?location[\.\w]*/i,
+  /\.outerHTML\s*=\s*(?:window\.|document\.)?location[\.\w]*/i,
+  /\.insertAdjacentHTML\s*\([^,]+,\s*(?:window\.|document\.)?location[\.\w]*/i,
 ];
 
 function normalizeUrl(input) {
@@ -81,326 +79,426 @@ function normalizeUrl(input) {
   return input;
 }
 
-/**
- * Check if file is a third-party library or minified
- */
-function isThirdPartyLibrary(fileUrl) {
-  return THIRD_PARTY_PATTERNS.some(pattern => pattern.test(fileUrl));
+function isThirdParty(url) {
+  return THIRD_PARTY_PATTERNS.some(p => p.test(url));
 }
 
-/**
- * Detect if value passes through sanitization/encoding
- */
-function hasSanitization(code) {
-  return SANITIZATION_FUNCTIONS.some(pattern => pattern.test(code));
-}
+function staticAnalyze(code, label) {
+  if (!code || code.trim().length < 10) return [];
+  if (isThirdParty(label)) return [];
 
-/**
- * Track source to sink data flow
- * Returns: { hasDirect: boolean, sources: [], sinks: [], flowConfidence: string }
- */
-function analyzeDataFlow(code) {
-  const sources = [];
-  const sinks = [];
-  
-  // Find all sources
-  USER_SOURCES.forEach(src => {
-    if (src.pattern.test(code)) {
-      src.pattern.lastIndex = 0; // Reset regex
-      sources.push(src.name);
-    }
-  });
-  
-  // Find all sinks
-  DANGEROUS_SINKS.forEach(sink => {
-    if (sink.pattern.test(code)) {
-      sink.pattern.lastIndex = 0; // Reset regex
-      sinks.push({ name: sink.name, severity: sink.severity });
-    }
-  });
-  
-  // Analyze direct source->sink flow
-  let flowConfidence = "low";
-  let hasDirect = false;
-  
+  const sources = USER_SOURCES.filter(s => s.pattern.test(code)).map(s => s.name);
+  const sinks = DANGEROUS_SINKS.filter(s => s.pattern.test(code)).map(s => ({ name: s.name, severity: s.severity }));
+  const hasDirect = DIRECT_FLOW_PATTERNS.some(p => p.test(code));
+
+  if (hasDirect) {
+    return [{
+      type: "DOM XSS - Direct Source to Sink (Static)",
+      location: label,
+      evidence: `Direct flow: ${sources.join(", ")} → ${sinks.map(s => s.name).join(", ")}`,
+      confidence: "Medium", // Static analysis — needs browser confirmation
+      sources,
+      sinks,
+    }];
+  }
+
   if (sources.length > 0 && sinks.length > 0) {
-    // Look for direct assignments/flows: source → variable → sink
-    const directFlowPatterns = [
-      // eval(location.search)
-      /eval\s*\(\s*location\.(search|hash|href)/gi,
-      // innerHTML = location.search
-      /\.innerHTML\s*=\s*location\.(search|hash|href)/gi,
-      // document.write(location.search)
-      /document\.write(?:ln)?\s*\(\s*location\.(search|hash|href)/gi,
-      // .src = location.search
-      /\.src\s*=\s*location\.(search|hash|href)/gi,
-      // .setAttribute with location
-      /\.setAttribute\s*\(\s*['"](src|href|onclick|on\w+)['"]\s*,\s*location\.(search|hash|href)/gi,
-    ];
-    
-    hasDirect = directFlowPatterns.some(pattern => {
-      const result = pattern.test(code);
-      pattern.lastIndex = 0;
-      return result;
-    });
-    
-    if (hasDirect) {
-      flowConfidence = hasSanitization(code) ? "medium" : "high";
-    } else {
-      flowConfidence = "medium"; // Sources and sinks exist but not directly connected
-    }
+    return [{
+      type: "DOM XSS - Source and Sink Present (Static)",
+      location: label,
+      evidence: `Sources (${sources.join(", ")}) and sinks (${sinks.map(s => s.name).join(", ")}) found — indirect flow, manual review needed.`,
+      confidence: "Low",
+      sources,
+      sinks,
+    }];
   }
-  
-  return {
-    hasDirect,
-    sources,
-    sinks,
-    flowConfidence,
-    hasSanitization: hasSanitization(code)
-  };
+
+  return [];
 }
 
 /**
- * Analyzes JavaScript code for DOM XSS vulnerabilities (with reduced false positives)
+ * Build a FOCUSED set of test URLs — hash + top 4 params only
+ * Keeps total page loads manageable (4 payloads × 5 URLs = 20 max)
  */
-function analyzeJavaScript(code, fileUrl) {
+function buildTestUrls(baseUrl, payload) {
+  const urls = [];
+  const base = baseUrl.replace(/\/$/, "");
+
+  // Hash injection — most common DOM XSS vector
+  urls.push(`${base}/#${payload}`);
+
+  // Top 4 most common reflected params only
+  const commonParams = ["q", "search", "input", "query"];
+  for (const param of commonParams) {
+    urls.push(`${base}/?${param}=${encodeURIComponent(payload)}`);
+  }
+
+  return urls; // 5 URLs per payload max
+}
+
+/**
+ * Core Puppeteer-based DOM XSS scanner
+ * Launches real Chrome, injects payloads, listens for alert() execution
+ */
+async function puppeteerScan(url) {
   const findings = [];
-  
-  if (!code || typeof code !== "string") {
-    return findings;
-  }
-  
-  // SKIP THIRD-PARTY LIBRARIES
-  if (isThirdPartyLibrary(fileUrl)) {
-    console.log(`[DOM XSS] Skipping third-party library: ${fileUrl}`);
-    return findings;
-  }
-  
-  const flow = analyzeDataFlow(code);
-  
-  // === CASE 1: Direct source-to-sink flow without sanitization ===
-  if (flow.hasDirect && !flow.hasSanitization) {
-    findings.push({
-      type: "DOM XSS - Confirmed Source to Sink",
-      location: fileUrl,
-      evidence: `Direct data flow from ${flow.sources.join(", ")} → ${flow.sinks.map(s => s.name).join(", ")} without sanitization`,
-      confidence: "High",
-      sources: flow.sources,
-      sinks: flow.sinks
+  let browser = null;
+
+  console.log(`[DOM XSS] Launching headless Chrome for: ${url}`);
+
+  try {
+    browser = await puppeteer.launch({
+      headless: "new",
+      timeout: 30000,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--no-first-run",
+        "--no-zygote",
+        "--disable-extensions",
+      ],
     });
-    return findings;
+
+    // === TEST 1: Payload injection — ONE page reused per payload ===
+    // Strategy: open one page, test all URLs for a payload via goto(), reuse page
+    // This is ~5x faster than opening a new page per URL
+    const page = await browser.newPage();
+    await page.setUserAgent(USER_AGENT);
+    await page.setDefaultTimeout(PAGE_TIMEOUT);
+
+    for (const payload of DOM_XSS_PAYLOADS) {
+      if (findings.length >= 2) break; // Stop early once we have confirmed findings
+
+      const testUrls = buildTestUrls(url, payload);
+
+      for (const testUrl of testUrls) {
+        if (findings.length >= 2) break;
+
+        try {
+          let dialogTriggered = false;
+          let dialogMessage = "";
+
+          // Re-attach dialog handler each navigation
+          const dialogHandler = async (dialog) => {
+            const msg = dialog.message();
+            if (msg.includes("DOMXSS") || msg === "1" || msg === "true") {
+              dialogTriggered = true;
+              dialogMessage = msg;
+            }
+            await dialog.dismiss().catch(() => {});
+          };
+          page.on("dialog", dialogHandler);
+
+          try {
+            await page.goto(testUrl, {
+              waitUntil: "domcontentloaded",
+              timeout: PAGE_TIMEOUT,
+            });
+            await new Promise(r => setTimeout(r, 1000));
+          } catch (navErr) {
+            // Navigation errors ok — dialog may still have fired
+          }
+
+          page.off("dialog", dialogHandler);
+
+          if (dialogTriggered) {
+            console.log(`[DOM XSS] ✅ CONFIRMED: alert('${dialogMessage}') at ${testUrl}`);
+            const source = testUrl.includes("#") ? "location.hash"
+              : testUrl.includes("?") ? "URL query parameter"
+              : "URL path";
+            findings.push({
+              type: "DOM XSS - Confirmed Execution",
+              location: testUrl,
+              evidence: `alert('${dialogMessage}') executed — payload injected via ${source}`,
+              confidence: "High",
+              payload,
+              source,
+            });
+            break; // Move to next payload
+          }
+        } catch (err) {
+          console.log(`[DOM XSS] Page error for ${testUrl}: ${err.message}`);
+        }
+      }
+    }
+
+    await page.close().catch(() => {});
+
+    // === TEST 2: Check existing page params ===
+    // If the URL already has query params, test those too
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.searchParams.toString()) {
+        for (const [paramName] of urlObj.searchParams.entries()) {
+          for (const payload of DOM_XSS_PAYLOADS.slice(0, 4)) {
+            let page = null;
+            try {
+              page = await browser.newPage();
+              await page.setUserAgent(USER_AGENT);
+              await page.setDefaultTimeout(PAGE_TIMEOUT);
+
+              let dialogTriggered = false;
+              let dialogMessage = "";
+
+              page.on("dialog", async (dialog) => {
+                const msg = dialog.message();
+                if (msg.includes("DOMXSS") || msg === "1") {
+                  dialogTriggered = true;
+                  dialogMessage = msg;
+                }
+                await dialog.dismiss();
+              });
+
+              const testUrl = new URL(url);
+              testUrl.searchParams.set(paramName, payload);
+
+              await page.goto(testUrl.toString(), {
+                waitUntil: "domcontentloaded",
+                timeout: PAGE_TIMEOUT,
+              }).catch(() => {});
+
+              await new Promise(r => setTimeout(r, 1500));
+
+              if (dialogTriggered) {
+                findings.push({
+                  type: "DOM XSS - Confirmed via Query Param",
+                  location: testUrl.toString(),
+                  evidence: `alert('${dialogMessage}') triggered via parameter "${paramName}"`,
+                  confidence: "High",
+                  payload,
+                  source: `URL parameter: ${paramName}`,
+                });
+                break;
+              }
+            } catch {}
+            finally {
+              if (page && !page.isClosed()) await page.close().catch(() => {});
+            }
+          }
+        }
+      }
+    } catch {}
+
+  } catch (err) {
+    console.error("[DOM XSS] Puppeteer error:", err.message);
+    throw err;
+  } finally {
+    if (browser) {
+      await browser.close().catch(() => {});
+      console.log("[DOM XSS] Browser closed");
+    }
   }
-  
-  // === CASE 2: Source and sink exist, but unclear flow (with or without sanitization) ===
-  if (flow.hasDirect && flow.hasSanitization) {
-    findings.push({
-      type: "DOM XSS - Sanitized Flow",
-      location: fileUrl,
-      evidence: `Data flow detected but sanitization functions present. Manual review recommended.`,
-      confidence: "Medium",
-      sources: flow.sources,
-      sinks: flow.sinks
-    });
-    return findings;
-  }
-  
-  // === CASE 3: Sources and sinks present but not directly connected ===
-  if (flow.sources.length > 0 && flow.sinks.length > 0) {
-    findings.push({
-      type: "DOM XSS - Source and Sink Detected",
-      location: fileUrl,
-      evidence: `Sources (${flow.sources.join(", ")}) and sinks (${flow.sinks.map(s => s.name).join(", ")}) present but data flow unclear. May require manual inspection.`,
-      confidence: "Low",
-      sources: flow.sources,
-      sinks: flow.sinks
-    });
-    return findings;
-  }
-  
-  // === CASE 4: Sink only (no source detected) ===
-  if (flow.sinks.length > 0 && flow.sources.length === 0) {
-    findings.push({
-      type: "DOM XSS - Potential Sink",
-      location: fileUrl,
-      evidence: `Dangerous sink found (${flow.sinks.map(s => s.name).join(", ")}) but no user-controlled source detected in this file. Manual review recommended.`,
-      confidence: "Low",
-      sinks: flow.sinks
-    });
-    return findings;
-  }
-  
+
   return findings;
 }
 
 /**
- * Fetches and analyzes a page for DOM XSS vulnerabilities (improved)
+ * Static analysis fallback — analyzes JS files without browser
  */
-async function scanDOMXSS(inputUrl) {
-  const url = normalizeUrl(inputUrl);
-  console.log(`Starting DOM-Based XSS scan for: ${url}`);
-  
+async function staticScan(url) {
   const findings = [];
-  const urlObj = new URL(url);
-  
+
   try {
-    console.log(`Fetching page: ${url}`);
     const response = await axios.get(url, {
-      timeout: TIMEOUT,
+      timeout: 20000,
       headers: { "User-Agent": USER_AGENT },
       validateStatus: () => true,
     });
-    
-    if (response.status !== 200) {
-      console.error(`Failed to fetch page: HTTP ${response.status}`);
-      return {
-        module: "DOM-Based XSS",
-        target: url,
-        vulnerable: false,
-        evidence: `Failed to fetch page: HTTP ${response.status}`,
-        notes: "Unable to analyze page for DOM XSS vulnerabilities",
-      };
-    }
-    
+
+    if (response.status !== 200) return findings;
+
     const html = response.data;
-    const dom = new JSDOM(html, { url: url, runScripts: "outside-only" });
-    
-    // Analyze inline scripts (application code)
-    const inlineScripts = dom.window.document.querySelectorAll("script:not([src])");
-    console.log(`Found ${inlineScripts.length} inline scripts`);
-    
-    for (const script of inlineScripts) {
+    const dom = new JSDOM(html, { url, runScripts: "outside-only" });
+
+    // Inline scripts
+    for (const script of dom.window.document.querySelectorAll("script:not([src])")) {
       const code = script.textContent || "";
-      if (code.trim()) {
-        const scriptFindings = analyzeJavaScript(code, "Inline Application Script");
-        findings.push(...scriptFindings);
-      }
+      findings.push(...staticAnalyze(code, "Inline Script"));
     }
-    
-    // Analyze external scripts (only if not third-party)
-    const externalScripts = dom.window.document.querySelectorAll("script[src]");
-    console.log(`Found ${externalScripts.length} external scripts`);
-    
-    for (const script of externalScripts) {
+
+    // External scripts
+    for (const script of dom.window.document.querySelectorAll("script[src]")) {
       const src = script.getAttribute("src");
       if (!src) continue;
-      
-      // SKIP THIRD-PARTY LIBRARIES
-      if (isThirdPartyLibrary(src)) {
-        console.log(`[DOM XSS] Skipping third-party library: ${src}`);
-        continue;
-      }
-      
+      let resolvedUrl;
+      try { resolvedUrl = new URL(src, url).toString(); } catch { continue; }
+      if (isThirdParty(resolvedUrl)) continue;
+
       try {
-        const scriptUrl = new URL(src, url).toString();
-        console.log(`Fetching custom external script: ${scriptUrl}`);
-        
-        const scriptResponse = await axios.get(scriptUrl, {
-          timeout: TIMEOUT,
-          headers: { "User-Agent": USER_AGENT },
-          validateStatus: () => true,
-        });
-        
-        if (scriptResponse.status === 200) {
-          const scriptCode = scriptResponse.data || "";
-          const scriptFindings = analyzeJavaScript(scriptCode, scriptUrl);
-          findings.push(...scriptFindings);
+        const res = await axios.get(resolvedUrl, { timeout: 10000, validateStatus: () => true });
+        if (res.status === 200 && typeof res.data === "string") {
+          findings.push(...staticAnalyze(res.data, resolvedUrl));
         }
-      } catch (error) {
-        console.error(`Error fetching script ${src}:`, error.message);
-      }
+      } catch {}
     }
-    
-    // === RUNTIME PAYLOAD TESTING ===
-    // Test if user input actually reaches the DOM
-    const testPayloads = [
-      "<img src=x onerror=alert('DOMXSS')>",
-      "<script>alert('DOMXSS')</script>",
-      "javascript:alert('DOMXSS')",
-      "'\"><img src=x onerror=alert('DOMXSS')>",
-    ];
-    
-    for (const payload of testPayloads) {
+  } catch {}
+
+  return findings;
+}
+
+/**
+ * Discovers linked pages from a page (same origin, shallow crawl)
+ * Used to find subpages like /level1/frame that have actual XSS
+ */
+async function discoverLinkedPages(url) {
+  const pages = new Set();
+  try {
+    const res = await axios.get(url, { timeout: 10000, validateStatus: () => true });
+    if (res.status !== 200) return [];
+    const dom = new JSDOM(res.data, { url });
+    const base = new URL(url);
+
+    // Collect <a href> links
+    dom.window.document.querySelectorAll("a[href]").forEach(el => {
       try {
-        const testUrlFragment = new URL(url);
-        testUrlFragment.hash = payload;
-        
-        const fragmentResponse = await axios.get(testUrlFragment.toString(), {
-          timeout: TIMEOUT,
-          headers: { "User-Agent": USER_AGENT },
-          validateStatus: () => true,
-        });
-        
-        const fragmentHtml = String(fragmentResponse.data || "");
-        // Payload must be present AND unencoded
-        if (fragmentHtml.includes(payload) && !fragmentHtml.includes(encodeURIComponent(payload))) {
-          findings.push({
-            type: "DOM XSS - Runtime Fragment Injection",
-            location: "URL Fragment (#)",
-            evidence: `Unencoded payload "${payload.substring(0, 30)}..." reflected in response`,
-            confidence: "High",
-          });
+        const resolved = new URL(el.getAttribute("href"), url);
+        if (resolved.origin === base.origin) {
+          resolved.search = "";
+          resolved.hash = "";
+          pages.add(resolved.toString());
         }
-      } catch (error) {
-        console.error(`Error testing URL fragment:`, error.message);
-      }
-      
-      if (urlObj.searchParams.toString()) {
-        for (const [paramName] of urlObj.searchParams.entries()) {
+      } catch {}
+    });
+
+    // Also collect <iframe src> — many XSS labs embed vulnerable pages in iframes
+    dom.window.document.querySelectorAll("iframe[src]").forEach(el => {
+      try {
+        const resolved = new URL(el.getAttribute("src"), url);
+        if (resolved.origin === base.origin) {
+          pages.add(resolved.toString()); // Keep query/hash for iframes — they matter
+        }
+      } catch {}
+    });
+
+    // For each discovered page, also check its iframe sources (one level deep)
+    const firstLevel = [...pages].slice(0, 6);
+    for (const pageUrl of firstLevel) {
+      try {
+        const pageRes = await axios.get(pageUrl, { timeout: 8000, validateStatus: () => true });
+        if (pageRes.status !== 200) continue;
+        const pageDom = new JSDOM(pageRes.data, { url: pageUrl });
+        pageDom.window.document.querySelectorAll("iframe[src]").forEach(el => {
           try {
-            const testUrlParam = new URL(url);
-            testUrlParam.searchParams.set(paramName, payload);
-            
-            const paramResponse = await axios.get(testUrlParam.toString(), {
-              timeout: TIMEOUT,
-              headers: { "User-Agent": USER_AGENT },
-              validateStatus: () => true,
-            });
-            
-            const paramHtml = String(paramResponse.data || "");
-            if (paramHtml.includes(payload) && !paramHtml.includes(encodeURIComponent(payload))) {
-              findings.push({
-                type: "DOM XSS - Runtime Query Parameter Injection",
-                location: `Parameter: ${paramName}`,
-                evidence: `Unencoded payload "${payload.substring(0, 30)}..." reflected in response without encoding`,
-                confidence: "High",
-              });
+            const resolved = new URL(el.getAttribute("src"), pageUrl);
+            if (resolved.origin === base.origin) {
+              pages.add(resolved.toString());
             }
-          } catch (error) {
-            console.error(`Error testing query parameter:`, error.message);
-          }
-        }
-      }
+          } catch {}
+        });
+      } catch {}
     }
-  } catch (error) {
-    console.error("DOM XSS scan error:", error);
-    return {
-      module: "DOM-Based XSS",
-      target: url,
-      vulnerable: false,
-      evidence: "Scan failed due to error",
-      notes: `Error: ${error.message}`,
-    };
+
+  } catch {}
+
+  const root = url.replace(/\/$/, "");
+  return [...pages]
+    .filter(p => p !== root && p !== root + "/")
+    .slice(0, 12);
+}
+
+/**
+ * Main DOM XSS scanner — tries Puppeteer first, falls back to static analysis
+ * Also crawls linked pages to find vulnerable subpages
+ */
+async function scanDOMXSS(inputUrl) {
+  const url = normalizeUrl(inputUrl);
+  console.log(`[DOM XSS] Starting scan: ${url}`);
+
+  let puppeteerFindings = [];
+  let staticFindings = [];
+  let puppeteerFailed = false;
+
+  // Discover linked subpages to scan (e.g. /level1/frame, /app, /search)
+  const linkedPages = await discoverLinkedPages(url);
+  const allTargets = [url, ...linkedPages];
+  console.log(`[DOM XSS] Will test ${allTargets.length} page(s): ${allTargets.join(", ")}`);
+
+  // === PRIMARY: Puppeteer browser-based scan ===
+  try {
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Puppeteer scan timeout")), SCAN_TIMEOUT)
+    );
+    // Run puppeteer on all discovered pages
+    const allPuppeteerFindings = [];
+    for (const target of allTargets) {
+      if (allPuppeteerFindings.length >= 2) break; // Stop once we have confirmed findings
+      const findings = await Promise.race([puppeteerScan(target), timeoutPromise]);
+      allPuppeteerFindings.push(...findings);
+    }
+    puppeteerFindings = allPuppeteerFindings;
+    console.log(`[DOM XSS] Puppeteer scan complete. Confirmed findings: ${puppeteerFindings.length}`);
+  } catch (err) {
+    console.warn(`[DOM XSS] Puppeteer scan failed: ${err.message}. Falling back to static analysis.`);
+    puppeteerFailed = true;
   }
-  
-  const vulnerable = findings.length > 0;
-  
+
+  // === FALLBACK: Static analysis (always runs to supplement) ===
+  try {
+    for (const target of allTargets.slice(0, 3)) { // Static scan top 3 pages
+      const findings = await staticScan(target);
+      staticFindings.push(...findings);
+    }
+    console.log(`[DOM XSS] Static analysis complete. Pattern findings: ${staticFindings.length}`);
+  } catch (err) {
+    console.warn(`[DOM XSS] Static scan error: ${err.message}`);
+  }
+
+  // Merge: confirmed Puppeteer findings take priority
+  // Only include static findings if Puppeteer found nothing (or failed)
+  let allFindings = [];
+
+  if (puppeteerFindings.length > 0) {
+    // Confirmed findings — only return these, ignore noisy static results
+    allFindings = puppeteerFindings;
+  } else if (puppeteerFailed && staticFindings.length > 0) {
+    // Puppeteer unavailable — use static as fallback
+    allFindings = staticFindings;
+  } else {
+    // Puppeteer ran but found nothing — still add static Low findings as informational
+    allFindings = staticFindings.filter(f => f.confidence === "Medium" || f.confidence === "High");
+  }
+
+  // Deduplicate by base URL (strip payload from query to group same endpoint)
+  const seen = new Set();
+  const dedupedFindings = allFindings.filter(f => {
+    try {
+      const u = new URL(f.location);
+      // Key = origin + pathname (ignores the injected payload in params/hash)
+      const key = u.origin + u.pathname;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    } catch {
+      return !seen.has(f.location) && seen.add(f.location);
+    }
+  });
+  allFindings = dedupedFindings;
+
+  const vulnerable = allFindings.length > 0;
+
   return {
     module: "DOM-Based XSS",
     target: url,
-    vulnerable: vulnerable,
+    vulnerable,
     evidence: vulnerable
-      ? findings.map((f) => ({
+      ? allFindings.map(f => ({
           type: f.type,
           location: f.location,
           evidence: f.evidence,
           confidence: f.confidence,
-          sources: f.sources,
-          sinks: f.sinks,
+          sources: f.sources || [],
+          sinks: f.sinks || [],
+          payload: f.payload || null,
         }))
       : "No DOM-based XSS vulnerabilities detected",
     notes: vulnerable
-      ? "DOM-based XSS vulnerabilities detected. Verify that user input reaches vulnerable code paths and consider additional mitigation."
-      : "No DOM-based XSS vulnerabilities detected in application code.",
+      ? puppeteerFindings.length > 0
+        ? "DOM XSS confirmed via real browser execution — these are verified vulnerabilities, not just patterns."
+        : "DOM XSS patterns detected via static analysis. Browser-based verification recommended."
+      : "No DOM-based XSS vulnerabilities detected.",
+    scanMethod: puppeteerFailed ? "static-analysis" : "browser+static",
   };
 }
 

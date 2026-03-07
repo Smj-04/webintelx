@@ -4,7 +4,7 @@ const axios = require("axios");
 const dns = require("dns").promises;
 const PDFDocument = require("pdfkit");
 console.log("🔥 fullScanController.js LOADED");
-
+const sensitiveFileCheck = require("../utils/sensitiveFileCheck");
 
 /*
   FullScan orchestration controller
@@ -108,7 +108,8 @@ if (!validation.valid) {
       reflectedXss: { found: false, details: null },
       clickjacking: { vulnerable: false, headers: {} },
       commandInjection: { found: false, details: null },
-      csrf: { found: false, details: null }
+      csrf: { found: false, details: null },
+      sensitiveFiles: { found: false, details: null }
     }
   };
 
@@ -182,12 +183,13 @@ if (!validation.valid) {
       })(),
 
       // All other modules unchanged
-      axios.post("http://localhost:5000/api/dom-xss", { url: baseUrl }, { timeout: 60000 }),
-      axios.post("http://localhost:5000/api/stored-xss", { url: baseUrl }, { timeout: 60000 }),
+      axios.post("http://localhost:5000/api/dom-xss", { url: baseUrl }, { timeout: 180000 }),
+      axios.post("http://localhost:5000/api/stored-xss", { url: baseUrl }, { timeout: 180000 }),
       axios.post("http://localhost:5000/api/autoxss", { url: baseUrl }, { timeout: 180000 }),
-      axios.post("http://localhost:5000/api/clickjacking", { url: baseUrl }, { timeout: 10000 }),
-      axios.post("http://localhost:5000/api/command-injection", { url: baseUrl }, { timeout: 20000 }),
-      axios.post("http://localhost:5000/api/csrf", { url: baseUrl }, { timeout: 60000 })
+      axios.post("http://localhost:5000/api/clickjacking", { url: baseUrl }, { timeout: 180000 }),
+      axios.post("http://localhost:5000/api/command-injection", { url: baseUrl }, { timeout: 180000 }),
+      axios.post("http://localhost:5000/api/csrf", { url: baseUrl }, { timeout: 180000 }),
+      axios.post("http://localhost:5000/api/sensitive-files", { url: baseUrl }, { timeout: 180000 })
     ]);
 
       // Process SQLMap result
@@ -213,6 +215,7 @@ if (!validation.valid) {
       const clickRes    = safeModule(moduleResults[3]);
       const cmdRes      = safeModule(moduleResults[4]);
       const csrfRes     = safeModule(moduleResults[5]);
+      const sensitiveRes = safeModule(moduleResults[6]);
 
 
     if (domRes.ok && domRes.data) {
@@ -281,6 +284,18 @@ if (!validation.valid) {
         fullResult.summary.high += 1;
       }
     }
+
+    if (sensitiveRes.ok && sensitiveRes.data) {
+      fullResult.vulnerabilities.sensitiveFiles.found = !!sensitiveRes.data.vulnerable;
+      fullResult.vulnerabilities.sensitiveFiles.details = sensitiveRes.data || null;
+      if (sensitiveRes.data.summary?.critical > 0) {
+        fullResult.summary.critical += 1;
+      } else if (sensitiveRes.data.summary?.high > 0) {
+        fullResult.summary.high += 1;
+      } else if (sensitiveRes.data.vulnerable) {
+        fullResult.summary.medium += 1;
+      }
+    }
     // Finalize summary: no CRITICAL/LOW detector available in current heuristics
     // We'll keep critical and low as 0 unless future modules provide richer severity metadata
 
@@ -340,7 +355,8 @@ exports.generateFullScanPDF = async (scanData, target, res) => {
       { name: 'Reflected XSS', found: vuln.reflectedXss?.found },
       { name: 'Clickjacking', found: vuln.clickjacking.vulnerable },
       { name: 'Command Injection', found: vuln.commandInjection.found },
-      { name: 'CSRF', found: vuln.csrf?.found }
+      { name: 'CSRF', found: vuln.csrf?.found },
+      { name: 'Sensitive File Exposure', found: vuln.sensitiveFiles?.found }
 
     ];
 
