@@ -18,6 +18,7 @@ const sqlmapRoute = require("./routes/sqlmapRoute");
 const securityTrailsRoute = require("./routes/securitytrailsRoute");
 const reportRoute = require("./routes/reportRoute");
 const phishingCheckRoute = require("./routes/phishingCheckRoute");
+const wordpressRoute = require("./routes/Wordpressroute");
 
 console.log("🚀 SERVER FILE PATH:", __filename);
 
@@ -37,6 +38,7 @@ app.use("/api", xssRoutes);
 app.use("/api", autoXssRoute);
 app.use("/api", sqlmapRoute);
 app.use("/api/report", reportRoute);
+app.use("/api/wordpress", wordpressRoute);
 
 app.use("/api", require("./routes/aiReportRoute"));
 
