@@ -5,6 +5,8 @@ const dns = require("dns").promises;
 const PDFDocument = require("pdfkit");
 console.log("🔥 fullScanController.js LOADED");
 const sensitiveFileCheck = require("../utils/sensitiveFileCheck");
+const openRedirectCheck = require("../utils/openRedirectCheck");
+const corsCheck = require("../utils/corsCheck");
 
 /*
   FullScan orchestration controller
@@ -109,7 +111,9 @@ if (!validation.valid) {
       clickjacking: { vulnerable: false, headers: {} },
       commandInjection: { found: false, details: null },
       csrf: { found: false, details: null },
-      sensitiveFiles: { found: false, details: null }
+      sensitiveFiles: { found: false, details: null },
+      openRedirect: { found: false, details: null },
+      cors: { found: false, details: null },
     }
   };
 
@@ -183,13 +187,15 @@ if (!validation.valid) {
       })(),
 
       // All other modules unchanged
-      axios.post("http://localhost:5000/api/dom-xss", { url: baseUrl }, { timeout: 180000 }),
+      axios.post("http://localhost:5000/api/dom-xss", { url: baseUrl }, { timeout: 300000 }),
       axios.post("http://localhost:5000/api/stored-xss", { url: baseUrl }, { timeout: 180000 }),
       axios.post("http://localhost:5000/api/autoxss", { url: baseUrl }, { timeout: 180000 }),
       axios.post("http://localhost:5000/api/clickjacking", { url: baseUrl }, { timeout: 180000 }),
       axios.post("http://localhost:5000/api/command-injection", { url: baseUrl }, { timeout: 180000 }),
       axios.post("http://localhost:5000/api/csrf", { url: baseUrl }, { timeout: 180000 }),
-      axios.post("http://localhost:5000/api/sensitive-files", { url: baseUrl }, { timeout: 180000 })
+      axios.post("http://localhost:5000/api/sensitive-files", { url: baseUrl }, { timeout: 180000 }),
+      axios.post("http://localhost:5000/api/open-redirect", { url: baseUrl }, { timeout: 60000 }),
+      axios.post("http://localhost:5000/api/cors",{ url: baseUrl }, { timeout: 60000 }),
     ]);
 
       // Process SQLMap result
@@ -296,6 +302,30 @@ if (!validation.valid) {
         fullResult.summary.medium += 1;
       }
     }
+
+      // --- Open Redirect --- (moduleResults[7])
+      const openRedirectRes = safeModule(moduleResults[7]);
+      if (openRedirectRes.ok && openRedirectRes.data) {
+        fullResult.vulnerabilities.openRedirect.found = !!openRedirectRes.data.vulnerable;
+        fullResult.vulnerabilities.openRedirect.details = openRedirectRes.data || null;
+        if (openRedirectRes.data.vulnerable) {
+          fullResult.summary.high += 1;
+        }
+      }
+
+      // --- CORS --- (moduleResults[8])
+      const corsRes = safeModule(moduleResults[8]);
+      if (corsRes.ok && corsRes.data) {
+        fullResult.vulnerabilities.cors.found = !!corsRes.data.vulnerable;
+        fullResult.vulnerabilities.cors.details = corsRes.data || null;
+        if (corsRes.data.vulnerable) {
+          const hasCritical = corsRes.data.summary?.critical > 0;
+          const hasHigh = corsRes.data.summary?.high > 0;
+          if (hasCritical) fullResult.summary.critical += 1;
+          else if (hasHigh) fullResult.summary.high += 1;
+          else fullResult.summary.medium += 1;
+        }
+      }
     // Finalize summary: no CRITICAL/LOW detector available in current heuristics
     // We'll keep critical and low as 0 unless future modules provide richer severity metadata
 

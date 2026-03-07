@@ -56,6 +56,8 @@ app.use("/api", require("./routes/idorRoute"));
 app.use("/api", phishingCheckRoute);
 app.use("/api/csrf", require("./routes/csrfRoutes"));
 app.use("/api/sensitive-files", require("./routes/sensitiveFilesRoute"));
+app.use("/api/open-redirect", require("./routes/openRedirectRoute"));
+app.use("/api/cors", require("./routes/corsRoute"));
 
 const PORT = 5000;
 

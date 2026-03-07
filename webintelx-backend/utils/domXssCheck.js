@@ -395,7 +395,7 @@ async function discoverLinkedPages(url) {
   const root = url.replace(/\/$/, "");
   return [...pages]
     .filter(p => p !== root && p !== root + "/")
-    .slice(0, 12);
+    .slice(0, 6);
 }
 
 /**

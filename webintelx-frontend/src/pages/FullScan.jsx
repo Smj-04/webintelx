@@ -535,6 +535,72 @@ export default function FullScan() {
                       </div>
                     ) : <DetailText>No sensitive files detected</DetailText>}
                   </ModuleBlock>
+
+                  
+ 
+                  {/* Open Redirect */}
+                  <ModuleBlock keyName="openRedirect" title="OPEN REDIRECT" found={!!v.openRedirect?.found} expanded={expanded.openRedirect} onToggle={toggle}>
+                    {v.openRedirect?.details?.evidence?.length > 0 ? (
+                      <div>
+                        <DetailMono>
+                          › Parameters affected: <Label color="#ff6b35">{v.openRedirect.details.summary?.total || 0}</Label>
+                          {"  "}Params: <Label color="#ff2222">{v.openRedirect.details.summary?.parameters?.join(", ") || "—"}</Label>
+                        </DetailMono>
+                        <div style={{ marginTop: "14px" }}>
+                          {v.openRedirect.details.evidence.map((e, i) => (
+                            <div key={i} style={{ marginBottom: "10px", paddingLeft: "12px", borderLeft: "2px solid #ff6b3555" }}>
+                              <DetailMono>
+                                › <Label color="#ff6b35">[HIGH]</Label>{" "}
+                                <Label color="#fff">Parameter: {e.parameter}</Label>
+                              </DetailMono>
+                              <DetailMono>› Payload: <Label color="#ff9800">{e.payload}</Label></DetailMono>
+                              <DetailMono>› Redirects to: <Label color="#ff2222">{e.redirectsTo}</Label></DetailMono>
+                              <DetailMono>› Status: <Label color="#fbbf24">{e.statusCode}</Label>{"  "}Type: <Label color="rgba(180,255,180,0.55)">{e.type}</Label></DetailMono>
+                              <DetailMono>› Test URL: <Label color="#00d4ff">{e.url}</Label></DetailMono>
+                            </div>
+                          ))}
+                        </div>
+                        <DetailMono style={{ marginTop: "8px" }}>
+                          › <Label color="rgba(180,255,180,0.5)">{v.openRedirect.details.notes}</Label>
+                        </DetailMono>
+                      </div>
+                    ) : <DetailText>No open redirect vulnerabilities detected</DetailText>}
+                  </ModuleBlock>
+
+
+
+                  {/* CORS Misconfiguration */}
+                  <ModuleBlock keyName="cors" title="CORS MISCONFIGURATION" found={!!v.cors?.found} expanded={expanded.cors} onToggle={toggle}>
+                    {v.cors?.details?.evidence?.length > 0 ? (
+                      <div>
+                        <DetailMono>
+                          › Total issues: <Label color="#ff6b35">{v.cors.details.summary?.total || 0}</Label>
+                          {"  "}Critical: <Label color="#ff2222">{v.cors.details.summary?.critical || 0}</Label>
+                          {"  "}High: <Label color="#ff6b35">{v.cors.details.summary?.high || 0}</Label>
+                          {"  "}Medium: <Label color="#fbbf24">{v.cors.details.summary?.medium || 0}</Label>
+                          {"  "}Exploitable: <Label color="#ff2222">{v.cors.details.summary?.exploitable || 0}</Label>
+                        </DetailMono>
+                        <div style={{ marginTop: "14px" }}>
+                          {v.cors.details.evidence.map((e, i) => (
+                            <div key={i} style={{ marginBottom: "10px", paddingLeft: "12px", borderLeft: `2px solid ${riskAccent(e.severity)}55` }}>
+                              <DetailMono>
+                                › <Label color={riskAccent(e.severity)}>[{e.severity}]</Label>{" "}
+                                <Label color="#fff">{e.type}</Label>
+                              </DetailMono>
+                              <DetailMono>› <Label color="rgba(180,255,180,0.55)">{e.description}</Label></DetailMono>
+                              <DetailMono>› Endpoint: <Label color="#00d4ff">{e.url}</Label></DetailMono>
+                              <DetailMono>› Header: <Label color="#ff9800">{e.header}</Label></DetailMono>
+                              <DetailMono>› Exploitable: <Label color={e.exploitable ? "#ff2222" : "#00ff88"}>{e.exploitable ? "Yes" : "No (browser blocks)"}</Label></DetailMono>
+                            </div>
+                          ))}
+                        </div>
+                        <DetailMono style={{ marginTop: "8px" }}>
+                          › <Label color="rgba(180,255,180,0.5)">{v.cors.details.notes}</Label>
+                        </DetailMono>
+                      </div>
+                    ) : <DetailText>No CORS misconfigurations detected</DetailText>}
+                  </ModuleBlock>
+
                 </div>
               );
             })()}
