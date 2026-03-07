@@ -1,4 +1,21 @@
+// controllers/wordpressController.js
+
 const axios = require("axios");
+const { exec } = require("child_process");
+const path = require("path");
+
+// ─── Wappalyzer via Python script ────────────────────────────────────────────
+
+function runWappalyzer(url) {
+  return new Promise((resolve) => {
+    const scriptPath = path.join(__dirname, "../utils/wappalyzer_scan.py");
+    exec(`python "${scriptPath}" "${url}"`, { timeout: 30000 }, (err, stdout) => {
+      if (err || !stdout) return resolve({});
+      try { resolve(JSON.parse(stdout.trim())); }
+      catch { resolve({}); }
+    });
+  });
+}
 
 // ─── Known vulnerable plugin versions (manually maintained) ─────────────────
 const KNOWN_VULNERABLE_PLUGINS = {
@@ -133,7 +150,6 @@ async function enumeratePlugins(baseUrl) {
     while ((match = regex.exec(home.data)) !== null) found.add(match[1]);
   }
 
-  // Probe common plugins
   await Promise.all(
     Object.keys(KNOWN_VULNERABLE_PLUGINS).map(async (slug) => {
       if (!found.has(slug)) {
@@ -207,7 +223,6 @@ async function detectTheme(baseUrl) {
 async function enumerateUsers(baseUrl) {
   const users = [];
 
-  // REST API
   const rest = await fetchPage(`${baseUrl}/wp-json/wp/v2/users`, 8000);
   if (rest?.status === 200) {
     try {
@@ -216,7 +231,6 @@ async function enumerateUsers(baseUrl) {
     } catch {}
   }
 
-  // Author scan
   for (let i = 1; i <= 5; i++) {
     const res = await fetchPage(`${baseUrl}/?author=${i}`, 5000);
     if (res?.status === 200) {
@@ -226,7 +240,6 @@ async function enumerateUsers(baseUrl) {
     }
   }
 
-  // oEmbed
   const oembed = await fetchPage(`${baseUrl}/wp-json/oembed/1.0/embed?url=${baseUrl}`, 5000);
   if (oembed?.status === 200) {
     try {
@@ -430,20 +443,43 @@ exports.scanWordPress = async (req, res) => {
       });
     }
 
-    const [coreVersion, plugins, theme, userEnumeration, loginExposure, xmlRpc, directoryListing, sensitiveFiles, securityHeaders] =
-      await Promise.all([
-        detectCoreVersion(baseUrl),
-        enumeratePlugins(baseUrl),
-        detectTheme(baseUrl),
-        enumerateUsers(baseUrl),
-        checkLoginExposure(baseUrl),
-        checkXmlRpc(baseUrl),
-        checkDirectoryListing(baseUrl),
-        checkSensitiveFiles(baseUrl),
-        checkSecurityHeaders(baseUrl),
-      ]);
+    // Run all checks + Wappalyzer in parallel
+    const [
+      coreVersion,
+      plugins,
+      theme,
+      userEnumeration,
+      loginExposure,
+      xmlRpc,
+      directoryListing,
+      sensitiveFiles,
+      securityHeaders,
+      techStack,
+    ] = await Promise.all([
+      detectCoreVersion(baseUrl),
+      enumeratePlugins(baseUrl),
+      detectTheme(baseUrl),
+      enumerateUsers(baseUrl),
+      checkLoginExposure(baseUrl),
+      checkXmlRpc(baseUrl),
+      checkDirectoryListing(baseUrl),
+      checkSensitiveFiles(baseUrl),
+      checkSecurityHeaders(baseUrl),
+      runWappalyzer(baseUrl),   // ← Wappalyzer runs independently here
+    ]);
 
-    const results = { coreVersion, plugins, theme, userEnumeration, loginExposure, xmlRpc, directoryListing, sensitiveFiles, securityHeaders };
+    const results = {
+      coreVersion,
+      plugins,
+      theme,
+      userEnumeration,
+      loginExposure,
+      xmlRpc,
+      directoryListing,
+      sensitiveFiles,
+      securityHeaders,
+      techStack,              // ← attached to WP scan results
+    };
     const riskScore = calculateRiskScore(results);
 
     return res.status(200).json({

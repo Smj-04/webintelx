@@ -114,6 +114,7 @@ if (!validation.valid) {
       sensitiveFiles: { found: false, details: null },
       openRedirect: { found: false, details: null },
       cors: { found: false, details: null },
+      wordpress: { found: false, details: null },
     }
   };
 
@@ -196,6 +197,7 @@ if (!validation.valid) {
       axios.post("http://localhost:5000/api/sensitive-files", { url: baseUrl }, { timeout: 180000 }),
       axios.post("http://localhost:5000/api/open-redirect", { url: baseUrl }, { timeout: 60000 }),
       axios.post("http://localhost:5000/api/cors",{ url: baseUrl }, { timeout: 60000 }),
+      axios.post("http://localhost:5000/api/wordpress/scan", { url: baseUrl }, { timeout: 60000 }),
     ]);
 
       // Process SQLMap result
@@ -222,6 +224,12 @@ if (!validation.valid) {
       const cmdRes      = safeModule(moduleResults[4]);
       const csrfRes     = safeModule(moduleResults[5]);
       const sensitiveRes = safeModule(moduleResults[6]);
+      const openRedirectRes = safeModule(moduleResults[7]);
+      const corsRes = safeModule(moduleResults[8]);
+      const wordpressRes = safeModule(moduleResults[9]);
+
+
+
 
 
     if (domRes.ok && domRes.data) {
@@ -304,7 +312,6 @@ if (!validation.valid) {
     }
 
       // --- Open Redirect --- (moduleResults[7])
-      const openRedirectRes = safeModule(moduleResults[7]);
       if (openRedirectRes.ok && openRedirectRes.data) {
         fullResult.vulnerabilities.openRedirect.found = !!openRedirectRes.data.vulnerable;
         fullResult.vulnerabilities.openRedirect.details = openRedirectRes.data || null;
@@ -314,7 +321,6 @@ if (!validation.valid) {
       }
 
       // --- CORS --- (moduleResults[8])
-      const corsRes = safeModule(moduleResults[8]);
       if (corsRes.ok && corsRes.data) {
         fullResult.vulnerabilities.cors.found = !!corsRes.data.vulnerable;
         fullResult.vulnerabilities.cors.details = corsRes.data || null;
@@ -324,6 +330,21 @@ if (!validation.valid) {
           if (hasCritical) fullResult.summary.critical += 1;
           else if (hasHigh) fullResult.summary.high += 1;
           else fullResult.summary.medium += 1;
+        }
+      }
+
+      // --- WordPress --- (moduleResults[9])
+      if (wordpressRes.ok && wordpressRes.data) {
+        const wp = wordpressRes.data;
+        if (wp.isWordPress) {
+          fullResult.vulnerabilities.wordpress.found = true;
+          fullResult.vulnerabilities.wordpress.details = wp;
+
+          const score = wp.riskScore?.level;
+          if (score === "CRITICAL") fullResult.summary.critical += 1;
+          else if (score === "HIGH") fullResult.summary.high += 1;
+          else if (score === "MEDIUM") fullResult.summary.medium += 1;
+          else fullResult.summary.low += 1;
         }
       }
     // Finalize summary: no CRITICAL/LOW detector available in current heuristics

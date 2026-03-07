@@ -1,3 +1,5 @@
+// routes/Wordpressroute.js
+
 const express = require("express");
 const router = express.Router();
 const { scanWordPress } = require("../controllers/wordpressController");

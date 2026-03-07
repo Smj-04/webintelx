@@ -1,3 +1,5 @@
+#utils/wappalyzer_scan.py
+
 from Wappalyzer import Wappalyzer, WebPage
 import json
 import sys

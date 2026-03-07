@@ -285,7 +285,7 @@ export default function FullScan() {
 
         {/* RESULTS */}
         {scanDone && !isScanning && (
-          <div style={{ animation: "fadeUp 0.6s ease both" }}>
+          <div style={{ animation: "fadeUp 0.6s ease both", paddingBottom: "120px" }}>
 
             {/* Completion Banner */}
             <div style={{ background: "rgba(0,255,136,0.04)", border: "1px solid rgba(0,255,136,0.2)", borderLeft: "4px solid #00ff88", padding: "24px 32px", marginBottom: "32px", position: "relative", overflow: "hidden" }}>
@@ -599,6 +599,117 @@ export default function FullScan() {
                         </DetailMono>
                       </div>
                     ) : <DetailText>No CORS misconfigurations detected</DetailText>}
+                  </ModuleBlock>
+
+
+                  {/* WordPress Security Scanner */}
+                  <ModuleBlock
+                    keyName="wordpress"
+                    title="WORDPRESS SECURITY"
+                    found={!!v.wordpress?.found}
+                    expanded={!!expanded.wordpress}
+                    onToggle={toggle}
+                  >
+                    {v.wordpress?.found ? (
+                      <div>
+                        {/* Risk Score */}
+                        <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,107,53,0.3)" }}>
+                          <DetailMono>› Risk Score: <Label color={riskAccent(v.wordpress.details?.riskScore?.level)}>
+                            {v.wordpress.details?.riskScore?.score ?? "?"}/100 ({v.wordpress.details?.riskScore?.level ?? "UNKNOWN"})
+                          </Label></DetailMono>
+                          <DetailMono>› Site: <Label color="#00d4ff">{v.wordpress.details?.url}</Label></DetailMono>
+                          <DetailMono>› Scanned At: <Label color="#fbbf24">
+                            {v.wordpress.details?.scannedAt ? new Date(v.wordpress.details.scannedAt).toLocaleString() : "—"}
+                          </Label></DetailMono>
+                        </div>
+
+                        {/* WP Core Version */}
+                        <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(0,255,136,0.3)" }}>
+                          <DetailMono>› WP Version: <Label color="#00ff88">
+                            {v.wordpress.details?.results?.coreVersion?.version || "Not detected"}
+                          </Label></DetailMono>
+                          {(v.wordpress.details?.results?.coreVersion?.vulnerabilities || []).map((cv, i) => (
+                            <DetailMono key={i}>› <Label color="#ff2222">[{cv.severity}]</Label> {cv.issue} — fix in <Label color="#fbbf24">{cv.fixedIn}</Label></DetailMono>
+                          ))}
+                        </div>
+
+                        {/* Vulnerable Plugins */}
+                        {(v.wordpress.details?.results?.plugins || []).filter(p => p.vulnerabilities?.length > 0).length > 0 && (
+                          <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,34,34,0.4)" }}>
+                            <DetailMono>› Vulnerable Plugins: <Label color="#ff2222">
+                              {v.wordpress.details.results.plugins.filter(p => p.vulnerabilities?.length > 0).length}
+                            </Label></DetailMono>
+                            {v.wordpress.details.results.plugins.filter(p => p.vulnerabilities?.length > 0).map((p, i) => (
+                              <div key={i} style={{ marginTop: "6px" }}>
+                                <DetailMono>
+                                  &nbsp;&nbsp;· <Label color={riskAccent(p.severity)}>[{p.severity}]</Label>{" "}
+                                  <Label color="#fbbf24">{p.slug}</Label>
+                                  {p.version && <Label color="rgba(180,255,180,0.5)"> v{p.version}</Label>}
+                                </DetailMono>
+                                <DetailMono>&nbsp;&nbsp;&nbsp;&nbsp;↳ <Label color="rgba(180,255,180,0.55)">{p.vulnerabilities[0]?.issue}</Label></DetailMono>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Theme */}
+                        {v.wordpress.details?.results?.theme?.name && (
+                          <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(0,255,136,0.2)" }}>
+                            <DetailMono>› Active Theme: <Label color="#00ff88">{v.wordpress.details.results.theme.name}</Label>
+                              {v.wordpress.details.results.theme.version && (
+                                <Label color="rgba(180,255,180,0.5)"> v{v.wordpress.details.results.theme.version}</Label>
+                              )}
+                            </DetailMono>
+                          </div>
+                        )}
+
+                        {/* User Enumeration */}
+                        {v.wordpress.details?.results?.userEnumeration?.exposed && (
+                          <div style={{ marginBottom: "10px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,34,34,0.4)" }}>
+                            <DetailMono>› <Label color="#ff2222">[HIGH]</Label> User Enumeration: <Label color="#ff6b35">
+                              {(v.wordpress.details.results.userEnumeration.users || []).length} user(s) exposed
+                            </Label></DetailMono>
+                            {(v.wordpress.details.results.userEnumeration.users || []).slice(0, 5).map((u, i) => (
+                              <DetailMono key={i}>&nbsp;&nbsp;· <Label color="#fbbf24">{u.name}</Label> <Label color="rgba(180,255,180,0.4)">via {u.source}</Label></DetailMono>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Login Exposure */}
+                        {v.wordpress.details?.results?.loginExposure?.wpLoginExposed && (
+                          <DetailMono style={{ marginBottom: "10px" }}>
+                            › <Label color="#ff6b35">[MEDIUM]</Label> wp-login.php publicly accessible
+                            {!v.wordpress.details.results.loginExposure.bruteForceProtection && (
+                              <Label color="#ff2222"> — No brute-force protection detected</Label>
+                            )}
+                          </DetailMono>
+                        )}
+
+                        {/* XML-RPC */}
+                        {v.wordpress.details?.results?.xmlRpc?.enabled && (
+                          <DetailMono style={{ marginBottom: "10px" }}>
+                            › <Label color={v.wordpress.details.results.xmlRpc.multicallEnabled ? "#ff2222" : "#ff6b35"}>
+                              [{v.wordpress.details.results.xmlRpc.multicallEnabled ? "CRITICAL" : "HIGH"}]
+                            </Label>{" "}
+                            XML-RPC enabled{v.wordpress.details.results.xmlRpc.multicallEnabled ? " + system.multicall (brute-force amplifier)" : ""}
+                          </DetailMono>
+                        )}
+
+                        {/* Security Headers */}
+                        {(v.wordpress.details?.results?.securityHeaders?.missing || []).length > 0 && (
+                          <div style={{ paddingLeft: "12px", borderLeft: "2px solid rgba(251,191,36,0.3)" }}>
+                            <DetailMono>› Missing security headers: <Label color="#fbbf24">
+                              {v.wordpress.details.results.securityHeaders.missing.length}
+                            </Label></DetailMono>
+                            {v.wordpress.details.results.securityHeaders.missing.map((h, i) => (
+                              <DetailMono key={i}>&nbsp;&nbsp;· <Label color="rgba(180,255,180,0.5)">{h.header}</Label></DetailMono>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <DetailText>Target is not running WordPress or no issues detected.</DetailText>
+                    )}
                   </ModuleBlock>
 
                 </div>
