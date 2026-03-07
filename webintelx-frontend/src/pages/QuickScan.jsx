@@ -134,14 +134,25 @@ export default function QuickScan() {
   const loaderRef = useRef(null);
   const resultsRef = useRef(null);
 
-  const isValidURL = (url) => {
-    try { new URL(url.startsWith("http") ? url : `http://${url}`); return true; }
-    catch { return false; }
+  const isValidTarget = (val) => {
+    const trimmed = val.trim();
+    try {
+      const u = new URL(trimmed.startsWith("http") ? trimmed : `http://${trimmed}`);
+      const host = u.hostname;
+      const domainRegex = /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+      const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+      return domainRegex.test(host) || ipRegex.test(host) || host === "localhost";
+    } catch {
+      return false;
+    }
   };
 
   const handleScan = async () => {
-    if (!input.trim()) return alert("Please enter a URL");
-    if (!isValidURL(input)) return alert("Invalid URL format");
+  if (!input.trim()) return alert("Please enter a URL");
+  if (!isValidTarget(input)) {
+    setError("Invalid target. Please enter a valid domain (e.g. example.com) or URL (e.g. https://example.com).");
+    return;
+  }
     setIsScanning(true); setError(""); setResults(null); setScanDone(false); setRiskAssessment(null);
     setTimeout(() => loaderRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     try {
@@ -245,7 +256,8 @@ export default function QuickScan() {
           <label style={{ fontFamily: "'Orbitron', monospace", fontSize: "12px", letterSpacing: "0.1em", color: "#e8ffe8", display: "block", marginBottom: "12px" }}>TARGET URL</label>
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
             <input
-              value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && handleScan()}
+              value={input} onChange={e => { setInput(e.target.value); if (error) setError(null); }}
+               onKeyDown={e => e.key === "Enter" && handleScan()}
               placeholder="example.com"
               style={{ flex: "1 1 240px", padding: "12px 16px", background: "rgba(0,0,0,0.8)", border: "1px solid rgba(0,255,136,0.2)", color: "#00ff88", fontFamily: "'Share Tech Mono', monospace", fontSize: "13px", outline: "none", letterSpacing: "0.05em" }}
               onFocus={e => e.target.style.borderColor = "#00ff88"}

@@ -2,7 +2,9 @@ import { useState, useRef } from "react";
 import axios from "axios";
 import {
   FaSearch, FaFingerprint, FaNetworkWired, FaBug,
-  FaUserSecret, FaListUl, FaFileDownload,
+  FaUserSecret, FaListUl, FaFileDownload, FaGlobe,
+  FaServer, FaShieldAlt, FaLock, FaCode, FaExclamationTriangle,
+  FaCheckCircle, FaTimesCircle, FaEnvelope, FaMapMarkerAlt,
 } from "react-icons/fa";
 
 const FONT_URL = "https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap";
@@ -45,6 +47,436 @@ const riskAccent = (risk) => {
   return "#00ff88";
 };
 
+const StatusBadge = ({ value, trueColor = "#00ff88", falseColor = "#ff6b35" }) => {
+  const isGood = value === true || value === "YES" || value === "ENABLED" || value === "PRESENT";
+  return (
+    <span style={{
+      fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.12em",
+      padding: "3px 9px", border: `1px solid ${isGood ? trueColor : falseColor}40`,
+      background: `${isGood ? trueColor : falseColor}12`,
+      color: isGood ? trueColor : falseColor,
+    }}>
+      {isGood ? "✓" : "✕"} {String(value)}
+    </span>
+  );
+};
+
+const InfoRow = ({ label, value, valueColor = "#00d4ff", mono = true }) => (
+  <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "6px 0", borderBottom: "1px solid rgba(0,255,136,0.04)" }}>
+    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(0,255,136,0.4)", letterSpacing: "0.12em", minWidth: "180px", flexShrink: 0 }}>{label}</span>
+    <span style={{ fontFamily: mono ? "'Share Tech Mono', monospace" : "'Rajdhani', sans-serif", fontSize: mono ? "11px" : "14px", color: valueColor, letterSpacing: mono ? "0.05em" : "0", wordBreak: "break-all" }}>{value}</span>
+  </div>
+);
+
+const SectionHeader = ({ icon, title, accent = "#00ff88", count }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px", paddingBottom: "10px", borderBottom: `1px solid ${accent}20` }}>
+    <span style={{ color: accent, fontSize: "14px", filter: `drop-shadow(0 0 6px ${accent})` }}>{icon}</span>
+    <span style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "12px", color: "#e8ffe8", letterSpacing: "0.08em" }}>{title}</span>
+    {count !== undefined && (
+      <span style={{ marginLeft: "auto", fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: accent, background: `${accent}15`, border: `1px solid ${accent}30`, padding: "2px 10px", letterSpacing: "0.1em" }}>
+        {count}
+      </span>
+    )}
+  </div>
+);
+
+const Panel = ({ children, accent = "rgba(0,255,136,0.12)", leftAccent = "#00ff88", style = {} }) => (
+  <div style={{
+    background: "rgba(0,0,0,0.55)", border: `1px solid ${accent}`,
+    borderLeft: `3px solid ${leftAccent}`, padding: "24px", marginBottom: "14px",
+    position: "relative", overflow: "hidden", ...style,
+  }}>
+    {children}
+  </div>
+);
+
+const Tag = ({ children, color = "#00ff88" }) => (
+  <span style={{
+    fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.1em",
+    color, background: `${color}12`, border: `1px solid ${color}30`,
+    padding: "3px 10px", marginRight: "8px", marginBottom: "6px", display: "inline-block",
+  }}>{children}</span>
+);
+
+// ─── FULL QUICKSCAN RESULTS DISPLAY ───────────────────────────────────────────
+function QuickScanResults({ data }) {
+  const qs = data?.quickscan || {};
+  const [expandedSections, setExpandedSections] = useState({
+    headers: true, tech: true, ports: true, osint: true,
+  });
+  const [showDebug, setShowDebug] = useState(false);
+  const toggle = (key) => setExpandedSections(s => ({ ...s, [key]: !s[key] }));
+
+  // ── flexible getters ──────────────────────────────────────────────────────
+  const tech  = qs.technology || {};
+  const ports = qs.ports || qs.portScan || {};
+  const osint = qs.osint || qs.reputation || {};
+  const hdrs  = qs.headers || qs.securityHeaders || qs.httpHeaders || {};
+
+  // ── always-show: present even if empty/clean ─────────────────────────────
+  const hasTech    = Object.keys(tech).length > 0;
+  const hasPorts   = Object.keys(ports).length > 0;
+  const hasHeaders = Object.keys(hdrs).length > 0;
+
+  // ── conditional: only show if there's an actual finding ──────────────────
+  const osintFindings = osint.virusTotal || osint.safeBrowsing || osint.blacklisted || osint.cves;
+  const hasOsintAlert = !!(
+    osint.virusTotal?.malicious > 0 ||
+    osint.safeBrowsing?.safe === false ||
+    osint.blacklisted === true ||
+    osint.cves?.count > 0 ||
+    osintFindings
+  );
+  const hasShodanAlert = !!(osint.cves?.count > 0);
+
+  const hasAnyData = hasTech || hasPorts || hasHeaders || hasOsintAlert;
+
+  const CollapseBtn = ({ section }) => (
+    <button
+      onClick={() => toggle(section)}
+      style={{
+        marginLeft: "auto", fontFamily: "'Share Tech Mono', monospace", fontSize: "10px",
+        letterSpacing: "0.1em", color: "rgba(0,255,136,0.5)", background: "rgba(0,255,136,0.05)",
+        border: "1px solid rgba(0,255,136,0.12)", padding: "4px 12px", cursor: "pointer",
+        flexShrink: 0,
+      }}
+    >
+      {expandedSections[section] ? "▲ HIDE" : "▼ SHOW"}
+    </button>
+  );
+
+  // helper: render any unknown object as key/value rows
+  const RenderObject = ({ obj, depth = 0 }) => {
+    if (!obj || typeof obj !== "object") return <InfoRow label="VALUE" value={String(obj)} />;
+    return Object.entries(obj).map(([k, v]) => {
+      if (v === null || v === undefined) return null;
+      if (Array.isArray(v)) {
+        if (v.length === 0) return null;
+        if (typeof v[0] !== "object") {
+          return (
+            <div key={k} style={{ padding: "6px 0", borderBottom: "1px solid rgba(0,255,136,0.04)" }}>
+              <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(0,255,136,0.4)", letterSpacing: "0.12em", marginBottom: "6px" }}>{k.toUpperCase()}</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                {v.map((item, i) => <Tag key={i} color="#00d4ff">{String(item)}</Tag>)}
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div key={k} style={{ marginBottom: "10px" }}>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(0,255,136,0.4)", letterSpacing: "0.12em", marginBottom: "6px" }}>{k.toUpperCase()} ({v.length})</div>
+            {v.slice(0, 10).map((item, i) => (
+              <div key={i} style={{ paddingLeft: "12px", borderLeft: "2px solid rgba(0,255,136,0.15)", marginBottom: "6px" }}>
+                <RenderObject obj={item} depth={depth + 1} />
+              </div>
+            ))}
+          </div>
+        );
+      }
+      if (typeof v === "object") {
+        if (depth > 1) return <InfoRow key={k} label={k.toUpperCase()} value={JSON.stringify(v).substring(0, 80)} valueColor="rgba(180,255,180,0.5)" />;
+        return (
+          <div key={k} style={{ marginBottom: "8px" }}>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(0,255,136,0.4)", letterSpacing: "0.12em", marginBottom: "4px" }}>{k.toUpperCase()}</div>
+            <div style={{ paddingLeft: "12px", borderLeft: "2px solid rgba(0,255,136,0.1)" }}>
+              <RenderObject obj={v} depth={depth + 1} />
+            </div>
+          </div>
+        );
+      }
+      const strVal = String(v);
+      const isNeg = strVal === "false" || strVal === "NO" || strVal === "MISSING" || strVal === "0";
+      const isPos = strVal === "true" || strVal === "YES" || strVal === "PRESENT";
+      return <InfoRow key={k} label={k.toUpperCase().replace(/_/g, " ")} value={strVal}
+        valueColor={isPos ? "#00ff88" : isNeg ? "#ff6b35" : "#00d4ff"} />;
+    });
+  };
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+        <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.3em", color: "rgba(0,255,136,0.38)" }}>
+          // RECONNAISSANCE_INTELLIGENCE
+        </div>
+        {/* Debug toggle — helps identify backend key names */}
+        <button
+          onClick={() => setShowDebug(s => !s)}
+          style={{
+            fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.15em",
+            color: showDebug ? "#fbbf24" : "rgba(251,191,36,0.3)",
+            background: showDebug ? "rgba(251,191,36,0.08)" : "transparent",
+            border: `1px solid ${showDebug ? "rgba(251,191,36,0.3)" : "rgba(251,191,36,0.1)"}`,
+            padding: "4px 12px", cursor: "pointer", transition: "all 0.2s",
+          }}
+        >
+          {showDebug ? "▲ HIDE RAW DATA" : "▼ DEBUG: SHOW RAW QUICKSCAN"}
+        </button>
+      </div>
+
+      {/* ── DEBUG PANEL ── */}
+      {showDebug && (
+        <div style={{ marginBottom: "20px", background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.2)", borderLeft: "3px solid #fbbf24", padding: "16px" }}>
+          <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "11px", color: "#fbbf24", letterSpacing: "0.1em", marginBottom: "10px" }}>⚙ RAW QUICKSCAN KEYS — use this to verify backend data shape</div>
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(0,255,136,0.5)", marginBottom: "8px" }}>
+            Top-level keys in <span style={{ color: "#fbbf24" }}>scanResult.quickscan</span>: {Object.keys(qs).join(", ") || "(none — quickscan is empty or missing)"}
+          </div>
+          <pre style={{ maxHeight: "300px", overflowY: "auto", fontSize: "10px", color: "rgba(0,255,136,0.55)", background: "rgba(0,0,0,0.4)", padding: "12px", border: "1px solid rgba(0,255,136,0.08)" }}>
+            {JSON.stringify(qs, null, 2)}
+          </pre>
+        </div>
+      )}
+
+      {/* ── NO DATA FALLBACK ── */}
+      {!hasAnyData && (
+        <Panel leftAccent="#fbbf24" accent="rgba(251,191,36,0.1)">
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "rgba(251,191,36,0.6)", lineHeight: 1.8 }}>
+            <div style={{ marginBottom: "8px" }}>⚠ No reconnaissance data found in <span style={{ color: "#fbbf24" }}>scanResult.quickscan</span></div>
+            <div>Enable the debug toggle above to inspect what your backend is returning.</div>
+          </div>
+        </Panel>
+      )}
+
+      {/* ── TECHNOLOGY FINGERPRINT ── */}
+      {hasTech && (
+        <Panel leftAccent="#fbbf24" accent="rgba(251,191,36,0.1)">
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: expandedSections.tech ? "20px" : 0 }}>
+            <SectionHeader icon={<FaFingerprint />} title="TECHNOLOGY FINGERPRINT" accent="#fbbf24" />
+            <CollapseBtn section="tech" />
+          </div>
+          {expandedSections.tech && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "14px" }}>
+              {/* Server / Backend block */}
+              {(tech.server || tech.backend || tech.serverVersion || tech.os) && (
+                <div style={{ background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.1)", padding: "16px" }}>
+                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#fbbf24", letterSpacing: "0.12em", marginBottom: "10px" }}>SERVER</div>
+                  {tech.server && <InfoRow label="WEB_SERVER" value={tech.server} valueColor="#fbbf24" />}
+                  {tech.backend && <InfoRow label="BACKEND" value={tech.backend} valueColor="#fbbf24" />}
+                  {tech.serverVersion && <InfoRow label="VERSION" value={tech.serverVersion} valueColor={tech.serverVersionOutdated ? "#ff6b35" : "#fbbf24"} />}
+                  {tech.os && <InfoRow label="OS" value={tech.os} valueColor="rgba(180,255,180,0.6)" />}
+                  {tech.poweredBy && <InfoRow label="POWERED_BY" value={tech.poweredBy} valueColor="#fbbf24" />}
+                </div>
+              )}
+              {/* SSL quick status */}
+              {(tech.ssl !== undefined || tech.https !== undefined) && (
+                <div style={{ background: "rgba(0,255,136,0.04)", border: "1px solid rgba(0,255,136,0.1)", padding: "16px" }}>
+                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#00ff88", letterSpacing: "0.12em", marginBottom: "10px" }}>SSL / HTTPS</div>
+                  <InfoRow label="SSL_ENABLED" value={tech.ssl || tech.https ? "YES" : "NO"} valueColor={tech.ssl || tech.https ? "#00ff88" : "#ff6b35"} />
+                </div>
+              )}
+              {/* CMS */}
+              {tech.cms && (
+                <div style={{ background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.1)", padding: "16px" }}>
+                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#00d4ff", letterSpacing: "0.12em", marginBottom: "10px" }}>CMS / PLATFORM</div>
+                  <InfoRow label="CMS" value={tech.cms} valueColor="#00d4ff" />
+                  {tech.cmsVersion && <InfoRow label="VERSION" value={tech.cmsVersion} valueColor={tech.cmsOutdated ? "#ff6b35" : "#00d4ff"} />}
+                  {tech.cmsOutdated && <div style={{ marginTop: "6px", fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "#ff6b35" }}>⚠ OUTDATED VERSION DETECTED</div>}
+                </div>
+              )}
+              {/* Frameworks */}
+              {(tech.frameworks?.length > 0 || tech.jsFrameworks?.length > 0 || tech.libraries?.length > 0) && (
+                <div style={{ background: "rgba(176,106,255,0.04)", border: "1px solid rgba(176,106,255,0.1)", padding: "16px" }}>
+                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#b06aff", letterSpacing: "0.12em", marginBottom: "10px" }}>FRAMEWORKS & LIBRARIES</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {[...(tech.frameworks || []), ...(tech.jsFrameworks || []), ...(tech.libraries || [])].map((f, i) => <Tag key={i} color="#b06aff">{f}</Tag>)}
+                  </div>
+                </div>
+              )}
+              {/* CDN / Infra */}
+              {(tech.cdn || tech.hosting || tech.cloudProvider || tech.waf) && (
+                <div style={{ background: "rgba(0,255,136,0.04)", border: "1px solid rgba(0,255,136,0.1)", padding: "16px" }}>
+                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#00ff88", letterSpacing: "0.12em", marginBottom: "10px" }}>INFRASTRUCTURE</div>
+                  {tech.cdn && <InfoRow label="CDN" value={tech.cdn} valueColor="#00ff88" />}
+                  {tech.hosting && <InfoRow label="HOSTING" value={tech.hosting} valueColor="#00ff88" />}
+                  {tech.cloudProvider && <InfoRow label="CLOUD" value={tech.cloudProvider} valueColor="#00ff88" />}
+                  {tech.waf && <InfoRow label="WAF" value={tech.waf} valueColor="#fbbf24" />}
+                </div>
+              )}
+              {/* Analytics */}
+              {(tech.analytics?.length > 0 || tech.trackers?.length > 0) && (
+                <div style={{ background: "rgba(255,107,53,0.04)", border: "1px solid rgba(255,107,53,0.1)", padding: "16px" }}>
+                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#ff6b35", letterSpacing: "0.12em", marginBottom: "10px" }}>ANALYTICS & TRACKERS</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {[...(tech.analytics || []), ...(tech.trackers || [])].map((t, i) => <Tag key={i} color="#ff6b35">{t}</Tag>)}
+                  </div>
+                </div>
+              )}
+              {/* Any remaining tech keys we haven't handled explicitly */}
+              {(() => {
+                const handled = new Set(["server","backend","serverVersion","serverVersionOutdated","os","ssl","https","cms","cmsVersion","cmsOutdated","frameworks","jsFrameworks","libraries","cdn","hosting","cloudProvider","waf","analytics","trackers","poweredBy"]);
+                const extra = Object.entries(tech).filter(([k, v]) => !handled.has(k) && v !== null && v !== undefined && v !== "");
+                if (extra.length === 0) return null;
+                return (
+                  <div style={{ background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.08)", padding: "16px" }}>
+                    <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#00d4ff", letterSpacing: "0.12em", marginBottom: "10px" }}>ADDITIONAL TECH DATA</div>
+                    <RenderObject obj={Object.fromEntries(extra)} />
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </Panel>
+      )}
+
+      {/* ── HTTP SECURITY HEADERS — always shown ── */}
+      <Panel leftAccent="#00d4ff" accent="rgba(0,212,255,0.1)">
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: expandedSections.headers ? "20px" : 0 }}>
+          <SectionHeader icon={<FaShieldAlt />} title="HTTP SECURITY HEADERS" accent="#00d4ff"
+            count={hasHeaders ? `${Object.values(hdrs).filter(v => v && v !== "MISSING" && v !== false).length} / ${Object.keys(hdrs).length}` : "NO DATA"} />
+          <CollapseBtn section="headers" />
+        </div>
+        {expandedSections.headers && (
+          hasHeaders ? (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "10px" }}>
+              {Object.entries(hdrs).map(([header, value]) => {
+                const present = !!value && value !== "MISSING" && value !== false && value !== "false";
+                return (
+                  <div key={header} style={{
+                    background: present ? "rgba(0,255,136,0.04)" : "rgba(255,34,34,0.04)",
+                    border: `1px solid ${present ? "rgba(0,255,136,0.12)" : "rgba(255,34,34,0.12)"}`,
+                    padding: "12px 16px", display: "flex", flexDirection: "column", gap: "6px",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ color: present ? "#00ff88" : "#ff2222", fontSize: "11px", flexShrink: 0 }}>{present ? <FaCheckCircle /> : <FaTimesCircle />}</span>
+                      <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: present ? "#00ff88" : "#ff6b35", letterSpacing: "0.06em", wordBreak: "break-all" }}>{header}</span>
+                    </div>
+                    {present && typeof value === "string" && value !== "true" && value.length > 0 && (
+                      <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", color: "rgba(0,255,136,0.4)", wordBreak: "break-all", lineHeight: 1.5 }}>
+                        {value.length > 80 ? value.substring(0, 80) + "…" : value}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "rgba(251,191,36,0.5)", padding: "8px 0" }}>
+              No header data returned from quickscan.
+            </div>
+          )
+        )}
+      </Panel>
+
+      {/* ── OPEN PORTS & SERVICES — always shown ── */}
+      <Panel leftAccent="#00d4ff" accent="rgba(0,212,255,0.1)">
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: expandedSections.ports ? "20px" : 0 }}>
+          <SectionHeader icon={<FaServer />} title="OPEN PORTS & SERVICES" accent="#00d4ff"
+            count={hasPorts ? `${(ports.open || ports.list || ports.ports || []).length} OPEN` : "NO DATA"} />
+          <CollapseBtn section="ports" />
+        </div>
+        {expandedSections.ports && (
+          hasPorts ? (
+            <div>
+              {ports.ip      && <InfoRow label="TARGET_IP" value={ports.ip}      valueColor="#00d4ff" />}
+              {ports.asn     && <InfoRow label="ASN"       value={ports.asn}     valueColor="rgba(180,255,180,0.6)" />}
+              {ports.org     && <InfoRow label="ORG"       value={ports.org}     valueColor="rgba(180,255,180,0.6)" />}
+              {ports.country && <InfoRow label="LOCATION"  value={ports.country} valueColor="#fbbf24" />}
+              {(ports.open || ports.list || ports.ports || []).length > 0 && (
+                <div style={{ marginTop: "16px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "8px" }}>
+                  {(ports.open || ports.list || ports.ports || []).map((port, i) => {
+                    const portNum = typeof port === "object" ? (port.port || port.number) : port;
+                    const service = typeof port === "object" ? (port.service || port.name || port.protocol) : null;
+                    const banner  = typeof port === "object" ? (port.banner || port.version || port.product) : null;
+                    const isSensitive = [21, 22, 23, 25, 3306, 5432, 6379, 27017, 8080, 8443, 1433, 3389].includes(Number(portNum));
+                    return (
+                      <div key={i} style={{ background: isSensitive ? "rgba(255,107,53,0.06)" : "rgba(0,212,255,0.04)", border: `1px solid ${isSensitive ? "rgba(255,107,53,0.2)" : "rgba(0,212,255,0.12)"}`, padding: "12px 14px" }}>
+                        <div style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "20px", color: isSensitive ? "#ff6b35" : "#00d4ff", marginBottom: "4px" }}>{portNum}</div>
+                        {service && <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(0,255,136,0.6)", letterSpacing: "0.08em" }}>{service}</div>}
+                        {banner  && <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px",  color: "rgba(0,255,136,0.35)", marginTop: "4px", wordBreak: "break-all" }}>{String(banner).substring(0, 36)}</div>}
+                        {isSensitive && <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "8px", color: "#ff6b35", marginTop: "4px" }}>⚠ SENSITIVE</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "rgba(0,212,255,0.4)", padding: "8px 0" }}>
+              Port scan returned no results or was not completed.
+            </div>
+          )
+        )}
+      </Panel>
+
+      {/* ── OSINT & REPUTATION — only shown if a real finding exists ── */}
+      {hasOsintAlert && (
+        <Panel leftAccent="#b06aff" accent="rgba(176,106,255,0.1)">
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: expandedSections.osint ? "20px" : 0 }}>
+            <SectionHeader icon={<FaUserSecret />} title="OSINT & REPUTATION INTEL" accent="#b06aff"
+              count="⚠ FINDINGS DETECTED" />
+            <CollapseBtn section="osint" />
+          </div>
+          {expandedSections.osint && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "14px" }}>
+              {/* VirusTotal */}
+              {osint.virusTotal && (
+                <div style={{ background: "rgba(255,107,53,0.05)", border: "1px solid rgba(255,107,53,0.18)", padding: "16px" }}>
+                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#ff6b35", letterSpacing: "0.12em", marginBottom: "10px" }}>VIRUSTOTAL</div>
+                  <InfoRow label="MALICIOUS"  value={osint.virusTotal.malicious  ?? 0} valueColor={osint.virusTotal.malicious  > 0 ? "#ff2222" : "#00ff88"} />
+                  <InfoRow label="SUSPICIOUS" value={osint.virusTotal.suspicious ?? 0} valueColor={osint.virusTotal.suspicious > 0 ? "#fbbf24" : "#00ff88"} />
+                  <InfoRow label="HARMLESS"   value={osint.virusTotal.harmless   ?? 0} valueColor="rgba(0,255,136,0.6)" />
+                  {osint.virusTotal.categories?.length > 0 && (
+                    <div style={{ marginTop: "8px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                      {osint.virusTotal.categories.map((c, i) => <Tag key={i} color="#ff6b35">{c}</Tag>)}
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Safe Browsing */}
+              {osint.safeBrowsing && osint.safeBrowsing.safe === false && (
+                <div style={{ background: "rgba(255,34,34,0.06)", border: "1px solid rgba(255,34,34,0.2)", padding: "16px" }}>
+                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#ff2222", letterSpacing: "0.12em", marginBottom: "10px" }}>GOOGLE SAFE BROWSING</div>
+                  <InfoRow label="STATUS" value="⚠ UNSAFE" valueColor="#ff2222" />
+                  {osint.safeBrowsing.threats?.length > 0 && (
+                    <div style={{ marginTop: "8px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                      {osint.safeBrowsing.threats.map((t, i) => <Tag key={i} color="#ff2222">{t}</Tag>)}
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* DNSBL Blacklist */}
+              {osint.blacklisted && (
+                <div style={{ background: "rgba(255,107,53,0.05)", border: "1px solid rgba(255,107,53,0.18)", padding: "16px" }}>
+                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#ff6b35", letterSpacing: "0.12em", marginBottom: "10px" }}>DNSBL BLACKLISTS</div>
+                  <InfoRow label="BLACKLISTED" value="YES" valueColor="#ff2222" />
+                  {osint.blacklistHits?.length > 0 && (
+                    <div style={{ marginTop: "8px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                      {osint.blacklistHits.map((b, i) => <Tag key={i} color="#ff6b35">{b}</Tag>)}
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Shodan CVEs */}
+              {osint.cves?.count > 0 && (
+                <div style={{ background: "rgba(255,34,34,0.06)", border: "1px solid rgba(255,34,34,0.2)", padding: "16px" }}>
+                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#ff2222", letterSpacing: "0.12em", marginBottom: "10px" }}>SHODAN CVEs</div>
+                  <InfoRow label="TOTAL_CVEs"    value={osint.cves.count}    valueColor="#ff2222" />
+                  <InfoRow label="CRITICAL"      value={osint.cves.critical ?? 0} valueColor={osint.cves.critical > 0 ? "#ff2222" : "rgba(0,255,136,0.5)"} />
+                  <InfoRow label="KEV_CONFIRMED" value={osint.cves.kev    ?? 0} valueColor={osint.cves.kev    > 0 ? "#ff6b35" : "rgba(0,255,136,0.5)"} />
+                  {osint.cves.details?.length > 0 && (
+                    <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                      {osint.cves.details.slice(0, 5).map((cve, i) => (
+                        <div key={i} style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "#ff6b35", background: "rgba(255,107,53,0.06)", padding: "5px 10px" }}>
+                          {typeof cve === "object" ? (cve.id || cve.cve || JSON.stringify(cve)) : cve}
+                        </div>
+                      ))}
+                      {osint.cves.details.length > 5 && (
+                        <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", color: "rgba(255,107,53,0.5)" }}>
+                          +{osint.cves.details.length - 5} more CVEs
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </Panel>
+      )}
+    </div>
+  );
+}
+
+// ─── CAPABILITY CARD ──────────────────────────────────────────────────────────
 const CapabilityCard = ({ icon, title, desc, accent }) => (
   <div style={{
     background: "rgba(0,0,0,0.55)", border: "1px solid rgba(0,255,136,0.08)",
@@ -61,6 +493,7 @@ const CapabilityCard = ({ icon, title, desc, accent }) => (
   </div>
 );
 
+// ─── MODULE BLOCK ─────────────────────────────────────────────────────────────
 const ModuleBlock = ({ keyName, title, found, expanded, onToggle, children }) => (
   <div style={{
     background: "rgba(0,0,0,0.55)",
@@ -105,6 +538,7 @@ const ModuleBlock = ({ keyName, title, found, expanded, onToggle, children }) =>
   </div>
 );
 
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function FullScan() {
   const [input, setInput] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -113,22 +547,40 @@ export default function FullScan() {
   const [expanded, setExpanded] = useState({});
   const [error, setError] = useState(null);
   const [showRawDomFindings, setShowRawDomFindings] = useState(false);
-  const [scanId, setScanId] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
   const loaderRef = useRef(null);
 
+
+    
+  // ← ADD THIS right before handleScan
+  const isValidTarget = (val) => {
+    const trimmed = val.trim();
+    try {
+      const u = new URL(trimmed.startsWith("http") ? trimmed : `http://${trimmed}`);
+      const host = u.hostname;
+      const domainRegex = /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+      const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+      return domainRegex.test(host) || ipRegex.test(host) || host === "localhost";
+    } catch {
+      return false;
+    }
+  };
+
+  // ← REPLACE the existing handleScan with this:
   const handleScan = async () => {
-    if (!input.trim()) return alert("Please enter a domain or company name");
+    if (!input.trim()) return alert("Please enter a domain or URL");
+    if (!isValidTarget(input)) {
+      setError("Invalid target. Please enter a valid domain (e.g. example.com) or URL (e.g. https://example.com).");
+      return;
+    }
     setIsScanning(true);
     setScanDone(false);
     setScanResult(null);
     setError(null);
     setIsPaused(false);
-    setScanId(null);
     setTimeout(() => loaderRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     try {
       const resp = await axios.post("http://localhost:5000/api/fullscan", { url: input }, { timeout: 0 });
-      setScanId(resp.data.scanId || null);
       setScanResult(resp.data);
       setScanDone(true);
     } catch (err) {
@@ -139,13 +591,8 @@ export default function FullScan() {
     }
   };
 
-    const handlePause = () => {
-      setIsPaused(true);
-    };
-
-    const handleResume = () => {
-      setIsPaused(false);
-    };
+  const handlePause = () => setIsPaused(true);
+  const handleResume = () => setIsPaused(false);
 
   const downloadPDF = async () => {
     const resp = await axios.post("/api/fullscan/pdf", { scanData: scanResult, target: scanResult.target }, { responseType: "blob" });
@@ -253,7 +700,7 @@ export default function FullScan() {
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
             <input
               type="text" value={input}
-              onChange={e => setInput(e.target.value)}
+              onChange={e => { setInput(e.target.value); if (error) setError(null); }}
               placeholder="example.com or company"
               onKeyDown={e => e.key === "Enter" && handleScan()}
               style={{
@@ -296,10 +743,8 @@ export default function FullScan() {
               background: "rgba(0,0,0,0.6)",
               border: `1px solid ${isPaused ? "rgba(251,191,36,0.3)" : "rgba(255,107,53,0.2)"}`,
               borderLeft: `3px solid ${isPaused ? "#fbbf24" : "#ff6b35"}`,
-              padding: "28px 32px", maxWidth: "600px",
-              transition: "border-color 0.3s",
+              padding: "28px 32px", maxWidth: "600px", transition: "border-color 0.3s",
             }}>
-              {/* Header row */}
               <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "18px" }}>
                 <div style={{
                   width: "20px", height: "20px",
@@ -312,67 +757,36 @@ export default function FullScan() {
                   {isPaused ? "SCAN PAUSED" : "RUNNING DEEP SCAN"}
                 </span>
               </div>
-
               <p style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "rgba(0,255,136,0.4)", marginBottom: "16px", letterSpacing: "0.1em" }}>
                 {isPaused ? "Scan is paused — press RESUME to continue" : "This may take several minutes"}
               </p>
-
-              {/* Scan steps */}
               {["Enumerating subdomains & infrastructure...", "Running OSINT correlation...", "Testing for SQL injection vectors...", "Scanning XSS attack surfaces...", "Checking CSRF, clickjacking, command injection...", "Generating vulnerability report..."].map((line, i) => (
                 <div key={i} style={{
                   fontFamily: "'Share Tech Mono', monospace", fontSize: "11px",
                   color: isPaused ? "rgba(251,191,36,0.25)" : "rgba(255,107,53,0.5)",
                   lineHeight: 1.9, letterSpacing: "0.08em",
                   animation: isPaused ? "none" : `scanPulse 2s ease ${i * 0.4}s infinite`,
-                  transition: "color 0.3s",
                 }}>
                   › {line}
                 </div>
               ))}
-
-              {/* ── PAUSE / RESUME CONTROLS ── */}
               <div style={{ display: "flex", gap: "12px", marginTop: "24px", alignItems: "center" }}>
                 {!isPaused ? (
-                  <button
-                    onClick={handlePause}
-                    style={{
-                      fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "10px",
-                      letterSpacing: "0.15em", color: "#020804", background: "#fbbf24",
-                      border: "none", padding: "10px 22px", cursor: "pointer",
-                      boxShadow: "0 0 14px rgba(251,191,36,0.35)", transition: "all 0.2s",
-                      display: "flex", alignItems: "center", gap: "7px",
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 22px rgba(251,191,36,0.6)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 14px rgba(251,191,36,0.35)"; }}
-                  >
+                  <button onClick={handlePause} style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "10px", letterSpacing: "0.15em", color: "#020804", background: "#fbbf24", border: "none", padding: "10px 22px", cursor: "pointer", boxShadow: "0 0 14px rgba(251,191,36,0.35)", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "7px" }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}>
                     ⏸ PAUSE SCAN
                   </button>
                 ) : (
-                  <button
-                    onClick={handleResume}
-                    style={{
-                      fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "10px",
-                      letterSpacing: "0.15em", color: "#020804", background: "#00ff88",
-                      border: "none", padding: "10px 22px", cursor: "pointer",
-                      boxShadow: "0 0 14px rgba(0,255,136,0.35)", transition: "all 0.2s",
-                      display: "flex", alignItems: "center", gap: "7px",
-                      animation: "pauseBlink 1.5s ease infinite",
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 22px rgba(0,255,136,0.6)"; e.currentTarget.style.animation = "none"; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 14px rgba(0,255,136,0.35)"; e.currentTarget.style.animation = "pauseBlink 1.5s ease infinite"; }}
-                  >
+                  <button onClick={handleResume} style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "10px", letterSpacing: "0.15em", color: "#020804", background: "#00ff88", border: "none", padding: "10px 22px", cursor: "pointer", boxShadow: "0 0 14px rgba(0,255,136,0.35)", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "7px", animation: "pauseBlink 1.5s ease infinite" }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.animation = "none"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.animation = "pauseBlink 1.5s ease infinite"; }}>
                     ▶ RESUME SCAN
                   </button>
                 )}
               </div>
-
-              {/* Paused status text */}
               {isPaused && (
-                <div style={{
-                  marginTop: "14px", display: "flex", alignItems: "center", gap: "10px",
-                  fontFamily: "'Share Tech Mono', monospace", fontSize: "11px",
-                  color: "#fbbf24", letterSpacing: "0.12em",
-                }}>
+                <div style={{ marginTop: "14px", display: "flex", alignItems: "center", gap: "10px", fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "#fbbf24", letterSpacing: "0.12em" }}>
                   ⏸ SCAN PAUSED
                 </div>
               )}
@@ -423,45 +837,22 @@ export default function FullScan() {
               ))}
             </div>
 
-            {/* Quick Scan Summary */}
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.3em", color: "rgba(0,255,136,0.38)", marginBottom: "16px" }}>
-              // QUICK_SCAN_SUMMARY
-            </div>
-            <div style={{ background: "rgba(0,0,0,0.55)", border: "1px solid rgba(0,255,136,0.1)", padding: "20px 24px", marginBottom: "36px", fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", lineHeight: 2 }}>
-              {[
-                { label: "SUBDOMAINS_DISCOVERED", val: scanResult?.quickscan?.attackSurface?.subdomainCount ?? 0, color: "#00d4ff" },
-                { label: "PARAMETERIZED_ENDPOINTS", val: scanResult?.quickscan?.attackSurface?.endpointCount ?? 0, color: "#00d4ff" },
-                { label: "OPEN_PORTS", val: scanResult?.quickscan?.attackSurface?.openPorts ?? 0, color: "#fbbf24" },
-                { label: "BACKEND_TECH", val: scanResult?.quickscan?.technology?.backend ?? "Unknown", color: "#00ff88" },
-                { label: "SSL_ENABLED", val: scanResult?.quickscan?.technology?.ssl ? "YES" : "NO", color: scanResult?.quickscan?.technology?.ssl ? "#00ff88" : "#ff6b35" },
-              ].map((m, i) => (
-                <div key={i} style={{ color: "rgba(0,255,136,0.4)" }}>
-                  › <span style={{ color: "rgba(0,255,136,0.55)" }}>{m.label}:</span> <span style={{ color: m.color }}>{m.val}</span>
-                </div>
-              ))}
-            </div>
+            {/* ── FULL QUICKSCAN RESULTS ── */}
+            <QuickScanResults data={scanResult} />
 
-            {/* Vulnerability Results */}
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.3em", color: "rgba(255,107,53,0.5)", marginBottom: "20px" }}>
+            {/* ── VULNERABILITY ASSESSMENT ── */}
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.3em", color: "rgba(255,107,53,0.5)", marginBottom: "20px", marginTop: "40px" }}>
               // VULNERABILITY_ASSESSMENT_RESULTS
             </div>
 
             {(() => {
               const v = scanResult?.vulnerabilities || {};
-
-              const DetailText = ({ children }) => (
-                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: "14px", color: "rgba(180,255,180,0.55)", lineHeight: 1.7 }}>{children}</div>
-              );
-              const DetailMono = ({ children }) => (
-                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "rgba(0,255,136,0.5)", lineHeight: 1.8 }}>{children}</div>
-              );
-              const Label = ({ children, color = "#fbbf24" }) => (
-                <span style={{ color, fontFamily: "'Share Tech Mono', monospace", fontSize: "11px" }}>{children}</span>
-              );
+              const DetailText = ({ children }) => <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: "14px", color: "rgba(180,255,180,0.55)", lineHeight: 1.7 }}>{children}</div>;
+              const DetailMono = ({ children }) => <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "rgba(0,255,136,0.5)", lineHeight: 1.8 }}>{children}</div>;
+              const Label = ({ children, color = "#fbbf24" }) => <span style={{ color, fontFamily: "'Share Tech Mono', monospace", fontSize: "11px" }}>{children}</span>;
 
               return (
                 <div>
-                  {/* SQL Injection */}
                   <ModuleBlock keyName="sql" title="SQL INJECTION" found={!!v.sqlInjection?.found} expanded={expanded.sql} onToggle={toggle}>
                     {v.sqlInjection?.details?.findings?.length > 0 ? (
                       v.sqlInjection.details.findings.map((f, i) => (
@@ -474,7 +865,6 @@ export default function FullScan() {
                     ) : <DetailText>No vulnerability details provided by module.</DetailText>}
                   </ModuleBlock>
 
-                  {/* DOM XSS */}
                   <ModuleBlock keyName="dom" title="DOM XSS" found={!!v.domXss?.found} expanded={expanded.dom} onToggle={toggle}>
                     {v.domXss?.details ? (() => {
                       const findings = Array.isArray(v.domXss.details.evidence) ? v.domXss.details.evidence : [];
@@ -509,7 +899,6 @@ export default function FullScan() {
                     })() : <DetailText>No vulnerability detected</DetailText>}
                   </ModuleBlock>
 
-                  {/* Stored XSS */}
                   <ModuleBlock keyName="stored" title="STORED XSS" found={!!v.storedXss?.found} expanded={expanded.stored} onToggle={toggle}>
                     {v.storedXss?.details?.evidence ? (
                       Array.isArray(v.storedXss.details.evidence)
@@ -525,7 +914,6 @@ export default function FullScan() {
                     ) : <DetailText>No vulnerability detected</DetailText>}
                   </ModuleBlock>
 
-                  {/* Reflected XSS */}
                   <ModuleBlock keyName="reflected" title="REFLECTED XSS" found={!!v.reflectedXss?.found} expanded={expanded.reflected} onToggle={toggle}>
                     {v.reflectedXss?.details ? (
                       <div>
@@ -547,7 +935,6 @@ export default function FullScan() {
                     ) : <DetailText>No vulnerability detected</DetailText>}
                   </ModuleBlock>
 
-                  {/* Clickjacking */}
                   <ModuleBlock keyName="click" title="CLICKJACKING" found={!!v.clickjacking?.vulnerable} expanded={expanded.click} onToggle={toggle}>
                     {v.clickjacking?.vulnerable ? (
                       <div>
@@ -566,7 +953,6 @@ export default function FullScan() {
                     ) : <DetailText>No vulnerability detected</DetailText>}
                   </ModuleBlock>
 
-                  {/* Command Injection */}
                   <ModuleBlock keyName="cmd" title="COMMAND INJECTION" found={!!v.commandInjection?.found} expanded={expanded.cmd} onToggle={toggle}>
                     {v.commandInjection?.found ? (
                       <div>
@@ -583,7 +969,6 @@ export default function FullScan() {
                     ) : <DetailText>No vulnerability detected</DetailText>}
                   </ModuleBlock>
 
-                  {/* CSRF */}
                   <ModuleBlock keyName="csrf" title="CSRF — CROSS-SITE REQUEST FORGERY" found={!!v.csrf?.found} expanded={expanded.csrf} onToggle={toggle}>
                     {v.csrf?.found ? (
                       <div>
@@ -604,7 +989,6 @@ export default function FullScan() {
                     ) : <DetailText>No vulnerability detected</DetailText>}
                   </ModuleBlock>
 
-                  {/* Sensitive File Exposure */}
                   <ModuleBlock keyName="sensitive" title="SENSITIVE FILE EXPOSURE" found={!!v.sensitiveFiles?.found} expanded={expanded.sensitive} onToggle={toggle}>
                     {v.sensitiveFiles?.details?.exposedFiles?.length > 0 ? (
                       <div>
@@ -618,14 +1002,9 @@ export default function FullScan() {
                         <div style={{ marginTop: "14px" }}>
                           {v.sensitiveFiles.details.exposedFiles.map((f, i) => (
                             <div key={i} style={{ marginBottom: "10px", paddingLeft: "12px", borderLeft: `2px solid ${riskAccent(f.severity)}55` }}>
-                              <DetailMono>
-                                › <Label color={riskAccent(f.severity)}>[{f.severity}]</Label>{" "}
-                                <Label color="#00d4ff">{f.path}</Label>
-                              </DetailMono>
+                              <DetailMono>› <Label color={riskAccent(f.severity)}>[{f.severity}]</Label>{" "}<Label color="#00d4ff">{f.path}</Label></DetailMono>
                               <DetailMono>› Status: <Label color="#fbbf24">{f.status}</Label>{"  "}Desc: <Label color="rgba(180,255,180,0.55)">{f.desc}</Label></DetailMono>
-                              {f.contentType && (
-                                <DetailMono>› Content-Type: <Label color="rgba(180,255,180,0.4)">{f.contentType}</Label></DetailMono>
-                              )}
+                              {f.contentType && <DetailMono>› Content-Type: <Label color="rgba(180,255,180,0.4)">{f.contentType}</Label></DetailMono>}
                             </div>
                           ))}
                         </div>
@@ -633,21 +1012,14 @@ export default function FullScan() {
                     ) : <DetailText>No sensitive files detected</DetailText>}
                   </ModuleBlock>
 
-                  {/* Open Redirect */}
                   <ModuleBlock keyName="openRedirect" title="OPEN REDIRECT" found={!!v.openRedirect?.found} expanded={expanded.openRedirect} onToggle={toggle}>
                     {v.openRedirect?.details?.evidence?.length > 0 ? (
                       <div>
-                        <DetailMono>
-                          › Parameters affected: <Label color="#ff6b35">{v.openRedirect.details.summary?.total || 0}</Label>
-                          {"  "}Params: <Label color="#ff2222">{v.openRedirect.details.summary?.parameters?.join(", ") || "—"}</Label>
-                        </DetailMono>
+                        <DetailMono>› Parameters affected: <Label color="#ff6b35">{v.openRedirect.details.summary?.total || 0}</Label>{"  "}Params: <Label color="#ff2222">{v.openRedirect.details.summary?.parameters?.join(", ") || "—"}</Label></DetailMono>
                         <div style={{ marginTop: "14px" }}>
                           {v.openRedirect.details.evidence.map((e, i) => (
                             <div key={i} style={{ marginBottom: "10px", paddingLeft: "12px", borderLeft: "2px solid #ff6b3555" }}>
-                              <DetailMono>
-                                › <Label color="#ff6b35">[HIGH]</Label>{" "}
-                                <Label color="#fff">Parameter: {e.parameter}</Label>
-                              </DetailMono>
+                              <DetailMono>› <Label color="#ff6b35">[HIGH]</Label>{" "}<Label color="#fff">Parameter: {e.parameter}</Label></DetailMono>
                               <DetailMono>› Payload: <Label color="#ff9800">{e.payload}</Label></DetailMono>
                               <DetailMono>› Redirects to: <Label color="#ff2222">{e.redirectsTo}</Label></DetailMono>
                               <DetailMono>› Status: <Label color="#fbbf24">{e.statusCode}</Label>{"  "}Type: <Label color="rgba(180,255,180,0.55)">{e.type}</Label></DetailMono>
@@ -655,31 +1027,19 @@ export default function FullScan() {
                             </div>
                           ))}
                         </div>
-                        <DetailMono style={{ marginTop: "8px" }}>
-                          › <Label color="rgba(180,255,180,0.5)">{v.openRedirect.details.notes}</Label>
-                        </DetailMono>
+                        <DetailMono style={{ marginTop: "8px" }}>› <Label color="rgba(180,255,180,0.5)">{v.openRedirect.details.notes}</Label></DetailMono>
                       </div>
                     ) : <DetailText>No open redirect vulnerabilities detected</DetailText>}
                   </ModuleBlock>
 
-                  {/* CORS Misconfiguration */}
                   <ModuleBlock keyName="cors" title="CORS MISCONFIGURATION" found={!!v.cors?.found} expanded={expanded.cors} onToggle={toggle}>
                     {v.cors?.details?.evidence?.length > 0 ? (
                       <div>
-                        <DetailMono>
-                          › Total issues: <Label color="#ff6b35">{v.cors.details.summary?.total || 0}</Label>
-                          {"  "}Critical: <Label color="#ff2222">{v.cors.details.summary?.critical || 0}</Label>
-                          {"  "}High: <Label color="#ff6b35">{v.cors.details.summary?.high || 0}</Label>
-                          {"  "}Medium: <Label color="#fbbf24">{v.cors.details.summary?.medium || 0}</Label>
-                          {"  "}Exploitable: <Label color="#ff2222">{v.cors.details.summary?.exploitable || 0}</Label>
-                        </DetailMono>
+                        <DetailMono>› Total issues: <Label color="#ff6b35">{v.cors.details.summary?.total || 0}</Label>{"  "}Critical: <Label color="#ff2222">{v.cors.details.summary?.critical || 0}</Label>{"  "}High: <Label color="#ff6b35">{v.cors.details.summary?.high || 0}</Label>{"  "}Medium: <Label color="#fbbf24">{v.cors.details.summary?.medium || 0}</Label>{"  "}Exploitable: <Label color="#ff2222">{v.cors.details.summary?.exploitable || 0}</Label></DetailMono>
                         <div style={{ marginTop: "14px" }}>
                           {v.cors.details.evidence.map((e, i) => (
                             <div key={i} style={{ marginBottom: "10px", paddingLeft: "12px", borderLeft: `2px solid ${riskAccent(e.severity)}55` }}>
-                              <DetailMono>
-                                › <Label color={riskAccent(e.severity)}>[{e.severity}]</Label>{" "}
-                                <Label color="#fff">{e.type}</Label>
-                              </DetailMono>
+                              <DetailMono>› <Label color={riskAccent(e.severity)}>[{e.severity}]</Label>{" "}<Label color="#fff">{e.type}</Label></DetailMono>
                               <DetailMono>› <Label color="rgba(180,255,180,0.55)">{e.description}</Label></DetailMono>
                               <DetailMono>› Endpoint: <Label color="#00d4ff">{e.url}</Label></DetailMono>
                               <DetailMono>› Header: <Label color="#ff9800">{e.header}</Label></DetailMono>
@@ -687,109 +1047,66 @@ export default function FullScan() {
                             </div>
                           ))}
                         </div>
-                        <DetailMono style={{ marginTop: "8px" }}>
-                          › <Label color="rgba(180,255,180,0.5)">{v.cors.details.notes}</Label>
-                        </DetailMono>
+                        <DetailMono style={{ marginTop: "8px" }}>› <Label color="rgba(180,255,180,0.5)">{v.cors.details.notes}</Label></DetailMono>
                       </div>
                     ) : <DetailText>No CORS misconfigurations detected</DetailText>}
                   </ModuleBlock>
 
-                  {/* WordPress Security */}
                   <ModuleBlock keyName="wordpress" title="WORDPRESS SECURITY" found={!!v.wordpress?.found} expanded={!!expanded.wordpress} onToggle={toggle}>
                     {v.wordpress?.found ? (
                       <div>
                         <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,107,53,0.3)" }}>
-                          <DetailMono>› Risk Score: <Label color={riskAccent(v.wordpress.details?.riskScore?.level)}>
-                            {v.wordpress.details?.riskScore?.score ?? "?"}/100 ({v.wordpress.details?.riskScore?.level ?? "UNKNOWN"})
-                          </Label></DetailMono>
+                          <DetailMono>› Risk Score: <Label color={riskAccent(v.wordpress.details?.riskScore?.level)}>{v.wordpress.details?.riskScore?.score ?? "?"}/100 ({v.wordpress.details?.riskScore?.level ?? "UNKNOWN"})</Label></DetailMono>
                           <DetailMono>› Site: <Label color="#00d4ff">{v.wordpress.details?.url}</Label></DetailMono>
-                          <DetailMono>› Scanned At: <Label color="#fbbf24">
-                            {v.wordpress.details?.scannedAt ? new Date(v.wordpress.details.scannedAt).toLocaleString() : "—"}
-                          </Label></DetailMono>
+                          <DetailMono>› Scanned At: <Label color="#fbbf24">{v.wordpress.details?.scannedAt ? new Date(v.wordpress.details.scannedAt).toLocaleString() : "—"}</Label></DetailMono>
                         </div>
-
                         <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(0,255,136,0.3)" }}>
-                          <DetailMono>› WP Version: <Label color="#00ff88">
-                            {v.wordpress.details?.results?.coreVersion?.version || "Not detected"}
-                          </Label></DetailMono>
+                          <DetailMono>› WP Version: <Label color="#00ff88">{v.wordpress.details?.results?.coreVersion?.version || "Not detected"}</Label></DetailMono>
                           {(v.wordpress.details?.results?.coreVersion?.vulnerabilities || []).map((cv, i) => (
                             <DetailMono key={i}>› <Label color="#ff2222">[{cv.severity}]</Label> {cv.issue} — fix in <Label color="#fbbf24">{cv.fixedIn}</Label></DetailMono>
                           ))}
                         </div>
-
                         {(v.wordpress.details?.results?.plugins || []).filter(p => p.vulnerabilities?.length > 0).length > 0 && (
                           <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,34,34,0.4)" }}>
-                            <DetailMono>› Vulnerable Plugins: <Label color="#ff2222">
-                              {v.wordpress.details.results.plugins.filter(p => p.vulnerabilities?.length > 0).length}
-                            </Label></DetailMono>
+                            <DetailMono>› Vulnerable Plugins: <Label color="#ff2222">{v.wordpress.details.results.plugins.filter(p => p.vulnerabilities?.length > 0).length}</Label></DetailMono>
                             {v.wordpress.details.results.plugins.filter(p => p.vulnerabilities?.length > 0).map((p, i) => (
                               <div key={i} style={{ marginTop: "6px" }}>
-                                <DetailMono>
-                                  &nbsp;&nbsp;· <Label color={riskAccent(p.severity)}>[{p.severity}]</Label>{" "}
-                                  <Label color="#fbbf24">{p.slug}</Label>
-                                  {p.version && <Label color="rgba(180,255,180,0.5)"> v{p.version}</Label>}
-                                </DetailMono>
+                                <DetailMono>&nbsp;&nbsp;· <Label color={riskAccent(p.severity)}>[{p.severity}]</Label>{" "}<Label color="#fbbf24">{p.slug}</Label>{p.version && <Label color="rgba(180,255,180,0.5)"> v{p.version}</Label>}</DetailMono>
                                 <DetailMono>&nbsp;&nbsp;&nbsp;&nbsp;↳ <Label color="rgba(180,255,180,0.55)">{p.vulnerabilities[0]?.issue}</Label></DetailMono>
                               </div>
                             ))}
                           </div>
                         )}
-
                         {v.wordpress.details?.results?.theme?.name && (
                           <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(0,255,136,0.2)" }}>
-                            <DetailMono>› Active Theme: <Label color="#00ff88">{v.wordpress.details.results.theme.name}</Label>
-                              {v.wordpress.details.results.theme.version && (
-                                <Label color="rgba(180,255,180,0.5)"> v{v.wordpress.details.results.theme.version}</Label>
-                              )}
-                            </DetailMono>
+                            <DetailMono>› Active Theme: <Label color="#00ff88">{v.wordpress.details.results.theme.name}</Label>{v.wordpress.details.results.theme.version && <Label color="rgba(180,255,180,0.5)"> v{v.wordpress.details.results.theme.version}</Label>}</DetailMono>
                           </div>
                         )}
-
                         {v.wordpress.details?.results?.userEnumeration?.exposed && (
                           <div style={{ marginBottom: "10px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,34,34,0.4)" }}>
-                            <DetailMono>› <Label color="#ff2222">[HIGH]</Label> User Enumeration: <Label color="#ff6b35">
-                              {(v.wordpress.details.results.userEnumeration.users || []).length} user(s) exposed
-                            </Label></DetailMono>
+                            <DetailMono>› <Label color="#ff2222">[HIGH]</Label> User Enumeration: <Label color="#ff6b35">{(v.wordpress.details.results.userEnumeration.users || []).length} user(s) exposed</Label></DetailMono>
                             {(v.wordpress.details.results.userEnumeration.users || []).slice(0, 5).map((u, i) => (
                               <DetailMono key={i}>&nbsp;&nbsp;· <Label color="#fbbf24">{u.name}</Label> <Label color="rgba(180,255,180,0.4)">via {u.source}</Label></DetailMono>
                             ))}
                           </div>
                         )}
-
                         {v.wordpress.details?.results?.loginExposure?.wpLoginExposed && (
-                          <DetailMono style={{ marginBottom: "10px" }}>
-                            › <Label color="#ff6b35">[MEDIUM]</Label> wp-login.php publicly accessible
-                            {!v.wordpress.details.results.loginExposure.bruteForceProtection && (
-                              <Label color="#ff2222"> — No brute-force protection detected</Label>
-                            )}
-                          </DetailMono>
+                          <DetailMono style={{ marginBottom: "10px" }}>› <Label color="#ff6b35">[MEDIUM]</Label> wp-login.php publicly accessible{!v.wordpress.details.results.loginExposure.bruteForceProtection && <Label color="#ff2222"> — No brute-force protection detected</Label>}</DetailMono>
                         )}
-
                         {v.wordpress.details?.results?.xmlRpc?.enabled && (
-                          <DetailMono style={{ marginBottom: "10px" }}>
-                            › <Label color={v.wordpress.details.results.xmlRpc.multicallEnabled ? "#ff2222" : "#ff6b35"}>
-                              [{v.wordpress.details.results.xmlRpc.multicallEnabled ? "CRITICAL" : "HIGH"}]
-                            </Label>{" "}
-                            XML-RPC enabled{v.wordpress.details.results.xmlRpc.multicallEnabled ? " + system.multicall (brute-force amplifier)" : ""}
-                          </DetailMono>
+                          <DetailMono style={{ marginBottom: "10px" }}>› <Label color={v.wordpress.details.results.xmlRpc.multicallEnabled ? "#ff2222" : "#ff6b35"}>[{v.wordpress.details.results.xmlRpc.multicallEnabled ? "CRITICAL" : "HIGH"}]</Label>{" "}XML-RPC enabled{v.wordpress.details.results.xmlRpc.multicallEnabled ? " + system.multicall (brute-force amplifier)" : ""}</DetailMono>
                         )}
-
                         {(v.wordpress.details?.results?.securityHeaders?.missing || []).length > 0 && (
                           <div style={{ paddingLeft: "12px", borderLeft: "2px solid rgba(251,191,36,0.3)" }}>
-                            <DetailMono>› Missing security headers: <Label color="#fbbf24">
-                              {v.wordpress.details.results.securityHeaders.missing.length}
-                            </Label></DetailMono>
+                            <DetailMono>› Missing security headers: <Label color="#fbbf24">{v.wordpress.details.results.securityHeaders.missing.length}</Label></DetailMono>
                             {v.wordpress.details.results.securityHeaders.missing.map((h, i) => (
                               <DetailMono key={i}>&nbsp;&nbsp;· <Label color="rgba(180,255,180,0.5)">{h.header}</Label></DetailMono>
                             ))}
                           </div>
                         )}
                       </div>
-                    ) : (
-                      <DetailText>Target is not running WordPress or no issues detected.</DetailText>
-                    )}
+                    ) : <DetailText>Target is not running WordPress or no issues detected.</DetailText>}
                   </ModuleBlock>
-
                 </div>
               );
             })()}
@@ -806,8 +1123,8 @@ export default function FullScan() {
                   display: "inline-flex", alignItems: "center", gap: "10px",
                   transition: "all 0.25s", boxShadow: "0 0 24px rgba(0,255,136,0.3)",
                 }}
-                onMouseEnter={e => { e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 0 40px rgba(0,255,136,0.5)"; }}
-                onMouseLeave={e => { e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 0 24px rgba(0,255,136,0.3)"; }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 40px rgba(0,255,136,0.5)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 24px rgba(0,255,136,0.3)"; }}
               >
                 <FaFileDownload /> DOWNLOAD FULL PDF REPORT
               </button>
