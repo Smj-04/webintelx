@@ -506,6 +506,35 @@ export default function FullScan() {
                       </div>
                     ) : <DetailText>No vulnerability detected</DetailText>}
                   </ModuleBlock>
+
+                  {/* Sensitive File Exposure */}
+                  <ModuleBlock keyName="sensitive" title="SENSITIVE FILE EXPOSURE" found={!!v.sensitiveFiles?.found} expanded={expanded.sensitive} onToggle={toggle}>
+                    {v.sensitiveFiles?.details?.exposedFiles?.length > 0 ? (
+                      <div>
+                        <DetailMono>
+                          › Total exposed: <Label color="#ff6b35">{v.sensitiveFiles.details.summary?.total || 0}</Label>
+                          {"  "}Critical: <Label color="#ff2222">{v.sensitiveFiles.details.summary?.critical || 0}</Label>
+                          {"  "}High: <Label color="#ff6b35">{v.sensitiveFiles.details.summary?.high || 0}</Label>
+                          {"  "}Medium: <Label color="#fbbf24">{v.sensitiveFiles.details.summary?.medium || 0}</Label>
+                          {"  "}Low: <Label color="#00ff88">{v.sensitiveFiles.details.summary?.low || 0}</Label>
+                        </DetailMono>
+                        <div style={{ marginTop: "14px" }}>
+                          {v.sensitiveFiles.details.exposedFiles.map((f, i) => (
+                            <div key={i} style={{ marginBottom: "10px", paddingLeft: "12px", borderLeft: `2px solid ${riskAccent(f.severity)}55` }}>
+                              <DetailMono>
+                                › <Label color={riskAccent(f.severity)}>[{f.severity}]</Label>{" "}
+                                <Label color="#00d4ff">{f.path}</Label>
+                              </DetailMono>
+                              <DetailMono>› Status: <Label color="#fbbf24">{f.status}</Label>{"  "}Desc: <Label color="rgba(180,255,180,0.55)">{f.desc}</Label></DetailMono>
+                              {f.contentType && (
+                                <DetailMono>› Content-Type: <Label color="rgba(180,255,180,0.4)">{f.contentType}</Label></DetailMono>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : <DetailText>No sensitive files detected</DetailText>}
+                  </ModuleBlock>
                 </div>
               );
             })()}
