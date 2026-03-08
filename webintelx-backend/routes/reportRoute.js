@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { generateQuickScanPDF } = require("../controllers/reportController");
+const { generateQuickScanPDF, generateCustomScanPDF } = require("../controllers/reportController");
 
-router.post("/quickscan/pdf", generateQuickScanPDF);
+router.post("/quickscan/pdf",  generateQuickScanPDF);
+router.post("/customscan/pdf", generateCustomScanPDF);
 
 module.exports = router;

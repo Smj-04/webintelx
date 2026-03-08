@@ -75,6 +75,29 @@ const modes = [
     tags: ["SQLi", "XSS", "CSRF", "CMD_INJECT", "CLICKJACK", "CVE"],
     route: "/full",
   },
+  {
+    num: "03",
+    title: "CUSTOM SCAN",
+    subtitle: "2–10 minutes • Your choice",
+    desc: "Modular Assessment — Pick exactly which modules to run. Mix OSINT, infrastructure recon, and vulnerability checks. Full control over scope and depth.",
+    accent: "#b06aff",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="3" y="3" width="9" height="9" stroke="#b06aff" strokeWidth="1.5" fill="none"/>
+        <rect x="16" y="3" width="9" height="9" stroke="#b06aff" strokeWidth="1.5" fill="none" opacity="0.5"/>
+        <rect x="3" y="16" width="9" height="9" stroke="#b06aff" strokeWidth="1.5" fill="none" opacity="0.5"/>
+        <rect x="16" y="16" width="9" height="9" stroke="#b06aff" strokeWidth="1.5" fill="none"/>
+        <line x1="7.5" y1="5.5" x2="7.5" y2="9.5" stroke="#b06aff" strokeWidth="1.2"/>
+        <line x1="5.5" y1="7.5" x2="9.5" y2="7.5" stroke="#b06aff" strokeWidth="1.2"/>
+        <line x1="19" y1="7.5" x2="23" y2="7.5" stroke="#b06aff" strokeWidth="1.2" opacity="0.4"/>
+        <line x1="19" y1="20.5" x2="23" y2="20.5" stroke="#b06aff" strokeWidth="1.2"/>
+        <line x1="21" y1="18.5" x2="21" y2="22.5" stroke="#b06aff" strokeWidth="1.2"/>
+        <line x1="5.5" y1="20.5" x2="9.5" y2="20.5" stroke="#b06aff" strokeWidth="1.2" opacity="0.4"/>
+      </svg>
+    ),
+    tags: ["CUSTOM", "OSINT", "VULN", "INFRA", "HOST", "MODULAR"],
+    route: "/custom",
+  },
 ];
 
 export default function ScanSelection() {
@@ -127,7 +150,7 @@ export default function ScanSelection() {
       </nav>
 
       {/* MAIN CONTENT */}
-      <div style={{ position: "relative", zIndex: 2, maxWidth: "1100px", margin: "0 auto", padding: "120px 40px 80px" }}>
+      <div style={{ position: "relative", zIndex: 2, maxWidth: "1200px", margin: "0 auto", padding: "120px 40px 80px" }}>
 
         {/* Header */}
         <div style={{ marginBottom: "60px", animation: "fadeUp 0.6s ease 0.1s both" }}>
@@ -143,7 +166,7 @@ export default function ScanSelection() {
           <div style={{ width: "48px", height: "2px", background: "#00ff88", marginTop: "20px", boxShadow: "0 0 10px rgba(0,255,136,0.5)" }} />
         </div>
 
-        {/* Cards */}
+        {/* Cards — 3 column on wide, wrap on narrow */}
         <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", animation: "fadeUp 0.6s ease 0.25s both" }}>
           {modes.map((mode, i) => (
             <div
@@ -152,11 +175,11 @@ export default function ScanSelection() {
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
               style={{
-                flex: "1 1 380px",
+                flex: "1 1 320px",
                 border: `1px solid ${hovered === i ? mode.accent : "rgba(0,255,136,0.1)"}`,
                 borderLeft: `3px solid ${mode.accent}`,
                 background: hovered === i ? "rgba(0,0,0,0.95)" : "rgba(0,0,0,0.55)",
-                padding: "40px 36px",
+                padding: "40px 32px",
                 cursor: "pointer",
                 position: "relative",
                 overflow: "hidden",

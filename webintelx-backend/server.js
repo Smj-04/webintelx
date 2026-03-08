@@ -19,6 +19,7 @@ const securityTrailsRoute = require("./routes/securitytrailsRoute");
 const reportRoute = require("./routes/reportRoute");
 const phishingCheckRoute = require("./routes/phishingCheckRoute");
 const wordpressRoute = require("./routes/Wordpressroute");
+const customScanRoute = require("./routes/customScanRoute");
 
 console.log("🚀 SERVER FILE PATH:", __filename);
 
@@ -33,6 +34,8 @@ app.use("/api/portscan", portscanRoute);
 app.use("/api/headers", headersRoute);
 app.use("/api/ssl", sslRoute);
 app.use("/api/quickscan", quickScanRoute);
+app.use("/api", customScanRoute);
+
 
 // ── FullScan routes (pause/resume must come BEFORE the generic /api/fullscan mount) ──
 const { pauseScan, resumeScan } = require('./controllers/fullScanController');

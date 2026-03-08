@@ -158,7 +158,7 @@ exports.generateQuickScanPDF = async (req, res) => {
     // ── COVER ──────────────────────────────────
     doc.fontSize(9).fillColor("#6b7280").text("WEBINTELX THREAT INTELLIGENCE", { align: "center" });
     doc.moveDown(0.3);
-    doc.fontSize(22).fillColor("#1e3a5f").text("Quick Scan Security Report", { align: "center" });
+    doc.fontSize(22).fillColor("#1e3a5f").text(`${req.body._scanType || "Quick Scan"} Security Report`, { align: "center" });
     doc.moveDown(0.5);
     doc.fontSize(12).fillColor(riskColor(risk)).text(`Risk Level: ${risk}  (${score}/15)`, { align: "center" });
     doc.moveDown(0.5);
@@ -479,4 +479,14 @@ exports.generateQuickScanPDF = async (req, res) => {
     console.error("PDF generation failed:", err);
     if (!res.headersSent) res.status(500).json({ error: "PDF generation failed", detail: err.message });
   }
+};
+
+// ─────────────────────────────────────────────
+// CUSTOM SCAN PDF — reuses same layout as QuickScan
+// ─────────────────────────────────────────────
+exports.generateCustomScanPDF = async (req, res) => {
+  // Custom scan has the same data shape as QuickScan + vulnerabilities
+  // Reuse generateQuickScanPDF logic with a different title
+  req.body._scanType = "Custom Scan";
+  return exports.generateQuickScanPDF(req, res);
 };

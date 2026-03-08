@@ -13,7 +13,7 @@ export default function AppRoutes() {
       <Route path="/" element={<WebIntelX />} />
       <Route path="/quick" element={<QuickScanPage />} />
       <Route path="/full" element={<FullScanPage />} />
-      <Route path="/custom" element={<FullScanPage />} />
+      <Route path="/custom" element={<CustomScanPage />} />
       <Route path="/phishing" element={<PhishingPage />} />
       <Route path="/password-checker" element={<PasswordChecker />} /> {/* add this */}
     </Routes>

@@ -4,7 +4,7 @@ import {
   FaGlobe, FaServer, FaLock, FaUnlock, FaNetworkWired, FaEnvelope,
   FaRoute, FaFingerprint, FaChevronDown, FaChevronUp, FaCode,
   FaLeaf, FaBiohazard, FaSkull, FaMapMarkerAlt, FaCookieBite,
-  FaVirus, FaRadiation, FaEye
+  FaVirus, FaRadiation, FaEye, FaExclamationTriangle
 } from "react-icons/fa";
 
 const FONT_URL = "https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap";
@@ -22,6 +22,45 @@ const riskBg = (risk) => {
   if (risk === "MEDIUM") return "rgba(251,191,36,0.08)";
   return "rgba(0,255,136,0.06)";
 };
+
+/* ── OUTDATED VERSION DATABASE ── */
+// Keys ordered longest-first so "jquery migrate" matches before "jquery"
+const OUTDATED_DB = {
+  "jquery migrate": { latest: "3.",   eol: ["1.", "2."],          severity: "MEDIUM",   note: "jQuery Migrate 1.x/2.x is deprecated — upgrade to 3.x" },
+  "jquery ui":      { latest: "1.13", eol: ["1.10","1.11","1.12"],severity: "MEDIUM",   note: "jQuery UI older versions have CSRF and XSS issues" },
+  "jquery":         { latest: "3.7",  eol: ["1.", "2."],          severity: "HIGH",     note: "jQuery 1.x/2.x have known XSS vulnerabilities — upgrade to 3.x" },
+  "bootstrap":      { latest: "5.",   eol: ["2.", "3."],          severity: "MEDIUM",   note: "Bootstrap 2.x/3.x are EOL — XSS risks in older components" },
+  "font awesome":   { latest: "6.",   eol: ["4."],                severity: "LOW",      note: "Font Awesome 4.x is EOL — consider upgrading to 6.x" },
+  "wordpress":      { latest: "6.",   eol: ["3.","4.","5.0","5.1","5.2","5.3","5.4","5.5","5.6","5.7","5.8","5.9"], severity: "CRITICAL", note: "Outdated WordPress is the #1 target for web attacks — update immediately" },
+  "drupal":         { latest: "10.",  eol: ["6.","7.","8.","9.0","9.1","9.2","9.3","9.4"], severity: "HIGH", note: "Outdated Drupal — known RCE vulnerabilities (Drupalgeddon)" },
+  "joomla":         { latest: "5.",   eol: ["2.", "3."],          severity: "HIGH",     note: "Joomla 3.x reached EOL — multiple known exploits exist" },
+  "php":            { latest: "8.",   eol: ["4.","5.","7.0","7.1","7.2","7.3","7.4"], severity: "CRITICAL", note: "PHP version is EOL — no security patches — upgrade to PHP 8.x" },
+  "apache":         { latest: "2.4",  eol: ["1.","2.0","2.2"],   severity: "HIGH",     note: "Apache 2.2 is EOL — no longer receives security patches" },
+  "nginx":          { latest: "1.24", eol: ["0.","1.0","1.2","1.4","1.6","1.8","1.10","1.12","1.14","1.16","1.18","1.20"], severity: "MEDIUM", note: "Outdated Nginx stable branch — upgrade to latest" },
+  "openssl":        { latest: "3.",   eol: ["1.0","1.1"],        severity: "CRITICAL", note: "OpenSSL 1.0/1.1 are EOL — known CVEs including Heartbleed lineage" },
+  "react":          { latest: "18.",  eol: ["0.","1.","2.","3.","4.","5.","6.","7.","8.","9.","10.","11.","12.","13.","14.","15.","16."], severity: "LOW", note: "Outdated React — upgrade for security patches" },
+  "angular":        { latest: "17.",  eol: ["1.","2.","3.","4.","5.","6.","7.","8.","9.","10.","11.","12.","13.","14."], severity: "MEDIUM", note: "Outdated Angular version — upgrade for XSS fixes" },
+  "vue.js":         { latest: "3.",   eol: ["1."],               severity: "MEDIUM",   note: "Vue 1.x is EOL — multiple XSS vulnerabilities exist" },
+  "moment.js":      { latest: null,   eol: ["*"],                severity: "MEDIUM",   note: "Moment.js is deprecated — migrate to day.js or date-fns" },
+  "mootools":       { latest: null,   eol: ["*"],                severity: "MEDIUM",   note: "MooTools is unmaintained since 2021 — consider migrating" },
+  "prototype":      { latest: null,   eol: ["*"],                severity: "HIGH",     note: "Prototype.js is abandoned and has known XSS vulnerabilities" },
+  "owl carousel":   { latest: "2.",   eol: ["1."],               severity: "LOW",      note: "Owl Carousel 1.x is deprecated — upgrade to 2.x" },
+  "lodash":         { latest: "4.",   eol: ["1.","2.","3."],     severity: "MEDIUM",   note: "Lodash 1-3.x has prototype pollution vulnerabilities" },
+};
+
+// Returns db entry if outdated, null if current/unknown
+function checkOutdated(techName, version) {
+  if (!version || version === "Unknown") return null;
+  const key = Object.keys(OUTDATED_DB).find(k => techName.toLowerCase().includes(k));
+  if (!key) return null;
+  const db = OUTDATED_DB[key];
+  if (db.eol.includes("*")) return db; // always flagged (deprecated libs)
+  const isEol = db.eol.some(prefix => version.startsWith(prefix));
+  return isEol ? db : null;
+}
+
+const severityColor = (s) =>
+  s === "CRITICAL" ? "#ff2222" : s === "HIGH" ? "#ff6b35" : s === "MEDIUM" ? "#fbbf24" : "#00ff88";
 
 /* ── BACKGROUND ── */
 function HexGrid() {
@@ -52,8 +91,6 @@ function HexGrid() {
 function ScanLines() {
   return <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 1, background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.012) 2px, rgba(0,255,136,0.012) 4px)" }} />;
 }
-
-
 
 /* ── STAT ROW ── */
 const StatRow = ({ label, value, accent = "rgba(0,255,136,0.7)", mono = true, icon }) => (
@@ -122,6 +159,23 @@ const TagList = ({ items, color = "#00ff88" }) => (
   </div>
 );
 
+/* ── TECH TAG (with optional OUTDATED badge) ── */
+const TechTag = ({ name, version, outdated }) => {
+  const baseColor = outdated ? severityColor(outdated.severity) : "#00d4ff";
+  return (
+    <div style={{ display: "inline-flex", alignItems: "center", border: `1px solid ${baseColor}40`, background: `${baseColor}0a`, overflow: "hidden" }}>
+      <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: baseColor, padding: "3px 8px" }}>
+        {name}{version ? ` ${version}` : ""}
+      </span>
+      {outdated && (
+        <span style={{ fontFamily: "'Orbitron', monospace", fontSize: "7px", fontWeight: 700, color: "#020804", background: baseColor, padding: "3px 6px", letterSpacing: "0.08em" }}>
+          OUTDATED
+        </span>
+      )}
+    </div>
+  );
+};
+
 /* ── MAIN ── */
 export default function QuickScan() {
   const [input, setInput] = useState("");
@@ -148,11 +202,11 @@ export default function QuickScan() {
   };
 
   const handleScan = async () => {
-  if (!input.trim()) return alert("Please enter a URL");
-  if (!isValidTarget(input)) {
-    setError("Invalid target. Please enter a valid domain (e.g. example.com) or URL (e.g. https://example.com).");
-    return;
-  }
+    if (!input.trim()) return alert("Please enter a URL");
+    if (!isValidTarget(input)) {
+      setError("Invalid target. Please enter a valid domain (e.g. example.com) or URL (e.g. https://example.com).");
+      return;
+    }
     setIsScanning(true); setError(""); setResults(null); setScanDone(false); setRiskAssessment(null);
     setTimeout(() => loaderRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     try {
@@ -193,7 +247,30 @@ export default function QuickScan() {
   /* ── DERIVED DATA ── */
   const r = results;
   const overallRisk = riskAssessment?.risk || "LOW";
-  const techStack = r?.wappalyzer ? Object.entries(r.wappalyzer).map(([t, v]) => v !== "Unknown" ? `${t} ${v}` : t) : [];
+
+  // Build enriched tech entries: [{ name, version, outdated }]
+  const techEntries = r?.wappalyzer
+    ? Object.entries(r.wappalyzer).map(([tech, version]) => ({
+        name: tech,
+        version: version !== "Unknown" ? version : null,
+        outdated: checkOutdated(tech, version),
+      }))
+    : [];
+
+  const outdatedTechs = techEntries.filter(t => t.outdated);
+  const criticalOutdated = outdatedTechs.filter(t => t.outdated.severity === "CRITICAL");
+  const highOutdated = outdatedTechs.filter(t => t.outdated.severity === "HIGH");
+
+  const techRisk = criticalOutdated.length > 0 ? "CRITICAL"
+    : highOutdated.length > 0 ? "HIGH"
+    : outdatedTechs.length > 0 ? "MEDIUM"
+    : r?.headers?.poweredBy?.includes("PHP/5") || r?.headers?.poweredBy?.includes("PHP/4") ? "HIGH"
+    : techEntries.length > 0 ? "LOW"
+    : "LOW";
+
+  const techSummary = outdatedTechs.length > 0
+    ? `${outdatedTechs.length} outdated / ${techEntries.length} detected`
+    : `${techEntries.length} technologies detected`;
 
   return (
     <div style={{ backgroundColor: "#020804", minHeight: "100vh", color: "#e8ffe8", overflowX: "hidden", cursor: "crosshair" }}>
@@ -375,23 +452,75 @@ export default function QuickScan() {
                 {r.headers?.poweredBy?.includes("PHP/5") && <AlertRow text="PHP 5.x is end-of-life and contains known vulnerabilities" severity="critical" />}
               </ModuleCard>
 
-              {/* Technology Stack */}
+              {/* ══════════════════════════════════════════════ */}
+              {/* TECHNOLOGY STACK — upgraded with version check */}
+              {/* ══════════════════════════════════════════════ */}
               <ModuleCard
                 title="Technology Stack"
-                icon={<FaCode style={{ color: "#00d4ff" }} />}
-                risk={r.headers?.poweredBy?.includes("PHP/5") || r.headers?.poweredBy?.includes("PHP/4") ? "HIGH" : techStack.length > 0 ? "MEDIUM" : "LOW"}
-                summary={`${techStack.length} technologies detected`}
+                icon={<FaCode style={{ color: outdatedTechs.length > 0 ? riskAccent(techRisk) : "#00d4ff" }} />}
+                risk={techRisk}
+                summary={techSummary}
+                defaultOpen={outdatedTechs.length > 0}
               >
-                {techStack.length > 0 ? (
+                {techEntries.length > 0 ? (
                   <>
+                    {/* Outdated components warning panel */}
+                    {outdatedTechs.length > 0 && (
+                      <div style={{ background: "rgba(255,107,53,0.06)", border: "1px solid rgba(255,107,53,0.2)", borderLeft: "3px solid #ff6b35", padding: "14px 16px", marginBottom: "20px" }}>
+                        <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", color: "rgba(255,107,53,0.8)", letterSpacing: "0.22em", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
+                          <FaExclamationTriangle style={{ fontSize: "10px" }} /> OUTDATED_COMPONENTS_DETECTED //
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                          {outdatedTechs.map((t, i) => {
+                            const color = severityColor(t.outdated.severity);
+                            return (
+                              <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "8px 10px", background: `${color}07`, borderLeft: `2px solid ${color}50` }}>
+                                <div style={{ flexShrink: 0, marginTop: "1px" }}>
+                                  <span style={{ fontFamily: "'Orbitron', monospace", fontSize: "8px", fontWeight: 700, color: "#020804", background: color, padding: "2px 6px", letterSpacing: "0.08em" }}>
+                                    {t.outdated.severity}
+                                  </span>
+                                </div>
+                                <div>
+                                  <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color, marginBottom: "3px" }}>
+                                    {t.name}{t.version ? ` ${t.version}` : ""}
+                                    {t.outdated.latest && (
+                                      <span style={{ color: "#00ff88", fontSize: "9px", marginLeft: "10px" }}>→ Latest: {t.outdated.latest}x</span>
+                                    )}
+                                  </div>
+                                  <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: "11px", color: `${color}cc`, lineHeight: 1.5 }}>
+                                    {t.outdated.note}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* All detected technologies with inline outdated badges */}
                     <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", color: "rgba(0,255,136,0.6)", letterSpacing: "0.2em", marginBottom: "10px" }}>DETECTED STACK //</div>
-                    <TagList items={techStack} color="#00d4ff" />
-                    <div style={{ marginTop: "16px" }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "20px" }}>
+                      {techEntries.map((t, i) => (
+                        <TechTag key={i} name={t.name} version={t.version} outdated={t.outdated} />
+                      ))}
+                    </div>
+
+                    {/* Summary stats */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 40px" }}>
+                      <StatRow label="TOTAL TECHNOLOGIES" value={techEntries.length} />
+                      <StatRow label="OUTDATED COMPONENTS" value={outdatedTechs.length} accent={outdatedTechs.length > 0 ? "#ff6b35" : "#00ff88"} />
                       <StatRow label="SERVER SOFTWARE" value={r.headers?.server ?? "Unknown"} />
                       <StatRow label="BACKEND LANGUAGE" value={r.headers?.poweredBy ?? "Unknown"} accent={r.headers?.poweredBy?.includes("PHP/5") ? "#ff6b35" : "#00ff88"} />
                     </div>
-                    {r.headers?.poweredBy?.includes("PHP/5") && <AlertRow text="PHP 5.x reached EOL in Dec 2018 — upgrade to PHP 8.x" severity="critical" />}
-                    {r.headers?.server?.toLowerCase().includes("apache/2.2") && <AlertRow text="Apache 2.2 is outdated and no longer receives security patches" severity="warn" />}
+
+                    {/* Legacy header-based fallback checks */}
+                    {r.headers?.poweredBy?.includes("PHP/5") && !outdatedTechs.find(t => t.name.toLowerCase().includes("php")) && (
+                      <AlertRow text="PHP 5.x reached EOL in Dec 2018 — upgrade to PHP 8.x" severity="critical" />
+                    )}
+                    {r.headers?.server?.toLowerCase().includes("apache/2.2") && !outdatedTechs.find(t => t.name.toLowerCase().includes("apache")) && (
+                      <AlertRow text="Apache 2.2 is outdated and no longer receives security patches" severity="warn" />
+                    )}
                   </>
                 ) : (
                   <AlertRow text="No technology fingerprints detected" severity="info" />
@@ -608,7 +737,7 @@ export default function QuickScan() {
                 )}
               </ModuleCard>
 
-                            {/* Email Intelligence — DNSBL + Hunter */}
+              {/* Email Intelligence — DNSBL + Hunter */}
               <ModuleCard
                 title="Email & Domain Intelligence"
                 icon={<FaEnvelope style={{ color: r.emailIntelligence?.blacklisted ? "#ff4444" : "#b06aff" }} />}
@@ -827,7 +956,6 @@ export default function QuickScan() {
                 ) : <AlertRow text={r.shodan?.note || "Add SHODAN_API_KEY to .env to enable"} severity="info" />}
               </ModuleCard>
 
-              
             </div>
 
             {/* ── SECTION: HOST INTELLIGENCE ── */}
