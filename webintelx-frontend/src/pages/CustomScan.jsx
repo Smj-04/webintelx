@@ -518,33 +518,49 @@ export default function CustomScan() {
       <HexGrid/>
 
       <div style={{position:"relative",zIndex:1,maxWidth:"900px",margin:"0 auto",padding:"40px 20px"}}>
+     
+      {/* Header */}
+      <div style={{ marginBottom: "52px", animation: "fadeUp 0.6s ease 0.1s both" }}>
+        <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.35em", color: "rgba(176,106,255,0.5)", marginBottom: "14px" }}>{"// MODULE_03 / CUSTOM_SCAN"}</div>
+        <h1 style={{ fontFamily: "'Orbitron', monospace", fontWeight: 900, fontSize: "clamp(28px,4vw,52px)", color: "#e8ffe8", letterSpacing: "0.04em", lineHeight: 1.1, marginBottom: "16px" }}>
+          CUSTOM <span style={{ color: "#b06aff" }}>SCAN</span>
+        </h1>
+        <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: "17px", color: "rgba(200,180,255,0.6)", lineHeight: 1.7, maxWidth: "540px" }}>
+          Select modules and run a targeted security assessment on your chosen attack surface.
+        </p>
+        <div style={{ width: "48px", height: "2px", background: "#b06aff", marginTop: "18px", boxShadow: "0 0 10px rgba(176,106,255,0.5)" }} />
+      </div>
 
-        {/* Header */}
-        <div style={{textAlign:"center",marginBottom:"40px"}}>
-          <div style={{fontFamily:"'Share Tech Mono',monospace",fontSize:"10px",color:"rgba(0,255,136,0.4)",letterSpacing:"0.4em",marginBottom:"8px"}}>MODULE_03 / CUSTOM_SCAN</div>
-          <h1 style={{fontFamily:"'Orbitron',monospace",fontSize:"clamp(22px,4vw,36px)",fontWeight:900,color:"#b06aff",margin:0,letterSpacing:"0.05em"}}>CUSTOM SCAN</h1>
-          <p style={{fontFamily:"'Rajdhani',sans-serif",fontSize:"14px",color:"rgba(176,106,255,0.5)",marginTop:"8px"}}>Select modules and run a targeted security assessment</p>
+      {/* Target input */}
+      <div style={{ background: "rgba(0,0,0,0.7)", border: "1px solid rgba(176,106,255,0.2)", borderTop: "2px solid #b06aff", padding: "36px", maxWidth: "600px", marginBottom: "32px", animation: "fadeUp 0.6s ease 0.3s both", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: 0, right: 0, width: 0, height: 0, borderStyle: "solid", borderWidth: "0 40px 40px 0", borderColor: "transparent rgba(176,106,255,0.15) transparent transparent" }} />
+        <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", color: "rgba(176,106,255,0.5)", letterSpacing: "0.25em", marginBottom: "20px" }}>TARGET_INPUT // ENTER_URL_OR_DOMAIN</div>
+        <label style={{ fontFamily: "'Orbitron', monospace", fontSize: "12px", letterSpacing: "0.1em", color: "#e8ffe8", display: "block", marginBottom: "12px" }}>TARGET URL</label>
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <input
+            value={input} onChange={e => { setInput(e.target.value); if (error) setError(""); }}
+            onKeyDown={e => e.key === "Enter" && handleScan()}
+            placeholder="example.com"
+            style={{ flex: "1 1 240px", padding: "12px 16px", background: "rgba(0,0,0,0.8)", border: "1px solid rgba(176,106,255,0.25)", color: "#b06aff", fontFamily: "'Share Tech Mono', monospace", fontSize: "13px", outline: "none", letterSpacing: "0.05em" }}
+            onFocus={e => e.target.style.borderColor = "#b06aff"}
+            onBlur={e => e.target.style.borderColor = "rgba(176,106,255,0.25)"}
+          />
+          <button
+            onClick={handleScan}
+            disabled={scanning || !input.trim() || selected.size === 0}
+            style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "11px", letterSpacing: "0.18em", color: "#020804", background: scanning || !input.trim() || selected.size === 0 ? "rgba(176,106,255,0.35)" : "#b06aff", border: "none", padding: "12px 28px", cursor: scanning || !input.trim() || selected.size === 0 ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 0 20px rgba(176,106,255,0.25)" }}
+            onMouseEnter={e => { if (!scanning && input.trim() && selected.size > 0) { e.currentTarget.style.background = "#c490ff"; e.currentTarget.style.transform = "translateY(-2px)"; } }}
+            onMouseLeave={e => { e.currentTarget.style.background = scanning || !input.trim() || selected.size === 0 ? "rgba(176,106,255,0.35)" : "#b06aff"; e.currentTarget.style.transform = "translateY(0)"; }}
+          >
+            {scanning ? <span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>◌</span> : <FaSlidersH />}
+            {scanning ? "SCANNING..." : "SCAN"}
+          </button>
         </div>
-
-        {/* Target input */}
-        <div style={{border:"1px solid rgba(0,255,136,0.3)",borderRadius:"4px",padding:"20px",marginBottom:"24px",background:"rgba(176,106,255,0.02)"}}>
-          <div style={{fontFamily:"'Share Tech Mono',monospace",fontSize:"9px",color:"rgba(0,255,136,0.4)",letterSpacing:"0.3em",marginBottom:"10px"}}>TARGET_INPUT // ENTER_URL_OR_DOMAIN</div>
-          <div style={{display:"flex",gap:"12px"}}>
-            <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleScan()}
-              placeholder="example.com or https://example.com"
-              style={{flex:1,background:"rgba(0,255,136,0.05)",border:"1px solid rgba(0,255,136,0.25)",borderRadius:"3px",color:"#b06aff",fontFamily:"'Share Tech Mono',monospace",fontSize:"12px",padding:"10px 14px",outline:"none"}}
-            />
-            <button onClick={handleScan} disabled={scanning||!input.trim()||selected.size===0}
-              style={{fontFamily:"'Orbitron',monospace",fontSize:"11px",fontWeight:700,color:"#020804",background:scanning||!input.trim()||selected.size===0?"rgba(0,255,136,0.3)":"#b06aff",border:"none",borderRadius:"3px",padding:"10px 28px",cursor:scanning||!input.trim()||selected.size===0?"not-allowed":"pointer",letterSpacing:"0.15em",display:"flex",alignItems:"center",gap:"8px"}}>
-              {scanning?<span style={{animation:"spin 1s linear infinite",display:"inline-block"}}>◌</span>:<FaSlidersH/>}
-              {scanning?"SCANNING...":"SCAN"}
-            </button>
-          </div>
-          {error&&<div style={{fontFamily:"'Share Tech Mono',monospace",fontSize:"10px",color:"#ff4444",marginTop:"10px"}}>⚠ {error}</div>}
-        </div>
+        {error && <div style={{ marginTop: "14px", fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "#ff6b6b", letterSpacing: "0.1em" }}>✕ ERROR: {error}</div>}
+      </div>
 
         {/* Module selector */}
-        <div style={{border:"1px solid rgba(176,106,255,0.2)",borderRadius:"4px",padding:"20px",marginBottom:"28px",background:"rgba(176,106,255,0.01)"}}>
+        <div style={{border:"1px solid rgba(255, 255, 255, 0.2)",borderRadius:"4px",padding:"20px",marginBottom:"28px",background:"rgba(176,106,255,0.01)"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
             <div style={{fontFamily:"'Share Tech Mono',monospace",fontSize:"9px",color:"rgba(0,255,136,0.4)",letterSpacing:"0.3em"}}>MODULE_SELECTION // {selected.size}/{ALL_MODULE_IDS.length} SELECTED</div>
             <div style={{display:"flex",gap:"10px"}}>
