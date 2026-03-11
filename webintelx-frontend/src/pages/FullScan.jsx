@@ -7,308 +7,282 @@ import {
   FaCheckCircle, FaTimesCircle, FaEnvelope, FaMapMarkerAlt,
 } from "react-icons/fa";
 
-const FONT_URL = "https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap";
+const FONT_URL = "https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Rajdhani:wght@500;600;700&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap";
 
-function HexGrid() {
-  const hexes = [];
-  for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 16; c++) {
-      const w = 52, h = 46;
-      const x = c * w * 0.75 + (r % 2 === 0 ? 0 : w * 0.375);
-      const y = r * h * 0.87;
-      hexes.push({ x, y, key: `${r}-${c}`, d: (r + c) * 0.08 });
-    }
-  }
-  const hexPath = (x, y, s = 22) =>
-    Array.from({ length: 6 }, (_, i) => {
-      const a = (Math.PI / 180) * (60 * i - 30);
-      return `${x + s * Math.cos(a)},${y + s * Math.sin(a)}`;
-    }).join(" ");
-  return (
-    <svg style={{ position: "fixed", inset: 0, width: "100%", height: "100%", opacity: 0.04, pointerEvents: "none", zIndex: 0 }} viewBox="0 0 1300 500" preserveAspectRatio="xMidYMid slice">
-      {hexes.map(h => (
-        <polygon key={h.key} points={hexPath(h.x + 26, h.y + 26)} fill="none" stroke="#00ff88" strokeWidth="0.6">
-          <animate attributeName="opacity" values="0.3;1;0.3" dur={`${4 + (h.d % 3)}s`} begin={`${h.d % 2}s`} repeatCount="indefinite" />
-        </polygon>
-      ))}
-    </svg>
-  );
-}
-
-function ScanLines() {
-  return <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 1, background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.012) 2px, rgba(0,255,136,0.012) 4px)" }} />;
-}
+const C = {
+  bg: "#F7F8F9", white: "#FFFFFF", border: "#E4E8EC", borderDark: "#CDD4DB",
+  text: "#0F1923", textSecondary: "#3A4A58", textMuted: "#6B7C8D", textXMuted: "#9BAAB7",
+  accent: "#B54A0C", accentLight: "#FFF7ED", accentBorder: "#FED7AA", accentHover: "#9A3E0A",
+  green: "#0A6640", greenBg: "#EAF4EE", greenBorder: "#A7D7BC",
+  amber: "#92600A", amberBg: "#FFFBEB", amberBorder: "#FDE68A",
+  orange: "#B54A0C", orangeBg: "#FFF7ED", orangeBorder: "#FED7AA",
+  red: "#C0312B", redBg: "#FEF2F2", redBorder: "#FECACA",
+  blue: "#2563AB", blueBg: "#EFF6FF", blueBorder: "#BFDBFE",
+  purple: "#6d28d9", purpleBg: "#F5F3FF", purpleBorder: "#DDD6FE",
+  sidebarBg: "#0F1923", sidebarBorder: "#1E2A36", sidebarFaint: "#3D4E5E", sidebarText: "#E6EDF3",
+};
 
 const riskAccent = (risk) => {
   const r = (risk || "").toUpperCase();
-  if (r === "CRITICAL") return "#ff2222";
-  if (r === "HIGH") return "#ff6b35";
-  if (r === "MEDIUM") return "#fbbf24";
-  return "#00ff88";
+  if (r === "CRITICAL") return C.red;
+  if (r === "HIGH") return C.orange;
+  if (r === "MEDIUM") return C.amber;
+  if (r === "LOW") return C.green;
+  return C.textMuted;
 };
+const riskBg     = (risk) => { const r=(risk||"").toUpperCase(); if(r==="CRITICAL")return C.redBg;    if(r==="HIGH")return C.orangeBg;    if(r==="MEDIUM")return C.amberBg;    return C.greenBg; };
+const riskBorder = (risk) => { const r=(risk||"").toUpperCase(); if(r==="CRITICAL")return C.redBorder; if(r==="HIGH")return C.orangeBorder; if(r==="MEDIUM")return C.amberBorder; return C.greenBorder; };
 
-const StatusBadge = ({ value, trueColor = "#00ff88", falseColor = "#ff6b35" }) => {
-  const isGood = value === true || value === "YES" || value === "ENABLED" || value === "PRESENT";
+// ─── PRIMITIVES ──────────────────────────────────────────────────────────────
+
+const Tag = ({ children, color = C.green }) => (
+  <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"11px", color, background:color+"12", border:`1px solid ${color}30`, padding:"3px 10px", borderRadius:"4px", marginRight:"6px", marginBottom:"6px", display:"inline-block" }}>{children}</span>
+);
+
+const KV = ({ label, value, valueColor, mono = true }) => {
+  if (value === null || value === undefined || value === "") return null;
+  const str = typeof value === "object" ? JSON.stringify(value) : String(value);
+  if (str === "" || str === "null" || str === "undefined") return null;
   return (
-    <span style={{
-      fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.12em",
-      padding: "3px 9px", border: `1px solid ${isGood ? trueColor : falseColor}40`,
-      background: `${isGood ? trueColor : falseColor}12`,
-      color: isGood ? trueColor : falseColor,
-    }}>
-      {isGood ? "✓" : "✕"} {String(value)}
-    </span>
+    <div style={{ display:"flex", alignItems:"flex-start", gap:"12px", padding:"7px 0", borderBottom:`1px solid ${C.border}` }}>
+      <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"11px", color:C.textMuted, minWidth:"190px", flexShrink:0, paddingTop:"1px", textTransform:"uppercase", letterSpacing:"0.04em" }}>{label}</span>
+      <span style={{ fontFamily: mono?"'DM Mono',monospace":"'DM Sans',sans-serif", fontSize: mono?"12px":"13px", color: valueColor||C.blue, wordBreak:"break-all", lineHeight:1.5 }}>{str}</span>
+    </div>
   );
 };
 
-const InfoRow = ({ label, value, valueColor = "#00d4ff", mono = true }) => (
-  <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "6px 0", borderBottom: "1px solid rgba(0,255,136,0.04)" }}>
-    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(0,255,136,0.4)", letterSpacing: "0.12em", minWidth: "180px", flexShrink: 0 }}>{label}</span>
-    <span style={{ fontFamily: mono ? "'Share Tech Mono', monospace" : "'Rajdhani', sans-serif", fontSize: mono ? "11px" : "14px", color: valueColor, letterSpacing: mono ? "0.05em" : "0", wordBreak: "break-all" }}>{value}</span>
-  </div>
+const Mono = ({ children, color = C.textSecondary }) => (
+  <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"12px", color, lineHeight:1.9 }}>{children}</div>
 );
 
-const SectionHeader = ({ icon, title, accent = "#00ff88", count }) => (
-  <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px", paddingBottom: "10px", borderBottom: `1px solid ${accent}20` }}>
-    <span style={{ color: accent, fontSize: "14px", filter: `drop-shadow(0 0 6px ${accent})` }}>{icon}</span>
-    <span style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "12px", color: "#e8ffe8", letterSpacing: "0.08em" }}>{title}</span>
+const SubHead = ({ children, color = C.textMuted }) => (
+  <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"10px", color, textTransform:"uppercase", letterSpacing:"0.1em", marginTop:"16px", marginBottom:"8px", paddingBottom:"4px", borderBottom:`1px solid ${C.border}` }}>{children}</div>
+);
+
+const RiskChip = ({ level }) => {
+  if (!level) return null;
+  const r = level.toUpperCase();
+  return (
+    <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"10px", fontWeight:600, letterSpacing:"0.06em", padding:"2px 8px", borderRadius:"4px", border:`1px solid ${riskBorder(r)}`, background:riskBg(r), color:riskAccent(r) }}>{r}</span>
+  );
+};
+
+const SectionHeader = ({ icon, title, accent = C.green, count }) => (
+  <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"16px", paddingBottom:"12px", borderBottom:`1px solid ${C.border}` }}>
+    <span style={{ color:accent, fontSize:"14px", flexShrink:0 }}>{icon}</span>
+    <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:"13px", color:C.text, letterSpacing:"0.02em" }}>{title}</span>
     {count !== undefined && (
-      <span style={{ marginLeft: "auto", fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: accent, background: `${accent}15`, border: `1px solid ${accent}30`, padding: "2px 10px", letterSpacing: "0.1em" }}>
-        {count}
-      </span>
+      <span style={{ marginLeft:"auto", fontFamily:"'DM Mono',monospace", fontSize:"11px", color:accent, background:accent+"12", border:`1px solid ${accent}30`, padding:"2px 10px", borderRadius:"20px" }}>{count}</span>
     )}
   </div>
 );
 
-const Panel = ({ children, accent = "rgba(0,255,136,0.12)", leftAccent = "#00ff88", style = {} }) => (
-  <div style={{
-    background: "rgba(0,0,0,0.55)", border: `1px solid ${accent}`,
-    borderLeft: `3px solid ${leftAccent}`, padding: "24px", marginBottom: "14px",
-    position: "relative", overflow: "hidden", ...style,
-  }}>
+const Panel = ({ children, accentColor = C.green, style = {} }) => (
+  <div style={{ background:C.white, border:`1px solid ${C.border}`, borderLeft:`4px solid ${accentColor}`, borderRadius:"0 6px 6px 0", padding:"24px", marginBottom:"12px", boxShadow:"0 1px 4px rgba(0,0,0,0.04)", ...style }}>
     {children}
   </div>
 );
 
-const Tag = ({ children, color = "#00ff88" }) => (
-  <span style={{
-    fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.1em",
-    color, background: `${color}12`, border: `1px solid ${color}30`,
-    padding: "3px 10px", marginRight: "8px", marginBottom: "6px", display: "inline-block",
-  }}>{children}</span>
+// Recursively renders any object/array of data — no assumptions, no junk
+const AutoKV = ({ obj, skipKeys = [] }) => {
+  if (!obj || typeof obj !== "object") return null;
+  const skip = new Set(skipKeys);
+  return Object.entries(obj).map(([k, val]) => {
+    if (skip.has(k) || val === null || val === undefined || val === "") return null;
+    if (Array.isArray(val)) {
+      if (!val.length) return null;
+      if (typeof val[0] !== "object") {
+        return (
+          <div key={k}>
+            <SubHead>{k.replace(/_/g," ").toUpperCase()}</SubHead>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:"4px" }}>
+              {val.map((item,i) => <Tag key={i} color={C.blue}>{String(item)}</Tag>)}
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div key={k}>
+          <SubHead>{k.replace(/_/g," ").toUpperCase()} ({val.length})</SubHead>
+          {val.map((item,i) => (
+            <div key={i} style={{ marginBottom:"8px", paddingLeft:"12px", borderLeft:`2px solid ${C.border}` }}>
+              <AutoKV obj={item} />
+            </div>
+          ))}
+        </div>
+      );
+    }
+    if (typeof val === "object") {
+      return (
+        <div key={k}>
+          <SubHead>{k.replace(/_/g," ").toUpperCase()}</SubHead>
+          <div style={{ paddingLeft:"12px", borderLeft:`2px solid ${C.border}` }}>
+            <AutoKV obj={val} />
+          </div>
+        </div>
+      );
+    }
+    return <KV key={k} label={k.replace(/_/g," ").toUpperCase()} value={String(val)} valueColor={C.blue} />;
+  });
+};
+
+// ─── MODULE BLOCK ─────────────────────────────────────────────────────────────
+const ModuleBlock = ({ keyName, title, found, expanded, onToggle, children }) => (
+  <div style={{ background:C.white, border:`1px solid ${found?C.orangeBorder:C.border}`, borderLeft:`4px solid ${found?C.orange:C.green}`, borderRadius:"0 6px 6px 0", marginBottom:"10px", overflow:"hidden", boxShadow:"0 1px 3px rgba(0,0,0,0.04)" }}>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 20px" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:"12px" }}>
+        <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:500, fontSize:"11px", letterSpacing:"0.04em", padding:"3px 10px", borderRadius:"20px", background:found?C.orangeBg:C.greenBg, border:`1px solid ${found?C.orangeBorder:C.greenBorder}`, color:found?C.orange:C.green }}>
+          {found?"Vulnerable":"Not found"}
+        </span>
+        <h4 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:"14px", color:C.text }}>{title}</h4>
+      </div>
+      <button onClick={() => onToggle(keyName)} style={{ fontFamily:"'DM Mono',monospace", fontSize:"11px", color:C.textMuted, background:C.bg, border:`1px solid ${C.border}`, padding:"5px 14px", borderRadius:"4px", cursor:"pointer", transition:"all 0.15s" }}
+        onMouseEnter={e => { e.currentTarget.style.background=C.border; e.currentTarget.style.color=C.text; }}
+        onMouseLeave={e => { e.currentTarget.style.background=C.bg; e.currentTarget.style.color=C.textMuted; }}>
+        {expanded ? "▲ Hide" : "▼ Details"}
+      </button>
+    </div>
+    {expanded && (
+      <div style={{ padding:"16px 20px 20px", borderTop:`1px solid ${C.border}` }}>
+        {children}
+      </div>
+    )}
+  </div>
 );
 
-// ─── FULL QUICKSCAN RESULTS DISPLAY ───────────────────────────────────────────
+// ─── QUICKSCAN RESULTS ────────────────────────────────────────────────────────
 function QuickScanResults({ data }) {
   const qs = data?.quickscan || {};
-  const [expandedSections, setExpandedSections] = useState({
-    headers: true, tech: true, ports: true, osint: true,
-  });
+  const [expandedSections, setExpandedSections] = useState({ headers:true, tech:true, ports:true, osint:true });
   const [showDebug, setShowDebug] = useState(false);
   const toggle = (key) => setExpandedSections(s => ({ ...s, [key]: !s[key] }));
 
-  // ── flexible getters ──────────────────────────────────────────────────────
   const tech  = qs.technology || {};
   const ports = qs.ports || qs.portScan || {};
   const osint = qs.osint || qs.reputation || {};
   const hdrs  = qs.headers || qs.securityHeaders || qs.httpHeaders || {};
 
-  // ── always-show: present even if empty/clean ─────────────────────────────
   const hasTech    = Object.keys(tech).length > 0;
   const hasPorts   = Object.keys(ports).length > 0;
   const hasHeaders = Object.keys(hdrs).length > 0;
-
-  // ── conditional: only show if there's an actual finding ──────────────────
-  const osintFindings = osint.virusTotal || osint.safeBrowsing || osint.blacklisted || osint.cves;
-  const hasOsintAlert = !!(
-    osint.virusTotal?.malicious > 0 ||
-    osint.safeBrowsing?.safe === false ||
-    osint.blacklisted === true ||
-    osint.cves?.count > 0 ||
-    osintFindings
-  );
-  const hasShodanAlert = !!(osint.cves?.count > 0);
-
+  const hasOsintAlert = !!(osint.virusTotal?.malicious > 0 || osint.safeBrowsing?.safe === false || osint.blacklisted === true || osint.cves?.count > 0);
   const hasAnyData = hasTech || hasPorts || hasHeaders || hasOsintAlert;
 
   const CollapseBtn = ({ section }) => (
-    <button
-      onClick={() => toggle(section)}
-      style={{
-        marginLeft: "auto", fontFamily: "'Share Tech Mono', monospace", fontSize: "10px",
-        letterSpacing: "0.1em", color: "rgba(0,255,136,0.5)", background: "rgba(0,255,136,0.05)",
-        border: "1px solid rgba(0,255,136,0.12)", padding: "4px 12px", cursor: "pointer",
-        flexShrink: 0,
-      }}
-    >
-      {expandedSections[section] ? "▲ HIDE" : "▼ SHOW"}
+    <button onClick={() => toggle(section)} style={{ marginLeft:"auto", fontFamily:"'DM Mono',monospace", fontSize:"11px", color:C.textMuted, background:C.bg, border:`1px solid ${C.border}`, padding:"4px 12px", borderRadius:"4px", cursor:"pointer", transition:"all 0.15s", flexShrink:0 }}
+      onMouseEnter={e => { e.currentTarget.style.background=C.border; e.currentTarget.style.color=C.text; }}
+      onMouseLeave={e => { e.currentTarget.style.background=C.bg; e.currentTarget.style.color=C.textMuted; }}>
+      {expandedSections[section] ? "▲ Hide" : "▼ Show"}
     </button>
   );
 
-  // helper: render any unknown object as key/value rows
-  const RenderObject = ({ obj, depth = 0 }) => {
-    if (!obj || typeof obj !== "object") return <InfoRow label="VALUE" value={String(obj)} />;
-    return Object.entries(obj).map(([k, v]) => {
-      if (v === null || v === undefined) return null;
-      if (Array.isArray(v)) {
-        if (v.length === 0) return null;
-        if (typeof v[0] !== "object") {
-          return (
-            <div key={k} style={{ padding: "6px 0", borderBottom: "1px solid rgba(0,255,136,0.04)" }}>
-              <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(0,255,136,0.4)", letterSpacing: "0.12em", marginBottom: "6px" }}>{k.toUpperCase()}</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
-                {v.map((item, i) => <Tag key={i} color="#00d4ff">{String(item)}</Tag>)}
-              </div>
-            </div>
-          );
-        }
-        return (
-          <div key={k} style={{ marginBottom: "10px" }}>
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(0,255,136,0.4)", letterSpacing: "0.12em", marginBottom: "6px" }}>{k.toUpperCase()} ({v.length})</div>
-            {v.slice(0, 10).map((item, i) => (
-              <div key={i} style={{ paddingLeft: "12px", borderLeft: "2px solid rgba(0,255,136,0.15)", marginBottom: "6px" }}>
-                <RenderObject obj={item} depth={depth + 1} />
-              </div>
-            ))}
-          </div>
-        );
-      }
-      if (typeof v === "object") {
-        if (depth > 1) return <InfoRow key={k} label={k.toUpperCase()} value={JSON.stringify(v).substring(0, 80)} valueColor="rgba(180,255,180,0.5)" />;
-        return (
-          <div key={k} style={{ marginBottom: "8px" }}>
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(0,255,136,0.4)", letterSpacing: "0.12em", marginBottom: "4px" }}>{k.toUpperCase()}</div>
-            <div style={{ paddingLeft: "12px", borderLeft: "2px solid rgba(0,255,136,0.1)" }}>
-              <RenderObject obj={v} depth={depth + 1} />
-            </div>
-          </div>
-        );
-      }
-      const strVal = String(v);
-      const isNeg = strVal === "false" || strVal === "NO" || strVal === "MISSING" || strVal === "0";
-      const isPos = strVal === "true" || strVal === "YES" || strVal === "PRESENT";
-      return <InfoRow key={k} label={k.toUpperCase().replace(/_/g, " ")} value={strVal}
-        valueColor={isPos ? "#00ff88" : isNeg ? "#ff6b35" : "#00d4ff"} />;
-    });
-  };
-
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-        <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.3em", color: "rgba(0,255,136,0.38)" }}>
-          // RECONNAISSANCE_INTELLIGENCE
-        </div>
-        {/* Debug toggle — helps identify backend key names */}
-        <button
-          onClick={() => setShowDebug(s => !s)}
-          style={{
-            fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.15em",
-            color: showDebug ? "#fbbf24" : "rgba(251,191,36,0.3)",
-            background: showDebug ? "rgba(251,191,36,0.08)" : "transparent",
-            border: `1px solid ${showDebug ? "rgba(251,191,36,0.3)" : "rgba(251,191,36,0.1)"}`,
-            padding: "4px 12px", cursor: "pointer", transition: "all 0.2s",
-          }}
-        >
-          {showDebug ? "▲ HIDE RAW DATA" : "▼ DEBUG: SHOW RAW QUICKSCAN"}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"20px" }}>
+        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"11px", color:C.textXMuted, letterSpacing:"0.05em" }}>// reconnaissance_intelligence</div>
+        <button onClick={() => setShowDebug(s => !s)} style={{ fontFamily:"'DM Mono',monospace", fontSize:"11px", color:showDebug?C.amber:C.textMuted, background:showDebug?C.amberBg:C.bg, border:`1px solid ${showDebug?C.amberBorder:C.border}`, padding:"4px 12px", borderRadius:"4px", cursor:"pointer", transition:"all 0.2s" }}>
+          {showDebug ? "▲ Hide raw data" : "▼ Debug: raw quickscan"}
         </button>
       </div>
 
-      {/* ── DEBUG PANEL ── */}
       {showDebug && (
-        <div style={{ marginBottom: "20px", background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.2)", borderLeft: "3px solid #fbbf24", padding: "16px" }}>
-          <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "11px", color: "#fbbf24", letterSpacing: "0.1em", marginBottom: "10px" }}>⚙ RAW QUICKSCAN KEYS — use this to verify backend data shape</div>
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(0,255,136,0.5)", marginBottom: "8px" }}>
-            Top-level keys in <span style={{ color: "#fbbf24" }}>scanResult.quickscan</span>: {Object.keys(qs).join(", ") || "(none — quickscan is empty or missing)"}
-          </div>
-          <pre style={{ maxHeight: "300px", overflowY: "auto", fontSize: "10px", color: "rgba(0,255,136,0.55)", background: "rgba(0,0,0,0.4)", padding: "12px", border: "1px solid rgba(0,255,136,0.08)" }}>
-            {JSON.stringify(qs, null, 2)}
-          </pre>
+        <div style={{ marginBottom:"20px", background:C.amberBg, border:`1px solid ${C.amberBorder}`, borderLeft:`4px solid ${C.amber}`, borderRadius:"0 6px 6px 0", padding:"16px" }}>
+          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:"12px", color:C.amber, marginBottom:"10px" }}>⚙ Raw quickscan keys</div>
+          <pre style={{ maxHeight:"300px", overflowY:"auto", fontSize:"11px", color:C.textSecondary, background:C.white, padding:"12px", border:`1px solid ${C.border}`, borderRadius:"4px" }}>{JSON.stringify(qs, null, 2)}</pre>
         </div>
       )}
 
-      {/* ── NO DATA FALLBACK ── */}
       {!hasAnyData && (
-        <Panel leftAccent="#fbbf24" accent="rgba(251,191,36,0.1)">
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "rgba(251,191,36,0.6)", lineHeight: 1.8 }}>
-            <div style={{ marginBottom: "8px" }}>⚠ No reconnaissance data found in <span style={{ color: "#fbbf24" }}>scanResult.quickscan</span></div>
-            <div>Enable the debug toggle above to inspect what your backend is returning.</div>
+        <Panel accentColor={C.amber}>
+          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"12px", color:C.amber, lineHeight:1.8 }}>
+            <div style={{ marginBottom:"8px" }}>⚠ No reconnaissance data found in <span style={{ fontWeight:600 }}>scanResult.quickscan</span></div>
+            <div style={{ color:C.textMuted }}>Enable the debug toggle above to inspect what your backend is returning.</div>
           </div>
         </Panel>
       )}
 
-      {/* ── TECHNOLOGY FINGERPRINT ── */}
+      {/* Technology */}
       {hasTech && (
-        <Panel leftAccent="#fbbf24" accent="rgba(251,191,36,0.1)">
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: expandedSections.tech ? "20px" : 0 }}>
-            <SectionHeader icon={<FaFingerprint />} title="TECHNOLOGY FINGERPRINT" accent="#fbbf24" />
+        <Panel accentColor={C.amber}>
+          <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:expandedSections.tech?"20px":0 }}>
+            <SectionHeader icon={<FaFingerprint />} title="Technology Fingerprint" accent={C.amber} />
             <CollapseBtn section="tech" />
           </div>
           {expandedSections.tech && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "14px" }}>
-              {/* Server / Backend block */}
-              {(tech.server || tech.backend || tech.serverVersion || tech.os) && (
-                <div style={{ background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.1)", padding: "16px" }}>
-                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#fbbf24", letterSpacing: "0.12em", marginBottom: "10px" }}>SERVER</div>
-                  {tech.server && <InfoRow label="WEB_SERVER" value={tech.server} valueColor="#fbbf24" />}
-                  {tech.backend && <InfoRow label="BACKEND" value={tech.backend} valueColor="#fbbf24" />}
-                  {tech.serverVersion && <InfoRow label="VERSION" value={tech.serverVersion} valueColor={tech.serverVersionOutdated ? "#ff6b35" : "#fbbf24"} />}
-                  {tech.os && <InfoRow label="OS" value={tech.os} valueColor="rgba(180,255,180,0.6)" />}
-                  {tech.poweredBy && <InfoRow label="POWERED_BY" value={tech.poweredBy} valueColor="#fbbf24" />}
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))", gap:"12px" }}>
+              {(tech.server||tech.backend||tech.serverVersion||tech.os||tech.poweredBy) && (
+                <div style={{ background:C.amberBg, border:`1px solid ${C.amberBorder}`, borderRadius:"6px", padding:"16px" }}>
+                  <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:"11px", color:C.amber, textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:"10px" }}>Server</div>
+                  <KV label="WEB_SERVER"  value={tech.server}         valueColor={C.amber} />
+                  <KV label="BACKEND"     value={tech.backend}        valueColor={C.amber} />
+                  <KV label="VERSION"     value={tech.serverVersion}  valueColor={tech.serverVersionOutdated?C.red:C.amber} />
+                  <KV label="OS"          value={tech.os}             valueColor={C.textSecondary} />
+                  <KV label="POWERED_BY"  value={tech.poweredBy}      valueColor={C.amber} />
                 </div>
               )}
-              {/* SSL quick status */}
-              {(tech.ssl !== undefined || tech.https !== undefined) && (
-                <div style={{ background: "rgba(0,255,136,0.04)", border: "1px solid rgba(0,255,136,0.1)", padding: "16px" }}>
-                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#00ff88", letterSpacing: "0.12em", marginBottom: "10px" }}>SSL / HTTPS</div>
-                  <InfoRow label="SSL_ENABLED" value={tech.ssl || tech.https ? "YES" : "NO"} valueColor={tech.ssl || tech.https ? "#00ff88" : "#ff6b35"} />
+              {(tech.ssl!==undefined||tech.https!==undefined) && (
+                <div style={{ background:(tech.ssl||tech.https)?C.greenBg:C.redBg, border:`1px solid ${(tech.ssl||tech.https)?C.greenBorder:C.redBorder}`, borderRadius:"6px", padding:"16px" }}>
+                  <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:"11px", color:(tech.ssl||tech.https)?C.green:C.red, textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:"10px" }}>SSL / HTTPS</div>
+                  <KV label="SSL_ENABLED"    value={(tech.ssl||tech.https)?"YES":"NO"} valueColor={(tech.ssl||tech.https)?C.green:C.red} />
+                  <KV label="PROTOCOL"       value={tech.tlsVersion}       valueColor={C.blue} />
+                  <KV label="GRADE"          value={tech.sslGrade}         valueColor={C.amber} />
+                  <KV label="ISSUER"         value={tech.sslIssuer}        valueColor={C.textSecondary} />
+                  <KV label="EXPIRES"        value={tech.sslExpiry}        valueColor={C.textSecondary} />
+                  <KV label="DAYS_REMAINING" value={tech.sslDaysRemaining} valueColor={tech.sslDaysRemaining<30?C.red:C.green} />
                 </div>
               )}
-              {/* CMS */}
               {tech.cms && (
-                <div style={{ background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.1)", padding: "16px" }}>
-                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#00d4ff", letterSpacing: "0.12em", marginBottom: "10px" }}>CMS / PLATFORM</div>
-                  <InfoRow label="CMS" value={tech.cms} valueColor="#00d4ff" />
-                  {tech.cmsVersion && <InfoRow label="VERSION" value={tech.cmsVersion} valueColor={tech.cmsOutdated ? "#ff6b35" : "#00d4ff"} />}
-                  {tech.cmsOutdated && <div style={{ marginTop: "6px", fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "#ff6b35" }}>⚠ OUTDATED VERSION DETECTED</div>}
+                <div style={{ background:C.blueBg, border:`1px solid ${C.blueBorder}`, borderRadius:"6px", padding:"16px" }}>
+                  <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:"11px", color:C.blue, textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:"10px" }}>CMS / Platform</div>
+                  <KV label="CMS"      value={tech.cms}        valueColor={C.blue} />
+                  <KV label="VERSION"  value={tech.cmsVersion} valueColor={tech.cmsOutdated?C.red:C.blue} />
+                  <KV label="THEME"    value={tech.cmsTheme}   valueColor={C.textSecondary} />
+                  {tech.cmsOutdated && <div style={{ marginTop:"6px", fontFamily:"'DM Mono',monospace", fontSize:"11px", color:C.red }}>⚠ Outdated version detected</div>}
+                  {Array.isArray(tech.plugins) && tech.plugins.length > 0 && (
+                    <>
+                      <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"11px", color:C.textMuted, marginTop:"10px", marginBottom:"6px" }}>PLUGINS ({tech.plugins.length})</div>
+                      <div style={{ display:"flex", flexWrap:"wrap", gap:"4px" }}>
+                        {tech.plugins.map((p,i) => <Tag key={i} color={C.blue}>{p}</Tag>)}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
-              {/* Frameworks */}
-              {(tech.frameworks?.length > 0 || tech.jsFrameworks?.length > 0 || tech.libraries?.length > 0) && (
-                <div style={{ background: "rgba(176,106,255,0.04)", border: "1px solid rgba(176,106,255,0.1)", padding: "16px" }}>
-                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#b06aff", letterSpacing: "0.12em", marginBottom: "10px" }}>FRAMEWORKS & LIBRARIES</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                    {[...(tech.frameworks || []), ...(tech.jsFrameworks || []), ...(tech.libraries || [])].map((f, i) => <Tag key={i} color="#b06aff">{f}</Tag>)}
+              {(tech.frameworks?.length>0||tech.jsFrameworks?.length>0||tech.libraries?.length>0) && (
+                <div style={{ background:C.purpleBg, border:`1px solid ${C.purpleBorder}`, borderRadius:"6px", padding:"16px" }}>
+                  <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:"11px", color:C.purple, textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:"10px" }}>Frameworks & Libraries</div>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:"6px" }}>
+                    {[...(tech.frameworks||[]),...(tech.jsFrameworks||[]),...(tech.libraries||[])].map((f,i) => <Tag key={i} color={C.purple}>{f}</Tag>)}
                   </div>
                 </div>
               )}
-              {/* CDN / Infra */}
-              {(tech.cdn || tech.hosting || tech.cloudProvider || tech.waf) && (
-                <div style={{ background: "rgba(0,255,136,0.04)", border: "1px solid rgba(0,255,136,0.1)", padding: "16px" }}>
-                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#00ff88", letterSpacing: "0.12em", marginBottom: "10px" }}>INFRASTRUCTURE</div>
-                  {tech.cdn && <InfoRow label="CDN" value={tech.cdn} valueColor="#00ff88" />}
-                  {tech.hosting && <InfoRow label="HOSTING" value={tech.hosting} valueColor="#00ff88" />}
-                  {tech.cloudProvider && <InfoRow label="CLOUD" value={tech.cloudProvider} valueColor="#00ff88" />}
-                  {tech.waf && <InfoRow label="WAF" value={tech.waf} valueColor="#fbbf24" />}
+              {(tech.cdn||tech.hosting||tech.cloudProvider||tech.waf||tech.reverseProxy) && (
+                <div style={{ background:C.greenBg, border:`1px solid ${C.greenBorder}`, borderRadius:"6px", padding:"16px" }}>
+                  <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:"11px", color:C.green, textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:"10px" }}>Infrastructure</div>
+                  <KV label="CDN"           value={tech.cdn}           valueColor={C.green} />
+                  <KV label="HOSTING"       value={tech.hosting}       valueColor={C.green} />
+                  <KV label="CLOUD"         value={tech.cloudProvider} valueColor={C.green} />
+                  <KV label="WAF"           value={tech.waf}           valueColor={C.amber} />
+                  <KV label="REVERSE_PROXY" value={tech.reverseProxy}  valueColor={C.textSecondary} />
                 </div>
               )}
-              {/* Analytics */}
-              {(tech.analytics?.length > 0 || tech.trackers?.length > 0) && (
-                <div style={{ background: "rgba(255,107,53,0.04)", border: "1px solid rgba(255,107,53,0.1)", padding: "16px" }}>
-                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#ff6b35", letterSpacing: "0.12em", marginBottom: "10px" }}>ANALYTICS & TRACKERS</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                    {[...(tech.analytics || []), ...(tech.trackers || [])].map((t, i) => <Tag key={i} color="#ff6b35">{t}</Tag>)}
+              {(tech.analytics?.length>0||tech.trackers?.length>0) && (
+                <div style={{ background:C.orangeBg, border:`1px solid ${C.orangeBorder}`, borderRadius:"6px", padding:"16px" }}>
+                  <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:"11px", color:C.orange, textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:"10px" }}>Analytics & Trackers</div>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:"6px" }}>
+                    {[...(tech.analytics||[]),...(tech.trackers||[])].map((t,i) => <Tag key={i} color={C.orange}>{t}</Tag>)}
                   </div>
                 </div>
               )}
-              {/* Any remaining tech keys we haven't handled explicitly */}
+              {/* Remaining tech fields */}
               {(() => {
-                const handled = new Set(["server","backend","serverVersion","serverVersionOutdated","os","ssl","https","cms","cmsVersion","cmsOutdated","frameworks","jsFrameworks","libraries","cdn","hosting","cloudProvider","waf","analytics","trackers","poweredBy"]);
-                const extra = Object.entries(tech).filter(([k, v]) => !handled.has(k) && v !== null && v !== undefined && v !== "");
-                if (extra.length === 0) return null;
+                const handled = new Set(["server","backend","serverVersion","serverVersionOutdated","os","ssl","https","tlsVersion","sslGrade","sslIssuer","sslExpiry","sslDaysRemaining","cms","cmsVersion","cmsOutdated","cmsTheme","plugins","frameworks","jsFrameworks","libraries","cdn","hosting","cloudProvider","waf","reverseProxy","analytics","trackers","poweredBy"]);
+                const extra = Object.entries(tech).filter(([k,v]) => !handled.has(k) && v!==null && v!==undefined && v!=="");
+                if (!extra.length) return null;
                 return (
-                  <div style={{ background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.08)", padding: "16px" }}>
-                    <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#00d4ff", letterSpacing: "0.12em", marginBottom: "10px" }}>ADDITIONAL TECH DATA</div>
-                    <RenderObject obj={Object.fromEntries(extra)} />
+                  <div style={{ background:C.blueBg, border:`1px solid ${C.blueBorder}`, borderRadius:"6px", padding:"16px" }}>
+                    <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:"11px", color:C.blue, textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:"10px" }}>Additional</div>
+                    {extra.map(([k,v]) => <KV key={k} label={k.toUpperCase().replace(/_/g," ")} value={typeof v==="object"?JSON.stringify(v):String(v)} valueColor={C.blue} />)}
                   </div>
                 );
               })()}
@@ -317,155 +291,115 @@ function QuickScanResults({ data }) {
         </Panel>
       )}
 
-      {/* ── HTTP SECURITY HEADERS — always shown ── */}
-      <Panel leftAccent="#00d4ff" accent="rgba(0,212,255,0.1)">
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: expandedSections.headers ? "20px" : 0 }}>
-          <SectionHeader icon={<FaShieldAlt />} title="HTTP SECURITY HEADERS" accent="#00d4ff"
-            count={hasHeaders ? `${Object.values(hdrs).filter(v => v && v !== "MISSING" && v !== false).length} / ${Object.keys(hdrs).length}` : "NO DATA"} />
+      {/* HTTP Headers */}
+      <Panel accentColor={C.blue}>
+        <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:expandedSections.headers?"20px":0 }}>
+          <SectionHeader icon={<FaShieldAlt />} title="HTTP Security Headers" accent={C.blue}
+            count={hasHeaders?`${Object.values(hdrs).filter(v=>v&&v!=="MISSING"&&v!==false).length} / ${Object.keys(hdrs).length} present`:"No data"} />
           <CollapseBtn section="headers" />
         </div>
         {expandedSections.headers && (
           hasHeaders ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "10px" }}>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))", gap:"8px" }}>
               {Object.entries(hdrs).map(([header, value]) => {
                 const present = !!value && value !== "MISSING" && value !== false && value !== "false";
+                const strVal  = typeof value === "string" ? value : JSON.stringify(value);
                 return (
-                  <div key={header} style={{
-                    background: present ? "rgba(0,255,136,0.04)" : "rgba(255,34,34,0.04)",
-                    border: `1px solid ${present ? "rgba(0,255,136,0.12)" : "rgba(255,34,34,0.12)"}`,
-                    padding: "12px 16px", display: "flex", flexDirection: "column", gap: "6px",
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ color: present ? "#00ff88" : "#ff2222", fontSize: "11px", flexShrink: 0 }}>{present ? <FaCheckCircle /> : <FaTimesCircle />}</span>
-                      <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: present ? "#00ff88" : "#ff6b35", letterSpacing: "0.06em", wordBreak: "break-all" }}>{header}</span>
+                  <div key={header} style={{ background:present?C.greenBg:C.redBg, border:`1px solid ${present?C.greenBorder:C.redBorder}`, borderRadius:"6px", padding:"12px 14px", display:"flex", flexDirection:"column", gap:"5px" }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
+                      <span style={{ color:present?C.green:C.red, fontSize:"12px", flexShrink:0 }}>{present?<FaCheckCircle/>:<FaTimesCircle/>}</span>
+                      <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"11px", color:present?C.green:C.red, wordBreak:"break-all", fontWeight:500 }}>{header}</span>
                     </div>
                     {present && typeof value === "string" && value !== "true" && value.length > 0 && (
-                      <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", color: "rgba(0,255,136,0.4)", wordBreak: "break-all", lineHeight: 1.5 }}>
-                        {value.length > 80 ? value.substring(0, 80) + "…" : value}
+                      <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"10px", color:C.textMuted, wordBreak:"break-all", lineHeight:1.5 }}>
+                        {strVal.length > 120 ? strVal.substring(0,120)+"…" : strVal}
                       </div>
                     )}
                   </div>
                 );
               })}
             </div>
-          ) : (
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "rgba(251,191,36,0.5)", padding: "8px 0" }}>
-              No header data returned from quickscan.
-            </div>
-          )
+          ) : <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"12px", color:C.textMuted }}>No header data returned.</div>
         )}
       </Panel>
 
-      {/* ── OPEN PORTS & SERVICES — always shown ── */}
-      <Panel leftAccent="#00d4ff" accent="rgba(0,212,255,0.1)">
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: expandedSections.ports ? "20px" : 0 }}>
-          <SectionHeader icon={<FaServer />} title="OPEN PORTS & SERVICES" accent="#00d4ff"
-            count={hasPorts ? `${(ports.open || ports.list || ports.ports || []).length} OPEN` : "NO DATA"} />
+      {/* Ports */}
+      <Panel accentColor={C.blue}>
+        <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:expandedSections.ports?"20px":0 }}>
+          <SectionHeader icon={<FaServer />} title="Open Ports & Services" accent={C.blue}
+            count={hasPorts?`${(ports.open||ports.list||ports.ports||[]).length} open`:"No data"} />
           <CollapseBtn section="ports" />
         </div>
         {expandedSections.ports && (
           hasPorts ? (
             <div>
-              {ports.ip      && <InfoRow label="TARGET_IP" value={ports.ip}      valueColor="#00d4ff" />}
-              {ports.asn     && <InfoRow label="ASN"       value={ports.asn}     valueColor="rgba(180,255,180,0.6)" />}
-              {ports.org     && <InfoRow label="ORG"       value={ports.org}     valueColor="rgba(180,255,180,0.6)" />}
-              {ports.country && <InfoRow label="LOCATION"  value={ports.country} valueColor="#fbbf24" />}
-              {(ports.open || ports.list || ports.ports || []).length > 0 && (
-                <div style={{ marginTop: "16px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "8px" }}>
-                  {(ports.open || ports.list || ports.ports || []).map((port, i) => {
-                    const portNum = typeof port === "object" ? (port.port || port.number) : port;
-                    const service = typeof port === "object" ? (port.service || port.name || port.protocol) : null;
-                    const banner  = typeof port === "object" ? (port.banner || port.version || port.product) : null;
-                    const isSensitive = [21, 22, 23, 25, 3306, 5432, 6379, 27017, 8080, 8443, 1433, 3389].includes(Number(portNum));
+              <KV label="TARGET_IP" value={ports.ip}       valueColor={C.blue} />
+              <KV label="ASN"       value={ports.asn}      valueColor={C.textSecondary} />
+              <KV label="ORG"       value={ports.org}      valueColor={C.textSecondary} />
+              <KV label="ISP"       value={ports.isp}      valueColor={C.textSecondary} />
+              <KV label="COUNTRY"   value={ports.country}  valueColor={C.amber} />
+              <KV label="HOSTNAME"  value={ports.hostname} valueColor={C.textSecondary} />
+              {(ports.open||ports.list||ports.ports||[]).length > 0 && (
+                <div style={{ marginTop:"16px", display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(160px, 1fr))", gap:"8px" }}>
+                  {(ports.open||ports.list||ports.ports||[]).map((port,i) => {
+                    const portNum = typeof port==="object"?(port.port||port.number):port;
+                    const service = typeof port==="object"?(port.service||port.name||port.protocol):null;
+                    const banner  = typeof port==="object"?(port.banner||port.version||port.product):null;
+                    const state   = typeof port==="object"?port.state:null;
+                    const cpe     = typeof port==="object"?port.cpe:null;
+                    const isSensitive = [21,22,23,25,3306,5432,6379,27017,8080,8443,1433,3389].includes(Number(portNum));
                     return (
-                      <div key={i} style={{ background: isSensitive ? "rgba(255,107,53,0.06)" : "rgba(0,212,255,0.04)", border: `1px solid ${isSensitive ? "rgba(255,107,53,0.2)" : "rgba(0,212,255,0.12)"}`, padding: "12px 14px" }}>
-                        <div style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "20px", color: isSensitive ? "#ff6b35" : "#00d4ff", marginBottom: "4px" }}>{portNum}</div>
-                        {service && <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(0,255,136,0.6)", letterSpacing: "0.08em" }}>{service}</div>}
-                        {banner  && <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px",  color: "rgba(0,255,136,0.35)", marginTop: "4px", wordBreak: "break-all" }}>{String(banner).substring(0, 36)}</div>}
-                        {isSensitive && <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "8px", color: "#ff6b35", marginTop: "4px" }}>⚠ SENSITIVE</div>}
+                      <div key={i} style={{ background:isSensitive?C.orangeBg:C.blueBg, border:`1px solid ${isSensitive?C.orangeBorder:C.blueBorder}`, borderRadius:"6px", padding:"14px" }}>
+                        <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:"24px", color:isSensitive?C.orange:C.blue, marginBottom:"4px", lineHeight:1 }}>{portNum}</div>
+                        {service && <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"11px", color:C.textMuted, marginBottom:"3px" }}>{service}</div>}
+                        {state   && <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"10px", color:C.textXMuted }}>state: {state}</div>}
+                        {banner  && <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"10px", color:C.textXMuted, marginTop:"3px", wordBreak:"break-all" }}>{String(banner).substring(0,60)}</div>}
+                        {cpe     && <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"10px", color:C.textXMuted, marginTop:"3px", wordBreak:"break-all" }}>{String(cpe).substring(0,60)}</div>}
+                        {isSensitive && <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"10px", color:C.orange, marginTop:"6px" }}>⚠ Sensitive</div>}
                       </div>
                     );
                   })}
                 </div>
               )}
             </div>
-          ) : (
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "rgba(0,212,255,0.4)", padding: "8px 0" }}>
-              Port scan returned no results or was not completed.
-            </div>
-          )
+          ) : <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"12px", color:C.textMuted }}>Port scan returned no results.</div>
         )}
       </Panel>
 
-      {/* ── OSINT & REPUTATION — only shown if a real finding exists ── */}
+      {/* OSINT */}
       {hasOsintAlert && (
-        <Panel leftAccent="#b06aff" accent="rgba(176,106,255,0.1)">
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: expandedSections.osint ? "20px" : 0 }}>
-            <SectionHeader icon={<FaUserSecret />} title="OSINT & REPUTATION INTEL" accent="#b06aff"
-              count="⚠ FINDINGS DETECTED" />
+        <Panel accentColor={C.purple}>
+          <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:expandedSections.osint?"20px":0 }}>
+            <SectionHeader icon={<FaUserSecret />} title="OSINT & Reputation Intel" accent={C.purple} count="⚠ Findings" />
             <CollapseBtn section="osint" />
           </div>
           {expandedSections.osint && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "14px" }}>
-              {/* VirusTotal */}
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(260px, 1fr))", gap:"12px" }}>
               {osint.virusTotal && (
-                <div style={{ background: "rgba(255,107,53,0.05)", border: "1px solid rgba(255,107,53,0.18)", padding: "16px" }}>
-                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#ff6b35", letterSpacing: "0.12em", marginBottom: "10px" }}>VIRUSTOTAL</div>
-                  <InfoRow label="MALICIOUS"  value={osint.virusTotal.malicious  ?? 0} valueColor={osint.virusTotal.malicious  > 0 ? "#ff2222" : "#00ff88"} />
-                  <InfoRow label="SUSPICIOUS" value={osint.virusTotal.suspicious ?? 0} valueColor={osint.virusTotal.suspicious > 0 ? "#fbbf24" : "#00ff88"} />
-                  <InfoRow label="HARMLESS"   value={osint.virusTotal.harmless   ?? 0} valueColor="rgba(0,255,136,0.6)" />
-                  {osint.virusTotal.categories?.length > 0 && (
-                    <div style={{ marginTop: "8px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                      {osint.virusTotal.categories.map((c, i) => <Tag key={i} color="#ff6b35">{c}</Tag>)}
-                    </div>
+                <div style={{ background:C.orangeBg, border:`1px solid ${C.orangeBorder}`, borderRadius:"6px", padding:"16px" }}>
+                  <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:"11px", color:C.orange, textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:"10px" }}>VirusTotal</div>
+                  <KV label="MALICIOUS"       value={osint.virusTotal.malicious}      valueColor={osint.virusTotal.malicious>0?C.red:C.green} />
+                  <KV label="SUSPICIOUS"      value={osint.virusTotal.suspicious}     valueColor={osint.virusTotal.suspicious>0?C.amber:C.green} />
+                  <KV label="HARMLESS"        value={osint.virusTotal.harmless}       valueColor={C.green} />
+                  <KV label="UNDETECTED"      value={osint.virusTotal.undetected}     valueColor={C.textMuted} />
+                  <KV label="TOTAL_ENGINES"   value={osint.virusTotal.total}          valueColor={C.textSecondary} />
+                  <KV label="COMMUNITY_SCORE" value={osint.virusTotal.communityScore} valueColor={osint.virusTotal.communityScore<0?C.red:C.textSecondary} />
+                  <KV label="LAST_ANALYSIS"   value={osint.virusTotal.lastAnalysis}   valueColor={C.textMuted} />
+                  {osint.virusTotal.categories?.length>0 && <div style={{ marginTop:"8px", display:"flex", flexWrap:"wrap", gap:"4px" }}>{osint.virusTotal.categories.map((c,i)=><Tag key={i} color={C.orange}>{c}</Tag>)}</div>}
+                  {osint.virusTotal.engines?.length>0 && (
+                    <>
+                      <SubHead>Flagged By</SubHead>
+                      <div style={{ display:"flex", flexWrap:"wrap", gap:"4px" }}>{osint.virusTotal.engines.slice(0,20).map((e,i)=><Tag key={i} color={C.red}>{e}</Tag>)}</div>
+                    </>
                   )}
                 </div>
               )}
-              {/* Safe Browsing */}
-              {osint.safeBrowsing && osint.safeBrowsing.safe === false && (
-                <div style={{ background: "rgba(255,34,34,0.06)", border: "1px solid rgba(255,34,34,0.2)", padding: "16px" }}>
-                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#ff2222", letterSpacing: "0.12em", marginBottom: "10px" }}>GOOGLE SAFE BROWSING</div>
-                  <InfoRow label="STATUS" value="⚠ UNSAFE" valueColor="#ff2222" />
-                  {osint.safeBrowsing.threats?.length > 0 && (
-                    <div style={{ marginTop: "8px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                      {osint.safeBrowsing.threats.map((t, i) => <Tag key={i} color="#ff2222">{t}</Tag>)}
-                    </div>
-                  )}
-                </div>
-              )}
-              {/* DNSBL Blacklist */}
-              {osint.blacklisted && (
-                <div style={{ background: "rgba(255,107,53,0.05)", border: "1px solid rgba(255,107,53,0.18)", padding: "16px" }}>
-                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#ff6b35", letterSpacing: "0.12em", marginBottom: "10px" }}>DNSBL BLACKLISTS</div>
-                  <InfoRow label="BLACKLISTED" value="YES" valueColor="#ff2222" />
-                  {osint.blacklistHits?.length > 0 && (
-                    <div style={{ marginTop: "8px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                      {osint.blacklistHits.map((b, i) => <Tag key={i} color="#ff6b35">{b}</Tag>)}
-                    </div>
-                  )}
-                </div>
-              )}
-              {/* Shodan CVEs */}
-              {osint.cves?.count > 0 && (
-                <div style={{ background: "rgba(255,34,34,0.06)", border: "1px solid rgba(255,34,34,0.2)", padding: "16px" }}>
-                  <div style={{ fontFamily: "'Orbitron', monospace", fontSize: "10px", color: "#ff2222", letterSpacing: "0.12em", marginBottom: "10px" }}>SHODAN CVEs</div>
-                  <InfoRow label="TOTAL_CVEs"    value={osint.cves.count}    valueColor="#ff2222" />
-                  <InfoRow label="CRITICAL"      value={osint.cves.critical ?? 0} valueColor={osint.cves.critical > 0 ? "#ff2222" : "rgba(0,255,136,0.5)"} />
-                  <InfoRow label="KEV_CONFIRMED" value={osint.cves.kev    ?? 0} valueColor={osint.cves.kev    > 0 ? "#ff6b35" : "rgba(0,255,136,0.5)"} />
-                  {osint.cves.details?.length > 0 && (
-                    <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "4px" }}>
-                      {osint.cves.details.slice(0, 5).map((cve, i) => (
-                        <div key={i} style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "#ff6b35", background: "rgba(255,107,53,0.06)", padding: "5px 10px" }}>
-                          {typeof cve === "object" ? (cve.id || cve.cve || JSON.stringify(cve)) : cve}
-                        </div>
-                      ))}
-                      {osint.cves.details.length > 5 && (
-                        <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", color: "rgba(255,107,53,0.5)" }}>
-                          +{osint.cves.details.length - 5} more CVEs
-                        </div>
-                      )}
-                    </div>
-                  )}
+              {osint.safeBrowsing && osint.safeBrowsing.safe===false && (
+                <div style={{ background:C.redBg, border:`1px solid ${C.redBorder}`, borderRadius:"6px", padding:"16px" }}>
+                  <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:"11px", color:C.red, textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:"10px" }}>Google Safe Browsing</div>
+                  <KV label="STATUS"       value="⚠ UNSAFE"                       valueColor={C.red} />
+                  <KV label="THREAT_COUNT" value={osint.safeBrowsing.threatCount}  valueColor={C.red} />
+                  {osint.safeBrowsing.threats?.length>0 && <div style={{ marginTop:"8px", display:"flex", flexWrap:"wrap", gap:"4px" }}>{osint.safeBrowsing.threats.map((t,i)=><Tag key={i} color={C.red}>{t}</Tag>)}</div>}
                 </div>
               )}
             </div>
@@ -478,67 +412,20 @@ function QuickScanResults({ data }) {
 
 // ─── CAPABILITY CARD ──────────────────────────────────────────────────────────
 const CapabilityCard = ({ icon, title, desc, accent }) => (
-  <div style={{
-    background: "rgba(0,0,0,0.55)", border: "1px solid rgba(0,255,136,0.08)",
-    borderLeft: `3px solid ${accent}`, padding: "24px", position: "relative", overflow: "hidden",
-  }}>
-    <div style={{ position: "absolute", top: 0, right: 0, width: 0, height: 0, borderStyle: "solid", borderWidth: "0 28px 28px 0", borderColor: `transparent ${accent}18 transparent transparent` }} />
-    <div style={{ display: "flex", alignItems: "flex-start", gap: "16px" }}>
-      <div style={{ fontSize: "20px", marginTop: "2px", filter: `drop-shadow(0 0 6px ${accent})`, flexShrink: 0 }}>{icon}</div>
+  <div style={{ background:C.white, border:`1px solid ${C.border}`, borderLeft:`3px solid ${accent}`, borderRadius:"0 6px 6px 0", padding:"20px 22px", boxShadow:"0 1px 3px rgba(0,0,0,0.04)", transition:"box-shadow 0.2s, transform 0.2s" }}
+    onMouseEnter={e => { e.currentTarget.style.boxShadow="0 4px 12px rgba(0,0,0,0.08)"; e.currentTarget.style.transform="translateY(-1px)"; }}
+    onMouseLeave={e => { e.currentTarget.style.boxShadow="0 1px 3px rgba(0,0,0,0.04)"; e.currentTarget.style.transform="translateY(0)"; }}>
+    <div style={{ display:"flex", alignItems:"flex-start", gap:"14px" }}>
+      <div style={{ fontSize:"18px", marginTop:"2px", color:accent, flexShrink:0 }}>{icon}</div>
       <div>
-        <h4 style={{ fontFamily: "'Orbitron', monospace", fontWeight: 600, fontSize: "13px", color: "#e8ffe8", marginBottom: "8px", letterSpacing: "0.04em" }}>{title}</h4>
-        <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: "14px", color: "rgba(180,255,180,0.45)", lineHeight: 1.65 }}>{desc}</p>
+        <h4 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:"14px", color:C.text, marginBottom:"6px" }}>{title}</h4>
+        <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:"13px", color:C.textMuted, lineHeight:1.6 }}>{desc}</p>
       </div>
     </div>
   </div>
 );
 
-// ─── MODULE BLOCK ─────────────────────────────────────────────────────────────
-const ModuleBlock = ({ keyName, title, found, expanded, onToggle, children }) => (
-  <div style={{
-    background: "rgba(0,0,0,0.55)",
-    border: `1px solid ${found ? "rgba(255,107,53,0.25)" : "rgba(0,255,136,0.1)"}`,
-    borderLeft: `3px solid ${found ? "#ff6b35" : "#00ff88"}`,
-    marginBottom: "12px", overflow: "hidden",
-  }}>
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-        <span style={{
-          fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "9px",
-          letterSpacing: "0.15em", padding: "4px 10px",
-          background: found ? "rgba(255,107,53,0.15)" : "rgba(0,255,136,0.1)",
-          border: `1px solid ${found ? "#ff6b3540" : "#00ff8840"}`,
-          color: found ? "#ff6b35" : "#00ff88",
-        }}>
-          {found ? "VULNERABLE" : "NOT FOUND"}
-        </span>
-        <h4 style={{ fontFamily: "'Orbitron', monospace", fontWeight: 600, fontSize: "13px", color: "#e8ffe8", letterSpacing: "0.04em" }}>{title}</h4>
-      </div>
-      <button
-        onClick={() => onToggle(keyName)}
-        style={{
-          fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.12em",
-          color: "rgba(0,255,136,0.6)", background: "rgba(0,255,136,0.06)",
-          border: "1px solid rgba(0,255,136,0.15)", padding: "6px 14px",
-          cursor: "pointer", transition: "all 0.2s",
-        }}
-        onMouseEnter={e => { e.target.style.color = "#00ff88"; e.target.style.borderColor = "#00ff88"; }}
-        onMouseLeave={e => { e.target.style.color = "rgba(0,255,136,0.6)"; e.target.style.borderColor = "rgba(0,255,136,0.15)"; }}
-      >
-        {expanded ? "▲ HIDE" : "▼ DETAILS"}
-      </button>
-    </div>
-    {expanded && (
-      <div style={{ padding: "0 24px 22px", borderTop: "1px solid rgba(0,255,136,0.07)", paddingTop: "18px" }}>
-        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: "14px", color: "rgba(180,255,180,0.6)", lineHeight: 1.7 }}>
-          {children}
-        </div>
-      </div>
-    )}
-  </div>
-);
-
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+// ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default function FullScan() {
   const [input, setInput] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -550,588 +437,750 @@ export default function FullScan() {
   const [isPaused, setIsPaused] = useState(false);
   const loaderRef = useRef(null);
 
-
-    
-  // ← ADD THIS right before handleScan
   const isValidTarget = (val) => {
-    const trimmed = val.trim();
+    const t = val.trim();
     try {
-      const u = new URL(trimmed.startsWith("http") ? trimmed : `http://${trimmed}`);
-      const host = u.hostname;
-      const domainRegex = /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
-      const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
-      return domainRegex.test(host) || ipRegex.test(host) || host === "localhost";
-    } catch {
-      return false;
-    }
+      const u = new URL(t.startsWith("http")?t:`http://${t}`);
+      const h = u.hostname;
+      return /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/.test(h)||/^(\d{1,3}\.){3}\d{1,3}$/.test(h)||h==="localhost";
+    } catch { return false; }
   };
 
-  // ← REPLACE the existing handleScan with this:
   const handleScan = async () => {
     if (!input.trim()) return alert("Please enter a domain or URL");
-    if (!isValidTarget(input)) {
-      setError("Invalid target. Please enter a valid domain (e.g. example.com) or URL (e.g. https://example.com).");
-      return;
-    }
-    setIsScanning(true);
-    setScanDone(false);
-    setScanResult(null);
-    setError(null);
-    setIsPaused(false);
-    setTimeout(() => loaderRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+    if (!isValidTarget(input)) { setError("Invalid target."); return; }
+    setIsScanning(true); setScanDone(false); setScanResult(null); setError(null); setIsPaused(false);
+    setTimeout(() => loaderRef.current?.scrollIntoView({ behavior:"smooth" }), 100);
     try {
-      const resp = await axios.post("http://localhost:5000/api/fullscan", { url: input }, { timeout: 0 });
-      setScanResult(resp.data);
-      setScanDone(true);
+      const resp = await axios.post("http://localhost:5000/api/fullscan", { url:input }, { timeout:0 });
+      setScanResult(resp.data); setScanDone(true);
     } catch (err) {
-      setError(err.response ? err.response.data.error || "Invalid target" : "Backend not reachable or network error.");
-    } finally {
-      setIsScanning(false);
-      setIsPaused(false);
-    }
+      setError(err.response ? err.response.data.error||"Invalid target" : "Backend not reachable.");
+    } finally { setIsScanning(false); setIsPaused(false); }
   };
 
-  const handlePause = () => setIsPaused(true);
-  const handleResume = () => setIsPaused(false);
-
   const downloadPDF = async () => {
-    const resp = await axios.post("/api/fullscan/pdf", { scanData: scanResult, target: scanResult.target }, { responseType: "blob" });
-    const blob = new Blob([resp.data], { type: "application/pdf" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `FullScan-${scanResult.target}.pdf`; a.click();
+    const resp = await axios.post("/api/fullscan/pdf", { scanData:scanResult, target:scanResult.target }, { responseType:"blob" });
+    const blob = new Blob([resp.data], { type:"application/pdf" });
+    const url  = window.URL.createObjectURL(blob);
+    const a    = document.createElement("a"); a.href=url; a.download=`FullScan-${scanResult.target}.pdf`; a.click();
   };
 
   const toggle = (key) => setExpanded(s => ({ ...s, [key]: !s[key] }));
 
   const capabilities = [
-    { icon: <FaUserSecret style={{ color: "#b06aff" }} />, title: "Deep OSINT Enumeration", desc: "Scrapes public records, social sources, leak databases, DNS history, WHOIS, emails & metadata.", accent: "#b06aff" },
-    { icon: <FaNetworkWired style={{ color: "#00ff88" }} />, title: "Infrastructure Reconnaissance", desc: "Maps subdomains, servers, CDN layers, firewalls, hosting providers & entry points.", accent: "#00ff88" },
-    { icon: <FaBug style={{ color: "#ff6b35" }} />, title: "Vulnerability Assessment", desc: "Detects SQLi, XSS (DOM/Stored/Reflected), Clickjacking, Command Injection & exposed sensitive files.", accent: "#ff6b35" },
-    { icon: <FaFingerprint style={{ color: "#fbbf24" }} />, title: "Technology Fingerprinting", desc: "Identifies CMS, frameworks, JS libraries, outdated components & vulnerable versions.", accent: "#fbbf24" },
-    { icon: <FaListUl style={{ color: "#00d4ff" }} />, title: "Port & Service Mapping", desc: "Performs deep port scans to fingerprint running services & detect outdated servers.", accent: "#00d4ff" },
-    { icon: <FaSearch style={{ color: "#00ff88" }} />, title: "Malware & Phishing Indicators", desc: "Scans domain reputation, blocklists, suspicious redirects & malware hosting markers.", accent: "#00ff88" },
+    { icon:<FaUserSecret style={{color:C.purple}}/>,   title:"Deep OSINT Enumeration",       desc:"Scrapes public records, social sources, leak databases, DNS history, WHOIS, emails & metadata.", accent:C.purple },
+    { icon:<FaNetworkWired style={{color:C.green}}/>,  title:"Infrastructure Reconnaissance", desc:"Maps subdomains, servers, CDN layers, firewalls, hosting providers & entry points.", accent:C.green },
+    { icon:<FaBug style={{color:C.orange}}/>,          title:"Vulnerability Assessment",      desc:"Detects SQLi, XSS (DOM/Stored/Reflected), Clickjacking, Command Injection & exposed sensitive files.", accent:C.orange },
+    { icon:<FaFingerprint style={{color:C.amber}}/>,   title:"Technology Fingerprinting",     desc:"Identifies CMS, frameworks, JS libraries, outdated components & vulnerable versions.", accent:C.amber },
+    { icon:<FaListUl style={{color:C.blue}}/>,         title:"Port & Service Mapping",        desc:"Performs deep port scans to fingerprint running services & detect outdated servers.", accent:C.blue },
+    { icon:<FaSearch style={{color:C.green}}/>,        title:"Malware & Phishing Indicators", desc:"Scans domain reputation, blocklists, suspicious redirects & malware hosting markers.", accent:C.green },
   ];
 
   return (
-    <div style={{ backgroundColor: "#020804", minHeight: "100vh", color: "#e8ffe8", overflowX: "hidden", cursor: "crosshair" }}>
+    <div style={{ backgroundColor:C.bg, minHeight:"100vh", color:C.text }}>
       <link rel="stylesheet" href={FONT_URL} />
       <style>{`
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.75)} }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
         @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        @keyframes scanPulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
-        @keyframes flicker { 0%,89%,91%,96%,100%{opacity:1} 90%{opacity:0.5} 95%{opacity:0.75} }
-        @keyframes pauseBlink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+        @keyframes shimmer { 0%,100%{opacity:0.4} 50%{opacity:1} }
+        @keyframes pauseBlink { 0%,100%{opacity:1} 50%{opacity:0.35} }
         * { box-sizing:border-box; margin:0; padding:0; }
-        ::selection { background:rgba(0,255,136,0.2); color:#00ff88; }
-        ::-webkit-scrollbar { width:3px; }
-        ::-webkit-scrollbar-track { background:#010502; }
-        ::-webkit-scrollbar-thumb { background:#00ff8855; }
-        pre { white-space: pre-wrap; font-family: 'Share Tech Mono', monospace; font-size: 11px; color: rgba(0,255,136,0.6); }
+        ::selection { background:rgba(181,74,12,0.15); color:${C.orange}; }
+        ::-webkit-scrollbar { width:4px; }
+        ::-webkit-scrollbar-track { background:${C.bg}; }
+        ::-webkit-scrollbar-thumb { background:${C.borderDark}; border-radius:2px; }
+        pre { white-space:pre-wrap; font-family:'DM Mono',monospace; font-size:11px; color:${C.textSecondary}; }
       `}</style>
-      <HexGrid />
-      <ScanLines />
 
-      {/* NAVBAR */}
-      <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 48px", height: "64px",
-        background: "rgba(2,8,4,0.92)", borderBottom: "1px solid rgba(0,255,136,0.09)",
-        backdropFilter: "blur(16px)", animation: "flicker 10s ease-in-out infinite",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }} onClick={() => window.location.href = "/"}>
-          <svg viewBox="0 0 36 36" width="32" height="32">
-            <polygon points="18,2 34,11 34,25 18,34 2,25 2,11" fill="none" stroke="#00ff88" strokeWidth="1.5" />
-            <polygon points="18,8 28,14 28,22 18,28 8,22 8,14" fill="none" stroke="#00ff88" strokeWidth="0.8" opacity="0.45" />
-            <circle cx="18" cy="18" r="3" fill="#00ff88"><animate attributeName="r" values="3;4.2;3" dur="2.5s" repeatCount="indefinite" /></circle>
+      {/* NAV */}
+      <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:200, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 48px", height:"56px", background:C.sidebarBg, borderBottom:`1px solid ${C.sidebarBorder}` }}>
+        <div style={{ display:"flex", alignItems:"center", gap:"12px", cursor:"pointer" }} onClick={() => window.location.href="/"}>
+          <svg viewBox="0 0 36 36" width="26" height="26">
+            <polygon points="18,2 34,11 34,25 18,34 2,25 2,11" fill="none" stroke={C.orange} strokeWidth="1.5"/>
+            <polygon points="18,8 28,14 28,22 18,28 8,22 8,14" fill="none" stroke={C.orange} strokeWidth="0.8" opacity="0.4"/>
+            <circle cx="18" cy="18" r="3" fill={C.orange}><animate attributeName="r" values="3;4;3" dur="2.5s" repeatCount="indefinite"/></circle>
           </svg>
           <div>
-            <div style={{ fontFamily: "'Orbitron', monospace", fontWeight: 900, fontSize: "14px", letterSpacing: "0.14em", color: "#00ff88" }}>WEBINTELX</div>
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "8px", color: "rgba(0,255,136,0.35)", letterSpacing: "0.2em", marginTop: "2px" }}>THREAT INTELLIGENCE SYS</div>
+            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:"14px", letterSpacing:"0.06em", color:C.sidebarText }}>WebIntelX</div>
+            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"9px", color:C.sidebarFaint, letterSpacing:"0.1em", marginTop:"1px" }}>Threat Intelligence</div>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(255,107,53,0.6)", letterSpacing: "0.15em" }}>FULL_SCAN // MODULE_02</span>
-          <div style={{
-            width: "7px", height: "7px", borderRadius: "50%",
-            background: isPaused ? "#fbbf24" : isScanning ? "#fbbf24" : "#ff6b35",
-            boxShadow: `0 0 10px ${isPaused ? "#fbbf24" : isScanning ? "#fbbf24" : "#ff6b35"}`,
-            animation: isPaused ? "pauseBlink 1s ease infinite" : "pulse 2s ease-in-out infinite"
-          }} />
-          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.15em", color: isPaused ? "#fbbf24" : isScanning ? "#fbbf24" : "#ff6b35" }}>
-            {isPaused ? "PAUSED" : isScanning ? "DEEP_SCANNING..." : "READY"}
-          </span>
+        <div style={{ display:"flex", alignItems:"center", gap:"12px" }}>
+          <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"10px", color:C.sidebarFaint, background:"rgba(255,255,255,0.05)", border:`1px solid ${C.sidebarBorder}`, padding:"4px 12px", borderRadius:"20px" }}>full_scan · module_02</span>
+          <div style={{ display:"flex", alignItems:"center", gap:"7px", background:isPaused?"rgba(146,96,10,0.15)":isScanning?"rgba(181,74,12,0.15)":"rgba(255,255,255,0.05)", border:`1px solid ${isPaused?C.amberBorder+"60":isScanning?C.orangeBorder+"60":C.sidebarBorder}`, padding:"4px 12px", borderRadius:"20px", transition:"all 0.3s" }}>
+            <div style={{ width:"7px", height:"7px", borderRadius:"50%", background:isPaused?C.amber:isScanning?C.orange:C.sidebarFaint, animation:isScanning&&!isPaused?"pulse 1.4s ease-in-out infinite":"none" }}/>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"10px", color:isPaused?C.amber:isScanning?C.orange:C.sidebarFaint }}>
+              {isPaused?"Paused":isScanning?"Scanning…":"Ready"}
+            </span>
+          </div>
         </div>
       </nav>
 
-      <div style={{ position: "relative", zIndex: 2, maxWidth: "1100px", margin: "0 auto", padding: "120px 40px 80px" }}>
+      <div style={{ maxWidth:"1100px", margin:"0 auto", padding:"88px 40px 80px" }}>
 
         {/* Header */}
-        <div style={{ marginBottom: "52px", animation: "fadeUp 0.6s ease 0.1s both" }}>
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.35em", color: "rgba(255,107,53,0.5)", marginBottom: "14px" }}>// MODULE_02 / FULL_SCAN</div>
-          <h1 style={{ fontFamily: "'Orbitron', monospace", fontWeight: 900, fontSize: "clamp(28px, 4vw, 52px)", color: "#e8ffe8", letterSpacing: "0.04em", lineHeight: 1.1, marginBottom: "16px" }}>
-            FULL <span style={{ color: "#ff6b35" }}>SCAN</span>
+        <div style={{ marginBottom:"48px", animation:"fadeUp 0.5s ease 0.1s both", maxWidth:"780px" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"22px" }}>
+            <div style={{ width:"3px", height:"18px", background:C.orange, borderRadius:"1px", flexShrink:0 }}/>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"11px", color:C.orange, letterSpacing:"0.14em" }}>// MODULE_02 / FULL_SCAN</span>
+          </div>
+          <h1 style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:"clamp(52px,7vw,88px)", color:C.text, lineHeight:0.95, letterSpacing:"0.02em", textTransform:"uppercase", marginBottom:"22px" }}>
+            FULL <span style={{ color:C.orange }}>SCAN</span>
           </h1>
-          <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: "17px", color: "rgba(180,255,180,0.5)", lineHeight: 1.7, maxWidth: "580px" }}>
+          <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:"15px", color:C.textMuted, lineHeight:1.75, maxWidth:"520px", marginBottom:"24px" }}>
             Deep OSINT + Reconnaissance + Vulnerability Assessment for complete intelligence on your target surface.
           </p>
-          <div style={{ width: "48px", height: "2px", background: "#ff6b35", marginTop: "18px", boxShadow: "0 0 10px rgba(255,107,53,0.5)" }} />
+          <div style={{ width:"48px", height:"3px", background:C.orange, borderRadius:"1px" }}/>
         </div>
 
-        {/* Capabilities Grid */}
-        <div style={{ marginBottom: "56px", animation: "fadeUp 0.6s ease 0.2s both" }}>
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.3em", color: "rgba(0,255,136,0.38)", marginBottom: "20px" }}>// WHAT_FULL_SCAN_INCLUDES</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "14px" }}>
-            {capabilities.map((c, i) => <CapabilityCard key={i} {...c} />)}
+        {/* Capabilities */}
+        <div style={{ marginBottom:"52px", animation:"fadeUp 0.5s ease 0.2s both" }}>
+          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"11px", color:C.textXMuted, letterSpacing:"0.08em", marginBottom:"18px" }}>// what_full_scan_includes</div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(300px, 1fr))", gap:"12px" }}>
+            {capabilities.map((c,i) => <CapabilityCard key={i} {...c} />)}
           </div>
         </div>
 
-        {/* Input Card */}
-        <div style={{ background: "rgba(0,0,0,0.7)", border: "1px solid rgba(255,107,53,0.2)", borderTop: "2px solid #ff6b35", padding: "36px", maxWidth: "600px", marginBottom: "32px", animation: "fadeUp 0.6s ease 0.3s both", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: 0, right: 0, width: 0, height: 0, borderStyle: "solid", borderWidth: "0 40px 40px 0", borderColor: "transparent rgba(255,107,53,0.15) transparent transparent" }} />
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", color: "rgba(255,107,53,0.5)", letterSpacing: "0.25em", marginBottom: "20px" }}>
-            TARGET_INPUT // DOMAIN_OR_URL
-          </div>
-          <label style={{ fontFamily: "'Orbitron', monospace", fontSize: "12px", letterSpacing: "0.1em", color: "#e8ffe8", display: "block", marginBottom: "12px" }}>
-            ENTER DOMAIN OR URL
-          </label>
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            <input
-              type="text" value={input}
-              onChange={e => { setInput(e.target.value); if (error) setError(null); }}
-              placeholder="example.com or company"
-              onKeyDown={e => e.key === "Enter" && handleScan()}
-              style={{
-                flex: "1 1 240px", padding: "12px 16px",
-                background: "rgba(0,0,0,0.8)", border: "1px solid rgba(255,107,53,0.25)",
-                color: "#ff6b35", fontFamily: "'Share Tech Mono', monospace", fontSize: "13px",
-                outline: "none", letterSpacing: "0.05em", transition: "border-color 0.2s",
-              }}
-              onFocus={e => e.target.style.borderColor = "#ff6b35"}
-              onBlur={e => e.target.style.borderColor = "rgba(255,107,53,0.25)"}
-            />
-            <button
-              onClick={handleScan}
-              style={{
-                fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "11px",
-                letterSpacing: "0.18em", color: "#020804", background: "#ff6b35", border: "none",
-                padding: "12px 28px", cursor: "pointer", textTransform: "uppercase",
-                transition: "all 0.25s", display: "flex", alignItems: "center", gap: "8px",
-                boxShadow: "0 0 20px rgba(255,107,53,0.25)",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = "#ff8c5a"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "#ff6b35"; e.currentTarget.style.transform = "translateY(0)"; }}
-            >
-              <FaSearch style={{ fontSize: "12px" }} /> START SCAN
+        {/* Input */}
+        <div style={{ background:C.white, border:`1px solid ${C.border}`, borderTop:`3px solid ${C.orange}`, borderRadius:"0 0 8px 8px", padding:"28px 32px", maxWidth:"600px", marginBottom:"28px", boxShadow:"0 2px 10px rgba(0,0,0,0.05)", animation:"fadeUp 0.5s ease 0.3s both" }}>
+          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"10px", color:C.textXMuted, letterSpacing:"0.12em", marginBottom:"14px" }}>TARGET_INPUT // ENTER_URL_OR_DOMAIN</div>
+          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"11px", fontWeight:600, color:C.text, letterSpacing:"0.06em", marginBottom:"10px", textTransform:"uppercase" }}>TARGET URL</div>
+          <div style={{ display:"flex", gap:"10px", flexWrap:"wrap" }}>
+            <input type="text" value={input} onChange={e => { setInput(e.target.value); if(error) setError(null); }} placeholder="example.com or https://company.com" onKeyDown={e => e.key==="Enter"&&handleScan()}
+              style={{ flex:"1 1 220px", padding:"11px 16px", background:C.bg, border:`1px solid ${C.border}`, color:C.text, fontFamily:"'DM Mono',monospace", fontSize:"13px", outline:"none", borderRadius:"4px", transition:"border-color 0.15s" }}
+              onFocus={e => e.target.style.borderColor=C.orange} onBlur={e => e.target.style.borderColor=C.border}/>
+            <button onClick={handleScan} style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:"15px", letterSpacing:"0.1em", textTransform:"uppercase", color:C.white, background:C.orange, border:"none", padding:"11px 28px", borderRadius:"4px", cursor:"pointer", display:"flex", alignItems:"center", gap:"9px", boxShadow:`0 2px 10px ${C.orange}50`, transition:"all 0.15s" }}
+              onMouseEnter={e => { e.currentTarget.style.background=C.accentHover; e.currentTarget.style.transform="translateY(-1px)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background=C.orange; e.currentTarget.style.transform="translateY(0)"; }}>
+              <FaSearch style={{ fontSize:"12px" }}/> Scan
             </button>
           </div>
         </div>
 
-        {/* Error */}
-        {error && (
-          <div style={{ maxWidth: "600px", marginBottom: "24px", padding: "14px 20px", background: "rgba(255,34,34,0.08)", border: "1px solid rgba(255,34,34,0.25)", borderLeft: "3px solid #ff2222", fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "#ff6b6b", letterSpacing: "0.1em" }}>
-            ✕ ERROR: {error}
-          </div>
-        )}
+        {error && <div style={{ maxWidth:"600px", marginBottom:"20px", padding:"12px 16px", background:C.redBg, border:`1px solid ${C.redBorder}`, borderLeft:`4px solid ${C.red}`, borderRadius:"0 4px 4px 0", fontFamily:"'DM Mono',monospace", fontSize:"12px", color:C.red }}>✕ {error}</div>}
 
         {/* Loader */}
         {isScanning && (
-          <div ref={loaderRef} style={{ marginBottom: "40px" }}>
-            <div style={{
-              background: "rgba(0,0,0,0.6)",
-              border: `1px solid ${isPaused ? "rgba(251,191,36,0.3)" : "rgba(255,107,53,0.2)"}`,
-              borderLeft: `3px solid ${isPaused ? "#fbbf24" : "#ff6b35"}`,
-              padding: "28px 32px", maxWidth: "600px", transition: "border-color 0.3s",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "18px" }}>
-                <div style={{
-                  width: "20px", height: "20px",
-                  border: `2px solid ${isPaused ? "rgba(251,191,36,0.2)" : "rgba(255,107,53,0.2)"}`,
-                  borderTop: `2px solid ${isPaused ? "#fbbf24" : "#ff6b35"}`,
-                  borderRadius: "50%",
-                  animation: isPaused ? "none" : "spin 0.8s linear infinite",
-                }} />
-                <span style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "14px", color: isPaused ? "#fbbf24" : "#ff6b35", letterSpacing: "0.1em" }}>
-                  {isPaused ? "SCAN PAUSED" : "RUNNING DEEP SCAN"}
-                </span>
+          <div ref={loaderRef} style={{ marginBottom:"36px" }}>
+            <div style={{ background:C.white, border:`1px solid ${isPaused?C.amberBorder:C.orangeBorder}`, borderLeft:`4px solid ${isPaused?C.amber:C.orange}`, borderRadius:"0 8px 8px 0", padding:"24px 28px", maxWidth:"600px", boxShadow:"0 2px 8px rgba(0,0,0,0.06)" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:"14px", marginBottom:"16px" }}>
+                <div style={{ width:"18px", height:"18px", border:`2px solid ${C.border}`, borderTop:`2px solid ${isPaused?C.amber:C.orange}`, borderRadius:"50%", animation:isPaused?"none":"spin 0.8s linear infinite", flexShrink:0 }}/>
+                <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:"18px", letterSpacing:"0.04em", textTransform:"uppercase", color:isPaused?C.amber:C.orange }}>{isPaused?"SCAN PAUSED":"RUNNING DEEP SCAN"}</span>
               </div>
-              <p style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "rgba(0,255,136,0.4)", marginBottom: "16px", letterSpacing: "0.1em" }}>
-                {isPaused ? "Scan is paused — press RESUME to continue" : "This may take several minutes"}
-              </p>
-              {["Enumerating subdomains & infrastructure...", "Running OSINT correlation...", "Testing for SQL injection vectors...", "Scanning XSS attack surfaces...", "Checking CSRF, clickjacking, command injection...", "Generating vulnerability report..."].map((line, i) => (
-                <div key={i} style={{
-                  fontFamily: "'Share Tech Mono', monospace", fontSize: "11px",
-                  color: isPaused ? "rgba(251,191,36,0.25)" : "rgba(255,107,53,0.5)",
-                  lineHeight: 1.9, letterSpacing: "0.08em",
-                  animation: isPaused ? "none" : `scanPulse 2s ease ${i * 0.4}s infinite`,
-                }}>
-                  › {line}
-                </div>
+              <p style={{ fontFamily:"'DM Mono',monospace", fontSize:"12px", color:C.textMuted, marginBottom:"14px" }}>{isPaused?"Scan is paused — press Resume to continue":"This may take several minutes"}</p>
+              {["Enumerating subdomains & infrastructure…","Running OSINT correlation…","Testing for SQL injection vectors…","Scanning XSS attack surfaces…","Checking CSRF, clickjacking, command injection…","Generating vulnerability report…"].map((line,i) => (
+                <div key={i} style={{ fontFamily:"'DM Mono',monospace", fontSize:"12px", color:isPaused?C.textXMuted:C.textMuted, lineHeight:2, animation:isPaused?"none":`shimmer 2.5s ease ${i*0.4}s infinite` }}>› {line}</div>
               ))}
-              <div style={{ display: "flex", gap: "12px", marginTop: "24px", alignItems: "center" }}>
+              <div style={{ display:"flex", gap:"10px", marginTop:"20px" }}>
                 {!isPaused ? (
-                  <button onClick={handlePause} style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "10px", letterSpacing: "0.15em", color: "#020804", background: "#fbbf24", border: "none", padding: "10px 22px", cursor: "pointer", boxShadow: "0 0 14px rgba(251,191,36,0.35)", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "7px" }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}>
-                    ⏸ PAUSE SCAN
-                  </button>
+                  <button onClick={() => setIsPaused(true)} style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:"13px", letterSpacing:"0.08em", textTransform:"uppercase", color:C.amber, background:C.amberBg, border:`1px solid ${C.amberBorder}`, padding:"8px 20px", borderRadius:"4px", cursor:"pointer" }}>⏸ Pause</button>
                 ) : (
-                  <button onClick={handleResume} style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "10px", letterSpacing: "0.15em", color: "#020804", background: "#00ff88", border: "none", padding: "10px 22px", cursor: "pointer", boxShadow: "0 0 14px rgba(0,255,136,0.35)", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "7px", animation: "pauseBlink 1.5s ease infinite" }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.animation = "none"; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.animation = "pauseBlink 1.5s ease infinite"; }}>
-                    ▶ RESUME SCAN
-                  </button>
+                  <button onClick={() => setIsPaused(false)} style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:"13px", letterSpacing:"0.08em", textTransform:"uppercase", color:C.green, background:C.greenBg, border:`1px solid ${C.greenBorder}`, padding:"8px 20px", borderRadius:"4px", cursor:"pointer", animation:"pauseBlink 1.5s ease infinite" }}>▶ Resume</button>
                 )}
               </div>
-              {isPaused && (
-                <div style={{ marginTop: "14px", display: "flex", alignItems: "center", gap: "10px", fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "#fbbf24", letterSpacing: "0.12em" }}>
-                  ⏸ SCAN PAUSED
-                </div>
-              )}
             </div>
           </div>
         )}
 
         {/* RESULTS */}
         {scanDone && !isScanning && (
-          <div style={{ animation: "fadeUp 0.6s ease both", paddingBottom: "120px" }}>
+          <div style={{ animation:"fadeUp 0.5s ease both", paddingBottom:"100px" }}>
 
-            {/* Completion Banner */}
-            <div style={{ background: "rgba(0,255,136,0.04)", border: "1px solid rgba(0,255,136,0.2)", borderLeft: "4px solid #00ff88", padding: "24px 32px", marginBottom: "32px", position: "relative", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "1px", background: "linear-gradient(90deg, #00ff88, transparent)" }} />
-              <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.3em", color: "rgba(0,255,136,0.4)", marginBottom: "8px" }}>// SCAN_COMPLETE</div>
-              <h2 style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "22px", color: "#00ff88", letterSpacing: "0.06em" }}>FULL SCAN COMPLETED</h2>
-              <p style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: "15px", color: "rgba(180,255,180,0.5)", marginTop: "8px" }}>
-                Complete breakdown of vulnerabilities and exposed assets below.
-              </p>
+            <div style={{ background:C.greenBg, border:`1px solid ${C.greenBorder}`, borderLeft:`4px solid ${C.green}`, borderRadius:"0 8px 8px 0", padding:"20px 28px", marginBottom:"28px" }}>
+              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"10px", color:C.green, letterSpacing:"0.1em", marginBottom:"6px" }}>// scan_complete</div>
+              <h2 style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:"28px", letterSpacing:"0.04em", textTransform:"uppercase", color:C.green }}>FULL SCAN COMPLETED</h2>
+              <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:"14px", color:C.textMuted, marginTop:"6px" }}>Complete breakdown of vulnerabilities and exposed assets below.</p>
             </div>
 
-            {/* Scan Meta */}
-            <div style={{ background: "rgba(0,0,0,0.55)", border: "1px solid rgba(0,255,136,0.1)", padding: "20px 24px", marginBottom: "24px", fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", lineHeight: 2 }}>
+            {/* Meta */}
+            <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:"6px", padding:"16px 20px", marginBottom:"20px", fontFamily:"'DM Mono',monospace", fontSize:"12px", lineHeight:2 }}>
               {[
-                { label: "TARGET", val: (scanResult?.target || input), color: "#00d4ff" },
-                { label: "STARTED", val: scanResult?.meta?.startedAt ? new Date(scanResult.meta.startedAt).toLocaleString() : "—", color: "#fbbf24" },
-                { label: "COMPLETED", val: scanResult?.meta?.completedAt ? new Date(scanResult.meta.completedAt).toLocaleString() : "—", color: "#fbbf24" },
-                { label: "DURATION", val: (scanResult?.meta?.startedAt && scanResult?.meta?.completedAt) ? `${Math.max(0, (new Date(scanResult.meta.completedAt) - new Date(scanResult.meta.startedAt)) / 1000).toFixed(0)}s` : "—", color: "#00ff88" },
-              ].map((m, i) => (
-                <div key={i} style={{ color: "rgba(0,255,136,0.4)" }}>
-                  › <span style={{ color: "rgba(0,255,136,0.6)" }}>{m.label}:</span> <span style={{ color: m.color }}>{m.val}</span>
+                { label:"TARGET",    val:scanResult?.target||input,               color:C.blue },
+                { label:"STARTED",   val:scanResult?.meta?.startedAt   ? new Date(scanResult.meta.startedAt).toLocaleString()   : "—", color:C.amber },
+                { label:"COMPLETED", val:scanResult?.meta?.completedAt ? new Date(scanResult.meta.completedAt).toLocaleString() : "—", color:C.amber },
+                { label:"DURATION",  val:(scanResult?.meta?.startedAt&&scanResult?.meta?.completedAt)?`${Math.max(0,(new Date(scanResult.meta.completedAt)-new Date(scanResult.meta.startedAt))/1000).toFixed(0)}s`:"—", color:C.green },
+              ].map((m,i) => (
+                <div key={i} style={{ color:C.textMuted }}>
+                  › <span style={{ color:C.textSecondary }}>{m.label}:</span> <span style={{ color:m.color }}>{m.val}</span>
                 </div>
               ))}
             </div>
 
-            {/* Risk Summary */}
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "36px" }}>
-              {[
-                { label: "CRITICAL", val: scanResult?.summary?.critical ?? 0, color: "#ff2222" },
-                { label: "HIGH", val: scanResult?.summary?.high ?? 0, color: "#ff6b35" },
-                { label: "MEDIUM", val: scanResult?.summary?.medium ?? 0, color: "#fbbf24" },
-                { label: "LOW", val: scanResult?.summary?.low ?? 0, color: "#00ff88" },
-              ].map((s, i) => (
-                <div key={i} style={{ flex: "1 1 120px", background: "rgba(0,0,0,0.55)", border: `1px solid ${s.color}25`, borderTop: `2px solid ${s.color}`, padding: "16px 20px" }}>
-                  <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", letterSpacing: "0.2em", color: "rgba(0,255,136,0.35)", marginBottom: "8px" }}>{s.label}</div>
-                  <div style={{ fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "28px", color: s.color, lineHeight: 1, textShadow: `0 0 20px ${s.color}40` }}>{s.val}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* ── FULL QUICKSCAN RESULTS ── */}
-            <QuickScanResults data={scanResult} />
-
-            {/* ── VULNERABILITY ASSESSMENT ── */}
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", letterSpacing: "0.3em", color: "rgba(255,107,53,0.5)", marginBottom: "20px", marginTop: "40px" }}>
-              // VULNERABILITY_ASSESSMENT_RESULTS
-            </div>
-
+            {/* Risk counters */}
             {(() => {
-              const v = scanResult?.vulnerabilities || {};
-              const DetailText = ({ children }) => <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: "14px", color: "rgba(180,255,180,0.55)", lineHeight: 1.7 }}>{children}</div>;
-              const DetailMono = ({ children }) => <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "rgba(0,255,136,0.5)", lineHeight: 1.8 }}>{children}</div>;
-              const Label = ({ children, color = "#fbbf24" }) => <span style={{ color, fontFamily: "'Share Tech Mono', monospace", fontSize: "11px" }}>{children}</span>;
-
+              const v = scanResult?.vulnerabilities||{};
+              const counts = { critical:0, high:0, medium:0, low:0 };
+              [
+                { found:!!v.sqlInjection?.found,      level:"critical" },
+                { found:!!v.commandInjection?.found,  level:"critical" },
+                { found:!!v.domXss?.found,            level:"high" },
+                { found:!!v.storedXss?.found,         level:"high" },
+                { found:!!v.reflectedXss?.found,      level:"high" },
+                { found:!!v.openRedirect?.found,      level:"high" },
+                { found:!!v.cors?.found,              level:"high" },
+                { found:!!v.wordpress?.found,         level:"high" },
+                { found:!!v.csrf?.found,              level:"medium" },
+                { found:!!v.clickjacking?.vulnerable, level:"medium" },
+                { found:!!v.sensitiveFiles?.found,    level:"low" },
+              ].forEach(m => { if(m.found) counts[m.level]++; });
               return (
-                <div>
-                  <ModuleBlock keyName="sql" title="SQL INJECTION" found={!!v.sqlInjection?.found} expanded={expanded.sql} onToggle={toggle}>
-                    {v.sqlInjection?.details?.findings?.length > 0 ? (
-                      v.sqlInjection.details.findings.map((f, i) => (
-                        <div key={i} style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,107,53,0.3)" }}>
-                          <DetailMono>› Endpoint: <Label color="#00d4ff">{f.url}</Label></DetailMono>
-                          <DetailMono>› Parameter: <Label color="#fbbf24">{f.param}</Label></DetailMono>
-                          <DetailMono>› Databases: <Label color="#00ff88">{(f.databases || []).join(", ") || "N/A"}</Label></DetailMono>
-                        </div>
-                      ))
-                    ) : <DetailText>No vulnerability details provided by module.</DetailText>}
-                  </ModuleBlock>
-
-                  <ModuleBlock keyName="dom" title="DOM XSS" found={!!v.domXss?.found} expanded={expanded.dom} onToggle={toggle}>
-                    {v.domXss?.details ? (() => {
-                      const findings = Array.isArray(v.domXss.details.evidence) ? v.domXss.details.evidence : [];
-                      const highMedium = findings.filter(f => ["high","medium"].includes((f.confidence||"").toLowerCase()));
-                      const lowCount = findings.length - highMedium.length;
-                      if (highMedium.length > 0) return (
-                        <div>
-                          <DetailMono>› Confirmed findings: <Label color="#ff6b35">{highMedium.length}</Label></DetailMono>
-                          {highMedium.map((f, i) => (
-                            <div key={i} style={{ marginTop: "10px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,107,53,0.3)" }}>
-                              <DetailMono>› Type: <Label color="#fbbf24">{f.type || "DOM XSS"}</Label></DetailMono>
-                              <DetailMono>› Location: <Label color="#00d4ff">{f.location || "N/A"}</Label></DetailMono>
-                              <DetailMono>› Confidence: <Label color="#00ff88">{f.confidence || "Unknown"}</Label></DetailMono>
-                            </div>
-                          ))}
-                          {lowCount > 0 && <DetailText style={{ marginTop: "10px" }}>{lowCount} low-confidence finding(s) suppressed.</DetailText>}
-                          <button onClick={() => setShowRawDomFindings(s => !s)} style={{ marginTop: "10px", fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "#00d4ff", background: "none", border: "none", cursor: "pointer", letterSpacing: "0.1em" }}>
-                            {showRawDomFindings ? "▲ HIDE RAW" : "▼ SHOW RAW FINDINGS"}
-                          </button>
-                          {showRawDomFindings && <pre style={{ marginTop: "10px", maxHeight: "200px", overflowY: "auto" }}>{JSON.stringify(findings, null, 2)}</pre>}
-                        </div>
-                      );
-                      if (findings.length > 0) return (
-                        <div>
-                          <DetailText>No confirmed High/Medium findings. {findings.length} low-confidence finding(s) detected.</DetailText>
-                          <button onClick={() => setShowRawDomFindings(s => !s)} style={{ marginTop: "8px", fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "#00d4ff", background: "none", border: "none", cursor: "pointer", letterSpacing: "0.1em" }}>
-                            {showRawDomFindings ? "▲ HIDE RAW" : "▼ SHOW RAW FINDINGS"}
-                          </button>
-                        </div>
-                      );
-                      return <DetailText>No vulnerability detected</DetailText>;
-                    })() : <DetailText>No vulnerability detected</DetailText>}
-                  </ModuleBlock>
-
-                  <ModuleBlock keyName="stored" title="STORED XSS" found={!!v.storedXss?.found} expanded={expanded.stored} onToggle={toggle}>
-                    {v.storedXss?.details?.evidence ? (
-                      Array.isArray(v.storedXss.details.evidence)
-                        ? v.storedXss.details.evidence.map((f, i) => (
-                          <div key={i} style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,107,53,0.3)" }}>
-                            <DetailMono>› Location: <Label color="#00d4ff">{f.location || "N/A"}</Label></DetailMono>
-                            <DetailMono>› Payload: <Label color="#fbbf24">{f.payload ? f.payload.substring(0, 50) : "N/A"}...</Label></DetailMono>
-                            <DetailMono>› Evidence: <Label color="#00ff88">{f.evidence || "N/A"}</Label></DetailMono>
-                            <DetailMono>› Confidence: <Label color="#ff6b35">{f.confidence || "Unknown"}</Label></DetailMono>
-                          </div>
-                        ))
-                        : <DetailText>{v.storedXss.details.notes || "Vulnerability detected but details unavailable"}</DetailText>
-                    ) : <DetailText>No vulnerability detected</DetailText>}
-                  </ModuleBlock>
-
-                  <ModuleBlock keyName="reflected" title="REFLECTED XSS" found={!!v.reflectedXss?.found} expanded={expanded.reflected} onToggle={toggle}>
-                    {v.reflectedXss?.details ? (
-                      <div>
-                        <DetailMono>› Endpoints tested: <Label color="#00d4ff">{v.reflectedXss.details.testedEndpoints || 0}</Label></DetailMono>
-                        <DetailMono>› Vulnerable endpoints: <Label color="#ff6b35">{(v.reflectedXss.details.vulnerableEndpoints || []).length || 0}</Label></DetailMono>
-                        {v.reflectedXss.details.vulnerableEndpoints?.length > 0 && (
-                          <div style={{ marginTop: "12px" }}>
-                            {v.reflectedXss.details.vulnerableEndpoints.slice(0, 10).map((ep, i) => (
-                              <div key={i} style={{ marginBottom: "10px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,107,53,0.3)" }}>
-                                <DetailMono>› URL: <Label color="#fbbf24">{ep.url || "Unknown"}</Label></DetailMono>
-                                {Array.isArray(ep.findings) && ep.findings.length > 0 && (
-                                  <DetailMono>› Payloads: <Label color="#00ff88">{ep.findings.length}</Label></DetailMono>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ) : <DetailText>No vulnerability detected</DetailText>}
-                  </ModuleBlock>
-
-                  <ModuleBlock keyName="click" title="CLICKJACKING" found={!!v.clickjacking?.vulnerable} expanded={expanded.click} onToggle={toggle}>
-                    {v.clickjacking?.vulnerable ? (
-                      <div>
-                        <DetailMono>› Issue: <Label color="#ff6b35">{v.clickjacking.details?.issue || "Missing X-Frame-Options / CSP frame-ancestors"}</Label></DetailMono>
-                        {v.clickjacking.details?.headers && Object.keys(v.clickjacking.details.headers).length > 0 && (
-                          <div style={{ marginTop: "10px" }}>
-                            <DetailMono style={{ marginBottom: "6px" }}>› Security Headers:</DetailMono>
-                            {Object.entries(v.clickjacking.details.headers || {}).slice(0, 8).map(([k, val]) => (
-                              <div key={k} style={{ paddingLeft: "12px" }}>
-                                <DetailMono>› <Label color="#fbbf24">{k}:</Label> <Label color="rgba(180,255,180,0.5)">{String(val).substring(0, 60)}...</Label></DetailMono>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ) : <DetailText>No vulnerability detected</DetailText>}
-                  </ModuleBlock>
-
-                  <ModuleBlock keyName="cmd" title="COMMAND INJECTION" found={!!v.commandInjection?.found} expanded={expanded.cmd} onToggle={toggle}>
-                    {v.commandInjection?.found ? (
-                      <div>
-                        <DetailMono>› Confidence: <Label color="#ff6b35">{v.commandInjection.details?.confidence || "Unknown"}</Label></DetailMono>
-                        <DetailMono>› Notes: <Label color="rgba(180,255,180,0.6)">{v.commandInjection.details?.notes || "Command execution vulnerability confirmed"}</Label></DetailMono>
-                        {Array.isArray(v.commandInjection.details?.evidence) && v.commandInjection.details.evidence.slice(0, 5).map((f, i) => (
-                          <div key={i} style={{ marginTop: "10px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,107,53,0.3)" }}>
-                            <DetailMono>› Parameter: <Label color="#fbbf24">{f.parameter || "Unknown"}</Label></DetailMono>
-                            <DetailMono>› Payload: <Label color="#00ff88">{f.payload ? f.payload.substring(0, 40) : "N/A"}...</Label></DetailMono>
-                            <DetailMono>› Evidence: <Label color="#00d4ff">{f.evidence || "N/A"}</Label></DetailMono>
-                          </div>
-                        ))}
-                      </div>
-                    ) : <DetailText>No vulnerability detected</DetailText>}
-                  </ModuleBlock>
-
-                  <ModuleBlock keyName="csrf" title="CSRF — CROSS-SITE REQUEST FORGERY" found={!!v.csrf?.found} expanded={expanded.csrf} onToggle={toggle}>
-                    {v.csrf?.found ? (
-                      <div>
-                        <DetailMono>› Total endpoints tested: <Label color="#00d4ff">{v.csrf.details?.summary?.totalEndpoints || 0}</Label></DetailMono>
-                        <DetailMono>› Vulnerable: <Label color="#ff6b35">{v.csrf.details?.summary?.vulnerable || 0}</Label></DetailMono>
-                        <DetailMono>› Safe: <Label color="#00ff88">{v.csrf.details?.summary?.safe || 0}</Label></DetailMono>
-                        {v.csrf.details?.vulnerableEndpoints?.length > 0 && (
-                          <div style={{ marginTop: "12px" }}>
-                            {v.csrf.details.vulnerableEndpoints.slice(0, 10).map((ep, i) => (
-                              <div key={i} style={{ marginBottom: "10px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,107,53,0.3)" }}>
-                                <DetailMono>› Endpoint: <Label color="#fbbf24">{ep.endpoint || "Unknown"}</Label></DetailMono>
-                                <DetailMono>› Method: <Label color="#00d4ff">{ep.method || "POST"}</Label> · Confidence: <Label color="#ff6b35">{ep.confidence || "Unknown"}</Label> · Risk: <Label color={ep.risk === "HIGH" ? "#ff2222" : "#fbbf24"}>{ep.risk || "MEDIUM"}</Label></DetailMono>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ) : <DetailText>No vulnerability detected</DetailText>}
-                  </ModuleBlock>
-
-                  <ModuleBlock keyName="sensitive" title="SENSITIVE FILE EXPOSURE" found={!!v.sensitiveFiles?.found} expanded={expanded.sensitive} onToggle={toggle}>
-                    {v.sensitiveFiles?.details?.exposedFiles?.length > 0 ? (
-                      <div>
-                        <DetailMono>
-                          › Total exposed: <Label color="#ff6b35">{v.sensitiveFiles.details.summary?.total || 0}</Label>
-                          {"  "}Critical: <Label color="#ff2222">{v.sensitiveFiles.details.summary?.critical || 0}</Label>
-                          {"  "}High: <Label color="#ff6b35">{v.sensitiveFiles.details.summary?.high || 0}</Label>
-                          {"  "}Medium: <Label color="#fbbf24">{v.sensitiveFiles.details.summary?.medium || 0}</Label>
-                          {"  "}Low: <Label color="#00ff88">{v.sensitiveFiles.details.summary?.low || 0}</Label>
-                        </DetailMono>
-                        <div style={{ marginTop: "14px" }}>
-                          {v.sensitiveFiles.details.exposedFiles.map((f, i) => (
-                            <div key={i} style={{ marginBottom: "10px", paddingLeft: "12px", borderLeft: `2px solid ${riskAccent(f.severity)}55` }}>
-                              <DetailMono>› <Label color={riskAccent(f.severity)}>[{f.severity}]</Label>{" "}<Label color="#00d4ff">{f.path}</Label></DetailMono>
-                              <DetailMono>› Status: <Label color="#fbbf24">{f.status}</Label>{"  "}Desc: <Label color="rgba(180,255,180,0.55)">{f.desc}</Label></DetailMono>
-                              {f.contentType && <DetailMono>› Content-Type: <Label color="rgba(180,255,180,0.4)">{f.contentType}</Label></DetailMono>}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : <DetailText>No sensitive files detected</DetailText>}
-                  </ModuleBlock>
-
-                  <ModuleBlock keyName="openRedirect" title="OPEN REDIRECT" found={!!v.openRedirect?.found} expanded={expanded.openRedirect} onToggle={toggle}>
-                    {v.openRedirect?.details?.evidence?.length > 0 ? (
-                      <div>
-                        <DetailMono>› Parameters affected: <Label color="#ff6b35">{v.openRedirect.details.summary?.total || 0}</Label>{"  "}Params: <Label color="#ff2222">{v.openRedirect.details.summary?.parameters?.join(", ") || "—"}</Label></DetailMono>
-                        <div style={{ marginTop: "14px" }}>
-                          {v.openRedirect.details.evidence.map((e, i) => (
-                            <div key={i} style={{ marginBottom: "10px", paddingLeft: "12px", borderLeft: "2px solid #ff6b3555" }}>
-                              <DetailMono>› <Label color="#ff6b35">[HIGH]</Label>{" "}<Label color="#fff">Parameter: {e.parameter}</Label></DetailMono>
-                              <DetailMono>› Payload: <Label color="#ff9800">{e.payload}</Label></DetailMono>
-                              <DetailMono>› Redirects to: <Label color="#ff2222">{e.redirectsTo}</Label></DetailMono>
-                              <DetailMono>› Status: <Label color="#fbbf24">{e.statusCode}</Label>{"  "}Type: <Label color="rgba(180,255,180,0.55)">{e.type}</Label></DetailMono>
-                              <DetailMono>› Test URL: <Label color="#00d4ff">{e.url}</Label></DetailMono>
-                            </div>
-                          ))}
-                        </div>
-                        <DetailMono style={{ marginTop: "8px" }}>› <Label color="rgba(180,255,180,0.5)">{v.openRedirect.details.notes}</Label></DetailMono>
-                      </div>
-                    ) : <DetailText>No open redirect vulnerabilities detected</DetailText>}
-                  </ModuleBlock>
-
-                  <ModuleBlock keyName="cors" title="CORS MISCONFIGURATION" found={!!v.cors?.found} expanded={expanded.cors} onToggle={toggle}>
-                    {v.cors?.details?.evidence?.length > 0 ? (
-                      <div>
-                        <DetailMono>› Total issues: <Label color="#ff6b35">{v.cors.details.summary?.total || 0}</Label>{"  "}Critical: <Label color="#ff2222">{v.cors.details.summary?.critical || 0}</Label>{"  "}High: <Label color="#ff6b35">{v.cors.details.summary?.high || 0}</Label>{"  "}Medium: <Label color="#fbbf24">{v.cors.details.summary?.medium || 0}</Label>{"  "}Exploitable: <Label color="#ff2222">{v.cors.details.summary?.exploitable || 0}</Label></DetailMono>
-                        <div style={{ marginTop: "14px" }}>
-                          {v.cors.details.evidence.map((e, i) => (
-                            <div key={i} style={{ marginBottom: "10px", paddingLeft: "12px", borderLeft: `2px solid ${riskAccent(e.severity)}55` }}>
-                              <DetailMono>› <Label color={riskAccent(e.severity)}>[{e.severity}]</Label>{" "}<Label color="#fff">{e.type}</Label></DetailMono>
-                              <DetailMono>› <Label color="rgba(180,255,180,0.55)">{e.description}</Label></DetailMono>
-                              <DetailMono>› Endpoint: <Label color="#00d4ff">{e.url}</Label></DetailMono>
-                              <DetailMono>› Header: <Label color="#ff9800">{e.header}</Label></DetailMono>
-                              <DetailMono>› Exploitable: <Label color={e.exploitable ? "#ff2222" : "#00ff88"}>{e.exploitable ? "Yes" : "No (browser blocks)"}</Label></DetailMono>
-                            </div>
-                          ))}
-                        </div>
-                        <DetailMono style={{ marginTop: "8px" }}>› <Label color="rgba(180,255,180,0.5)">{v.cors.details.notes}</Label></DetailMono>
-                      </div>
-                    ) : <DetailText>No CORS misconfigurations detected</DetailText>}
-                  </ModuleBlock>
-
-                  <ModuleBlock keyName="wordpress" title="WORDPRESS SECURITY" found={!!v.wordpress?.found} expanded={!!expanded.wordpress} onToggle={toggle}>
-                    {v.wordpress?.found ? (
-                      <div>
-                        <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,107,53,0.3)" }}>
-                          <DetailMono>› Risk Score: <Label color={riskAccent(v.wordpress.details?.riskScore?.level)}>{v.wordpress.details?.riskScore?.score ?? "?"}/100 ({v.wordpress.details?.riskScore?.level ?? "UNKNOWN"})</Label></DetailMono>
-                          <DetailMono>› Site: <Label color="#00d4ff">{v.wordpress.details?.url}</Label></DetailMono>
-                          <DetailMono>› Scanned At: <Label color="#fbbf24">{v.wordpress.details?.scannedAt ? new Date(v.wordpress.details.scannedAt).toLocaleString() : "—"}</Label></DetailMono>
-                        </div>
-                        <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(0,255,136,0.3)" }}>
-                          <DetailMono>› WP Version: <Label color="#00ff88">{v.wordpress.details?.results?.coreVersion?.version || "Not detected"}</Label></DetailMono>
-                          {(v.wordpress.details?.results?.coreVersion?.vulnerabilities || []).map((cv, i) => (
-                            <DetailMono key={i}>› <Label color="#ff2222">[{cv.severity}]</Label> {cv.issue} — fix in <Label color="#fbbf24">{cv.fixedIn}</Label></DetailMono>
-                          ))}
-                        </div>
-                        {(v.wordpress.details?.results?.plugins || []).filter(p => p.vulnerabilities?.length > 0).length > 0 && (
-                          <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,34,34,0.4)" }}>
-                            <DetailMono>› Vulnerable Plugins: <Label color="#ff2222">{v.wordpress.details.results.plugins.filter(p => p.vulnerabilities?.length > 0).length}</Label></DetailMono>
-                            {v.wordpress.details.results.plugins.filter(p => p.vulnerabilities?.length > 0).map((p, i) => (
-                              <div key={i} style={{ marginTop: "6px" }}>
-                                <DetailMono>&nbsp;&nbsp;· <Label color={riskAccent(p.severity)}>[{p.severity}]</Label>{" "}<Label color="#fbbf24">{p.slug}</Label>{p.version && <Label color="rgba(180,255,180,0.5)"> v{p.version}</Label>}</DetailMono>
-                                <DetailMono>&nbsp;&nbsp;&nbsp;&nbsp;↳ <Label color="rgba(180,255,180,0.55)">{p.vulnerabilities[0]?.issue}</Label></DetailMono>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        {v.wordpress.details?.results?.theme?.name && (
-                          <div style={{ marginBottom: "14px", paddingLeft: "12px", borderLeft: "2px solid rgba(0,255,136,0.2)" }}>
-                            <DetailMono>› Active Theme: <Label color="#00ff88">{v.wordpress.details.results.theme.name}</Label>{v.wordpress.details.results.theme.version && <Label color="rgba(180,255,180,0.5)"> v{v.wordpress.details.results.theme.version}</Label>}</DetailMono>
-                          </div>
-                        )}
-                        {v.wordpress.details?.results?.userEnumeration?.exposed && (
-                          <div style={{ marginBottom: "10px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,34,34,0.4)" }}>
-                            <DetailMono>› <Label color="#ff2222">[HIGH]</Label> User Enumeration: <Label color="#ff6b35">{(v.wordpress.details.results.userEnumeration.users || []).length} user(s) exposed</Label></DetailMono>
-                            {(v.wordpress.details.results.userEnumeration.users || []).slice(0, 5).map((u, i) => (
-                              <DetailMono key={i}>&nbsp;&nbsp;· <Label color="#fbbf24">{u.name}</Label> <Label color="rgba(180,255,180,0.4)">via {u.source}</Label></DetailMono>
-                            ))}
-                          </div>
-                        )}
-                        {v.wordpress.details?.results?.loginExposure?.wpLoginExposed && (
-                          <DetailMono style={{ marginBottom: "10px" }}>› <Label color="#ff6b35">[MEDIUM]</Label> wp-login.php publicly accessible{!v.wordpress.details.results.loginExposure.bruteForceProtection && <Label color="#ff2222"> — No brute-force protection detected</Label>}</DetailMono>
-                        )}
-                        {v.wordpress.details?.results?.xmlRpc?.enabled && (
-                          <DetailMono style={{ marginBottom: "10px" }}>› <Label color={v.wordpress.details.results.xmlRpc.multicallEnabled ? "#ff2222" : "#ff6b35"}>[{v.wordpress.details.results.xmlRpc.multicallEnabled ? "CRITICAL" : "HIGH"}]</Label>{" "}XML-RPC enabled{v.wordpress.details.results.xmlRpc.multicallEnabled ? " + system.multicall (brute-force amplifier)" : ""}</DetailMono>
-                        )}
-                        {(v.wordpress.details?.results?.securityHeaders?.missing || []).length > 0 && (
-                          <div style={{ paddingLeft: "12px", borderLeft: "2px solid rgba(251,191,36,0.3)" }}>
-                            <DetailMono>› Missing security headers: <Label color="#fbbf24">{v.wordpress.details.results.securityHeaders.missing.length}</Label></DetailMono>
-                            {v.wordpress.details.results.securityHeaders.missing.map((h, i) => (
-                              <DetailMono key={i}>&nbsp;&nbsp;· <Label color="rgba(180,255,180,0.5)">{h.header}</Label></DetailMono>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ) : <DetailText>Target is not running WordPress or no issues detected.</DetailText>}
-                  </ModuleBlock>
+                <div style={{ display:"flex", gap:"10px", flexWrap:"wrap", marginBottom:"32px" }}>
+                  {[
+                    { label:"Critical", val:counts.critical, color:C.red,    bg:C.redBg,    border:C.redBorder },
+                    { label:"High",     val:counts.high,     color:C.orange, bg:C.orangeBg, border:C.orangeBorder },
+                    { label:"Medium",   val:counts.medium,   color:C.amber,  bg:C.amberBg,  border:C.amberBorder },
+                    { label:"Low",      val:counts.low,      color:C.green,  bg:C.greenBg,  border:C.greenBorder },
+                  ].map((s,i) => (
+                    <div key={i} style={{ flex:"1 1 110px", background:s.bg, border:`1px solid ${s.border}`, borderTop:`3px solid ${s.color}`, borderRadius:"0 0 6px 6px", padding:"14px 18px" }}>
+                      <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"10px", color:C.textMuted, textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:"6px" }}>{s.label}</div>
+                      <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:"32px", color:s.color, lineHeight:1 }}>{s.val}</div>
+                    </div>
+                  ))}
                 </div>
               );
             })()}
 
-            {/* PDF Download */}
-            <div style={{ textAlign: "center", paddingTop: "40px", paddingBottom: "20px" }}>
-              <button
-                onClick={downloadPDF}
-                style={{
-                  fontFamily: "'Orbitron', monospace", fontWeight: 700, fontSize: "11px",
-                  letterSpacing: "0.18em", textTransform: "uppercase",
-                  color: "#020804", background: "#00ff88", border: "none",
-                  padding: "16px 36px", cursor: "pointer",
-                  display: "inline-flex", alignItems: "center", gap: "10px",
-                  transition: "all 0.25s", boxShadow: "0 0 24px rgba(0,255,136,0.3)",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 40px rgba(0,255,136,0.5)"; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 24px rgba(0,255,136,0.3)"; }}
-              >
-                <FaFileDownload /> DOWNLOAD FULL PDF REPORT
+            <QuickScanResults data={scanResult} />
+
+            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"11px", color:C.textXMuted, letterSpacing:"0.08em", marginBottom:"16px", marginTop:"36px" }}>
+              // vulnerability_assessment_results
+            </div>
+
+            {(() => {
+              const v = scanResult?.vulnerabilities||{};
+              return (
+                <div>
+
+                  {/* ── SQL INJECTION ── */}
+                  <ModuleBlock keyName="sql" title="SQL Injection" found={!!v.sqlInjection?.found} expanded={expanded.sql} onToggle={toggle}>
+                    {v.sqlInjection?.details ? (() => {
+                      const d = v.sqlInjection.details;
+                        console.log("SQLi details:", JSON.stringify(d, null, 2)); // ADD THIS
+
+                      // Backend: details = { findings: [{ url, param, databases[] }] }
+                      const findings = Array.isArray(d.findings) ? d.findings : [];
+                      const isFlatResult = !!(d.url || d.param);
+                      return (
+                        <div>
+                          <KV label="ENDPOINTS_SCANNED" value={d.scanned||d.testedEndpoints||d.totalTested} valueColor={C.blue} />
+                          <KV label="TOTAL_ENDPOINTS"   value={d.total}        valueColor={C.textSecondary} />
+                          <KV label="CONFIDENCE"        value={d.confidence}   valueColor={C.amber} />
+                          <KV label="TOOL_USED"         value={d.tool}         valueColor={C.textMuted} />
+
+                          {/* Flat single-result from backend */}
+                          {isFlatResult && (
+                            <>
+                              <SubHead>Injection Point</SubHead>
+                              <div style={{ padding:"12px 14px", background:C.redBg, border:`1px solid ${C.redBorder}`, borderLeft:`3px solid ${C.red}`, borderRadius:"0 6px 6px 0" }}>
+                                <KV label="URL"        value={d.url}    valueColor={C.blue} />
+                                <KV label="PARAMETER"  value={d.param}  valueColor={C.amber} />
+                                <KV label="METHOD"     value={d.method} valueColor={C.textSecondary} />
+                                <KV label="PAYLOAD"    value={d.payload} valueColor={C.red} />
+                                <KV label="TYPE"       value={d.type}   valueColor={C.orange} />
+                                <KV label="DB_VERSION" value={d.dbVersion} valueColor={C.textMuted} />
+                                <KV label="EVIDENCE"   value={d.evidence}  valueColor={C.textMuted} />
+                                {Array.isArray(d.databases) && d.databases.length > 0 && (
+                                  <>
+                                    <SubHead>Databases Extracted ({d.databases.length})</SubHead>
+                                    <div style={{ display:"flex", flexWrap:"wrap", gap:"6px", paddingTop:"4px" }}>
+                                      {d.databases.map((db, i) => (
+                                        <span key={i} style={{ fontFamily:"'DM Mono',monospace", fontSize:"12px", fontWeight:500, color:C.green, background:C.greenBg, border:`1px solid ${C.greenBorder}`, padding:"4px 12px", borderRadius:"4px" }}>{db}</span>
+                                      ))}
+                                    </div>
+                                  </>
+                                )}
+                                {Array.isArray(d.tables) && d.tables.length > 0 && (
+                                  <>
+                                    <SubHead>Tables Extracted ({d.tables.length})</SubHead>
+                                    <div style={{ display:"flex", flexWrap:"wrap", gap:"6px", paddingTop:"4px" }}>
+                                      {d.tables.map((t, i) => (
+                                        <span key={i} style={{ fontFamily:"'DM Mono',monospace", fontSize:"12px", color:C.blue, background:C.blueBg, border:`1px solid ${C.blueBorder}`, padding:"4px 12px", borderRadius:"4px" }}>{t}</span>
+                                      ))}
+                                    </div>
+                                  </>
+                                )}
+                                <AutoKV obj={d} skipKeys={["url","param","method","payload","type","databases","tables","dbVersion","confidence","evidence","tool","scanned","total","testedEndpoints","totalTested","findings","vulnerable"]} />
+                              </div>
+                            </>
+                          )}
+
+                          {/* Array of findings (alternative backend shape) */}
+                          {findings.length > 0 && (
+                            <>
+                              <SubHead>Injection Points ({findings.length})</SubHead>
+                              {findings.map((f,i) => (
+                                <div key={i} style={{ marginBottom:"14px", padding:"12px 14px", background:C.redBg, border:`1px solid ${C.redBorder}`, borderLeft:`3px solid ${C.red}`, borderRadius:"0 6px 6px 0" }}>
+                                      { console.log("finding:", JSON.stringify(f)) }
+
+                                  <KV label="URL"        value={f.url}       valueColor={C.blue} />
+                                  <KV label="PARAMETER"  value={f.param}     valueColor={C.amber} />
+                                  <KV label="METHOD"     value={f.method}    valueColor={C.textSecondary} />
+                                  <KV label="PAYLOAD"    value={f.payload}   valueColor={C.red} />
+                                  <KV label="TYPE"       value={f.type}      valueColor={C.orange} />
+                                  <KV label="DB_VERSION" value={f.dbVersion} valueColor={C.textMuted} />
+                                  <KV label="CONFIDENCE" value={f.confidence} valueColor={C.amber} />
+                                  <KV label="EVIDENCE"   value={f.evidence}  valueColor={C.textMuted} />
+                                  {Array.isArray(f.databases) && f.databases.length > 0 && (
+                                    <>
+                                      <SubHead>Databases ({f.databases.length})</SubHead>
+                                      <div style={{ display:"flex", flexWrap:"wrap", gap:"6px", paddingTop:"4px" }}>
+                                        {f.databases.map((db,j) => <span key={j} style={{ fontFamily:"'DM Mono',monospace", fontSize:"12px", color:C.green, background:C.greenBg, border:`1px solid ${C.greenBorder}`, padding:"4px 12px", borderRadius:"4px" }}>{db}</span>)}
+                                      </div>
+                                    </>
+                                  )}
+                                  {Array.isArray(f.tables) && f.tables.length > 0 && (
+                                    <>
+                                      <SubHead>Tables ({f.tables.length})</SubHead>
+                                      <div style={{ display:"flex", flexWrap:"wrap", gap:"6px", paddingTop:"4px" }}>
+                                        {f.tables.map((t,j) => <span key={j} style={{ fontFamily:"'DM Mono',monospace", fontSize:"12px", color:C.blue, background:C.blueBg, border:`1px solid ${C.blueBorder}`, padding:"4px 12px", borderRadius:"4px" }}>{t}</span>)}
+                                      </div>
+                                    </>
+                                  )}
+                                  <AutoKV obj={f} skipKeys={["url","param","method","payload","type","databases","tables","dbVersion","confidence","evidence"]} />
+                                </div>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })() : <Mono color={C.textMuted}>No vulnerability detected.</Mono>}
+                  </ModuleBlock>
+
+                  {/* ── DOM XSS ── */}
+                  <ModuleBlock keyName="dom" title="DOM XSS" found={!!v.domXss?.found} expanded={expanded.dom} onToggle={toggle}>
+                    {v.domXss?.details ? (() => {
+                      const d = v.domXss.details;
+                      const evidence = Array.isArray(d.evidence) ? d.evidence : [];
+                      const high = evidence.filter(f => ["high","medium"].includes((f.confidence||"").toLowerCase()));
+                      const low  = evidence.filter(f => !["high","medium"].includes((f.confidence||"").toLowerCase()));
+                      return (
+                        <div>
+                          <KV label="TOTAL_FINDINGS"  value={evidence.length}   valueColor={C.blue} />
+                          <KV label="HIGH_CONFIDENCE" value={high.length}       valueColor={high.length>0?C.red:C.textMuted} />
+                          <KV label="LOW_CONFIDENCE"  value={low.length}        valueColor={C.textMuted} />
+                          <KV label="PAGES_SCANNED"   value={d.pagesScanned}    valueColor={C.textSecondary} />
+                          <KV label="TOOL"            value={d.tool}            valueColor={C.textMuted} />
+                          <AutoKV obj={d} skipKeys={["evidence","pagesScanned","tool"]} />
+                          {high.length > 0 && (
+                            <>
+                              <SubHead>High / Medium Confidence ({high.length})</SubHead>
+                              {high.map((f,i) => (
+                                <div key={i} style={{ marginBottom:"12px", padding:"12px 14px", background:C.orangeBg, border:`1px solid ${C.orangeBorder}`, borderLeft:`3px solid ${C.orange}`, borderRadius:"0 6px 6px 0" }}>
+                                  <KV label="TYPE"       value={f.type}       valueColor={C.amber} />
+                                  <KV label="LOCATION"   value={f.location}   valueColor={C.blue} />
+                                  <KV label="SINK"       value={f.sink}       valueColor={C.orange} />
+                                  <KV label="SOURCE"     value={f.source}     valueColor={C.textSecondary} />
+                                  <KV label="CONFIDENCE" value={f.confidence} valueColor={C.amber} />
+                                  <KV label="URL"        value={f.url}        valueColor={C.blue} />
+                                  <KV label="PAYLOAD"    value={f.payload}    valueColor={C.red} />
+                                  <KV label="LINE"       value={f.line}       valueColor={C.textMuted} />
+                                  <AutoKV obj={f} skipKeys={["type","location","sink","source","confidence","url","payload","line"]} />
+                                </div>
+                              ))}
+                            </>
+                          )}
+                          {low.length > 0 && (
+                            <>
+                              <SubHead>Low Confidence ({low.length})</SubHead>
+                              {low.map((f,i) => (
+                                <div key={i} style={{ marginBottom:"8px", padding:"10px 12px", background:C.bg, border:`1px solid ${C.border}`, borderRadius:"4px" }}>
+                                  <KV label="TYPE"       value={f.type}       valueColor={C.textSecondary} />
+                                  <KV label="LOCATION"   value={f.location}   valueColor={C.blue} />
+                                  <KV label="CONFIDENCE" value={f.confidence} valueColor={C.textMuted} />
+                                  <AutoKV obj={f} skipKeys={["type","location","confidence"]} />
+                                </div>
+                              ))}
+                            </>
+                          )}
+                          <button onClick={() => setShowRawDomFindings(s=>!s)} style={{ marginTop:"10px", fontFamily:"'DM Mono',monospace", fontSize:"11px", color:C.blue, background:"none", border:"none", cursor:"pointer" }}>
+                            {showRawDomFindings?"▲ Hide raw findings JSON":"▼ Show raw findings JSON"}
+                          </button>
+                          {showRawDomFindings && <pre style={{ marginTop:"10px", maxHeight:"200px", overflowY:"auto", background:C.bg, padding:"12px", borderRadius:"4px", border:`1px solid ${C.border}` }}>{JSON.stringify(evidence, null, 2)}</pre>}
+                        </div>
+                      );
+                    })() : <Mono color={C.textMuted}>No vulnerability detected.</Mono>}
+                  </ModuleBlock>
+
+                  {/* ── STORED XSS ── */}
+                  <ModuleBlock keyName="stored" title="Stored XSS" found={!!v.storedXss?.found} expanded={expanded.stored} onToggle={toggle}>
+                    {v.storedXss?.details ? (() => {
+                      const d = v.storedXss.details;
+                      const evidence = Array.isArray(d.evidence) ? d.evidence : [];
+                      return (
+                        <div>
+                          <KV label="ENDPOINTS_TESTED" value={d.endpointsTested||d.totalTested} valueColor={C.blue} />
+                          <KV label="INPUTS_TESTED"    value={d.inputsTested}                   valueColor={C.blue} />
+                          <KV label="VULNERABLE_COUNT" value={d.vulnerableCount||evidence.length} valueColor={evidence.length>0?C.red:C.textMuted} />
+                          <KV label="NOTES"            value={d.notes}                          valueColor={C.textMuted} mono={false} />
+                          <AutoKV obj={d} skipKeys={["evidence","endpointsTested","totalTested","inputsTested","vulnerableCount","notes"]} />
+                          {evidence.length > 0 && (
+                            <>
+                              <SubHead>Evidence ({evidence.length})</SubHead>
+                              {evidence.map((f,i) => (
+                                <div key={i} style={{ marginBottom:"12px", padding:"12px 14px", background:C.redBg, border:`1px solid ${C.redBorder}`, borderLeft:`3px solid ${C.red}`, borderRadius:"0 6px 6px 0" }}>
+                                  <KV label="LOCATION"     value={f.location}    valueColor={C.blue} />
+                                  <KV label="PAYLOAD"      value={f.payload}     valueColor={C.red} />
+                                  <KV label="CONFIDENCE"   value={f.confidence}  valueColor={C.amber} />
+                                  <KV label="FORM_ACTION"  value={f.formAction}  valueColor={C.textSecondary} />
+                                  <KV label="STORED_AT"    value={f.storedAt}    valueColor={C.textMuted} />
+                                  <KV label="REFLECTED_AT" value={f.reflectedAt} valueColor={C.textMuted} />
+                                  <KV label="INPUT_FIELD"  value={f.inputField}  valueColor={C.textSecondary} />
+                                  <AutoKV obj={f} skipKeys={["location","payload","confidence","formAction","storedAt","reflectedAt","inputField"]} />
+                                </div>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })() : <Mono color={C.textMuted}>No vulnerability detected.</Mono>}
+                  </ModuleBlock>
+
+                  {/* ── REFLECTED XSS ── */}
+                  <ModuleBlock keyName="reflected" title="Reflected XSS" found={!!v.reflectedXss?.found} expanded={expanded.reflected} onToggle={toggle}>
+                    {v.reflectedXss?.details ? (() => {
+                      const d = v.reflectedXss.details;
+                      const vulnEps = Array.isArray(d.vulnerableEndpoints) ? d.vulnerableEndpoints : [];
+                      return (
+                        <div>
+                          <KV label="ENDPOINTS_TESTED"     value={d.testedEndpoints}       valueColor={C.blue} />
+                          <KV label="VULNERABLE_ENDPOINTS" value={vulnEps.length||d.vulnerableCount} valueColor={vulnEps.length>0?C.red:C.textMuted} />
+                          <KV label="PAYLOADS_TESTED"      value={d.payloadsTested}         valueColor={C.textSecondary} />
+                          <KV label="TOOL"                 value={d.tool}                   valueColor={C.textMuted} />
+                          <AutoKV obj={d} skipKeys={["vulnerableEndpoints","testedEndpoints","vulnerableCount","payloadsTested","tool"]} />
+                          {vulnEps.length > 0 && (
+                            <>
+                              <SubHead>Vulnerable Endpoints ({vulnEps.length})</SubHead>
+                              {vulnEps.map((ep,i) => (
+                                <div key={i} style={{ marginBottom:"12px", padding:"12px 14px", background:C.redBg, border:`1px solid ${C.redBorder}`, borderLeft:`3px solid ${C.red}`, borderRadius:"0 6px 6px 0" }}>
+                                  <KV label="URL"        value={typeof ep==="string"?ep:ep.url}  valueColor={C.blue} />
+                                  <KV label="PARAMETER"  value={ep.param||ep.parameter}          valueColor={C.amber} />
+                                  <KV label="PAYLOAD"    value={ep.payload}                      valueColor={C.red} />
+                                  <KV label="METHOD"     value={ep.method}                       valueColor={C.textSecondary} />
+                                  <KV label="CONTEXT"    value={ep.context}                      valueColor={C.textMuted} />
+                                  <KV label="CONFIDENCE" value={ep.confidence}                   valueColor={C.amber} />
+                                  <KV label="EVIDENCE"   value={ep.evidence}                     valueColor={C.textMuted} />
+                                  {typeof ep==="object" && <AutoKV obj={ep} skipKeys={["url","param","parameter","payload","method","context","confidence","evidence"]} />}
+                                </div>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })() : <Mono color={C.textMuted}>No vulnerability detected.</Mono>}
+                  </ModuleBlock>
+
+                  {/* ── CLICKJACKING ── */}
+                  <ModuleBlock keyName="click" title="Clickjacking" found={!!v.clickjacking?.vulnerable} expanded={expanded.click} onToggle={toggle}>
+                    {v.clickjacking ? (() => {
+                      const d = v.clickjacking.details || v.clickjacking;
+                      return (
+                        <div>
+                          <KV label="VULNERABLE"          value={String(v.clickjacking.vulnerable)} valueColor={v.clickjacking.vulnerable?C.red:C.green} />
+                          <KV label="X_FRAME_OPTIONS"     value={d.xFrameOptions||d.xfo}            valueColor={(!d.xFrameOptions&&!d.xfo)?C.red:C.green} />
+                          <KV label="CSP_FRAME_ANCESTORS" value={d.cspFrameAncestors||d.frameAncestors} valueColor={(!d.cspFrameAncestors&&!d.frameAncestors)?C.red:C.green} />
+                          <KV label="ISSUE"               value={d.issue}                           valueColor={C.orange} mono={false} />
+                          <KV label="RECOMMENDATION"      value={d.recommendation||d.fix}           valueColor={C.textMuted} mono={false} />
+                          <AutoKV obj={d} skipKeys={["xFrameOptions","xfo","cspFrameAncestors","frameAncestors","issue","recommendation","fix"]} />
+                        </div>
+                      );
+                    })() : <Mono color={C.textMuted}>No vulnerability detected.</Mono>}
+                  </ModuleBlock>
+
+                  {/* ── COMMAND INJECTION ── */}
+                  <ModuleBlock keyName="cmd" title="Command Injection" found={!!v.commandInjection?.found} expanded={expanded.cmd} onToggle={toggle}>
+                    {v.commandInjection?.found && v.commandInjection?.details ? (() => {
+                      const d = v.commandInjection.details;
+                      const evidence = Array.isArray(d.evidence) ? d.evidence : [];
+                      return (
+                        <div>
+                          <KV label="CONFIDENCE"       value={d.confidence}                valueColor={C.amber} />
+                          <KV label="ENDPOINTS_TESTED" value={d.tested}                    valueColor={C.blue} />
+                          <KV label="VULNERABLE_COUNT" value={d.vulnerable||evidence.length} valueColor={C.red} />
+                          <AutoKV obj={d} skipKeys={["evidence","confidence","tested","vulnerable"]} />
+                          {evidence.length > 0 && (
+                            <>
+                              <SubHead>Evidence ({evidence.length})</SubHead>
+                              {evidence.map((f,i) => (
+                                <div key={i} style={{ marginBottom:"12px", padding:"12px 14px", background:C.redBg, border:`1px solid ${C.redBorder}`, borderLeft:`3px solid ${C.red}`, borderRadius:"0 6px 6px 0" }}>
+                                  <KV label="URL"        value={f.url}        valueColor={C.blue} />
+                                  <KV label="PARAMETER"  value={f.param}      valueColor={C.amber} />
+                                  <KV label="PAYLOAD"    value={f.payload}    valueColor={C.red} />
+                                  <KV label="OUTPUT"     value={f.output}     valueColor={C.textSecondary} />
+                                  <KV label="CONFIDENCE" value={f.confidence} valueColor={C.amber} />
+                                  <AutoKV obj={f} skipKeys={["url","param","payload","output","confidence"]} />
+                                </div>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })() : <Mono color={C.textMuted}>No vulnerability detected.</Mono>}
+                  </ModuleBlock>
+
+                  {/* ── CSRF ── */}
+                  <ModuleBlock keyName="csrf" title="CSRF — Cross-Site Request Forgery" found={!!v.csrf?.found} expanded={expanded.csrf} onToggle={toggle}>
+                    {v.csrf?.found && v.csrf?.details ? (() => {
+                      const d    = v.csrf.details;
+                      // Backend shape: { module, target, summary: { totalEndpoints, vulnerable, safe }, vulnerableEndpoints[], safeEndpoints[] }
+                      const sum  = d.summary || {};
+                      const vulnEps = Array.isArray(d.vulnerableEndpoints) ? d.vulnerableEndpoints : [];
+                      const safeEps = Array.isArray(d.safeEndpoints)       ? d.safeEndpoints       : [];
+                      return (
+                        <div>
+                          <KV label="TARGET"           value={d.target}            valueColor={C.blue} />
+                          <KV label="TOTAL_ENDPOINTS"  value={sum.totalEndpoints}  valueColor={C.blue} />
+                          <KV label="VULNERABLE"       value={sum.vulnerable}      valueColor={sum.vulnerable>0?C.red:C.textMuted} />
+                          <KV label="SAFE"             value={sum.safe}            valueColor={C.green} />
+
+                          {vulnEps.length > 0 && (
+                            <>
+                              <SubHead>Vulnerable Endpoints ({vulnEps.length})</SubHead>
+                              {vulnEps.map((ep,i) => (
+                                <div key={i} style={{ marginBottom:"10px", padding:"12px 14px", background:C.redBg, border:`1px solid ${C.redBorder}`, borderLeft:`3px solid ${C.red}`, borderRadius:"0 6px 6px 0" }}>
+                                  <KV label="URL"          value={ep.url||ep.action}      valueColor={C.blue} />
+                                  <KV label="METHOD"       value={ep.method}              valueColor={C.textSecondary} />
+                                  <KV label="FORM_ACTION"  value={ep.formAction}          valueColor={C.textMuted} />
+                                  <KV label="ISSUE"        value={ep.issue||ep.reason||ep.vulnerability} valueColor={C.orange} mono={false} />
+                                  <KV label="TOKEN_PRESENT" value={ep.hasToken!=null?(ep.hasToken?"YES":"NO"):undefined} valueColor={ep.hasToken?C.green:C.red} />
+                                  <KV label="TOKEN_VALUE"  value={ep.token||ep.csrfToken} valueColor={ep.token?C.green:C.red} />
+                                  <KV label="FIELDS"       value={Array.isArray(ep.fields)?ep.fields.join(", "):ep.fields} valueColor={C.textSecondary} />
+                                  <KV label="ENCTYPE"      value={ep.enctype}             valueColor={C.textMuted} />
+                                  <AutoKV obj={ep} skipKeys={["url","action","method","formAction","issue","reason","vulnerability","hasToken","token","csrfToken","fields","enctype"]} />
+                                </div>
+                              ))}
+                            </>
+                          )}
+
+                          {safeEps.length > 0 && (
+                            <>
+                              <SubHead>Safe Endpoints ({safeEps.length})</SubHead>
+                              <div style={{ display:"flex", flexDirection:"column", gap:"6px" }}>
+                                {safeEps.map((ep,i) => (
+                                  <div key={i} style={{ padding:"8px 14px", background:C.greenBg, border:`1px solid ${C.greenBorder}`, borderLeft:`3px solid ${C.green}`, borderRadius:"0 6px 6px 0", display:"flex", alignItems:"center", gap:"10px", flexWrap:"wrap" }}>
+                                    <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"12px", color:C.blue, wordBreak:"break-all" }}>{ep.url||ep.action||String(ep)}</span>
+                                    {ep.method && <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"10px", color:C.textMuted }}>{ep.method}</span>}
+                                    {(ep.hasToken||ep.token) && <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"10px", color:C.green }}>✓ token present</span>}
+                                  </div>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })() : <Mono color={C.textMuted}>No vulnerability detected.</Mono>}
+                  </ModuleBlock>
+
+                  {/* ── SENSITIVE FILES ── */}
+                  <ModuleBlock keyName="sensitive" title="Sensitive File Exposure" found={!!v.sensitiveFiles?.found} expanded={expanded.sensitive} onToggle={toggle}>
+                    {v.sensitiveFiles?.details ? (() => {
+                      const d     = v.sensitiveFiles.details;
+                      const sum   = d.summary || {};
+                      const files = Array.isArray(d.exposedFiles) ? d.exposedFiles : [];
+                      return (
+                        <div>
+                          <KV label="TOTAL_EXPOSED" value={sum.total||files.length} valueColor={files.length>0?C.red:C.textMuted} />
+                          <KV label="CRITICAL"      value={sum.critical}            valueColor={sum.critical>0?C.red:C.textMuted} />
+                          <KV label="HIGH"          value={sum.high}                valueColor={sum.high>0?C.orange:C.textMuted} />
+                          <KV label="MEDIUM"        value={sum.medium}              valueColor={sum.medium>0?C.amber:C.textMuted} />
+                          <KV label="LOW"           value={sum.low}                 valueColor={sum.low>0?C.green:C.textMuted} />
+                          <KV label="PATHS_CHECKED" value={d.pathsChecked}          valueColor={C.textSecondary} />
+                          {files.length > 0 && (
+                            <>
+                              <SubHead>Exposed Files ({files.length})</SubHead>
+                              {files.map((f,i) => (
+                                <div key={i} style={{ marginBottom:"10px", padding:"10px 14px", background:riskBg(f.severity), border:`1px solid ${riskBorder(f.severity)}`, borderLeft:`3px solid ${riskAccent(f.severity)}`, borderRadius:"0 6px 6px 0" }}>
+                                  <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"6px" }}>
+                                    <RiskChip level={f.severity} />
+                                    <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"12px", color:C.blue, wordBreak:"break-all" }}>{f.path||f.url}</span>
+                                  </div>
+                                  <KV label="STATUS_CODE"  value={f.statusCode||f.status} valueColor={C.textSecondary} />
+                                  <KV label="CONTENT_TYPE" value={f.contentType}           valueColor={C.textMuted} />
+                                  <KV label="SIZE"         value={f.size}                  valueColor={C.textMuted} />
+                                  <KV label="DESCRIPTION"  value={f.description}           valueColor={C.textMuted} mono={false} />
+                                  <KV label="SNIPPET"      value={f.snippet}               valueColor={C.orange} />
+                                  <AutoKV obj={f} skipKeys={["path","url","severity","statusCode","status","contentType","size","description","snippet"]} />
+                                </div>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })() : <Mono color={C.textMuted}>No sensitive files detected.</Mono>}
+                  </ModuleBlock>
+
+                  {/* ── OPEN REDIRECT ── */}
+                  <ModuleBlock keyName="openRedirect" title="Open Redirect" found={!!v.openRedirect?.found} expanded={expanded.openRedirect} onToggle={toggle}>
+                    {v.openRedirect?.details ? (() => {
+                      const d = v.openRedirect.details;
+                      const evidence = Array.isArray(d.evidence) ? d.evidence : [];
+                      return (
+                        <div>
+                          <KV label="TESTED_PARAMS" value={d.testedParams||d.totalTested} valueColor={C.blue} />
+                          <KV label="VULNERABLE"    value={evidence.length||d.vulnerable}  valueColor={evidence.length>0?C.red:C.textMuted} />
+                          <KV label="TOOL"          value={d.tool}                         valueColor={C.textMuted} />
+                          <AutoKV obj={d} skipKeys={["evidence","testedParams","totalTested","vulnerable","tool"]} />
+                          {evidence.length > 0 && (
+                            <>
+                              <SubHead>Evidence ({evidence.length})</SubHead>
+                              {evidence.map((e,i) => (
+                                <div key={i} style={{ marginBottom:"12px", padding:"12px 14px", background:C.orangeBg, border:`1px solid ${C.orangeBorder}`, borderLeft:`3px solid ${C.orange}`, borderRadius:"0 6px 6px 0" }}>
+                                  <KV label="URL"          value={e.url}         valueColor={C.blue} />
+                                  <KV label="PARAMETER"    value={e.parameter}   valueColor={C.amber} />
+                                  <KV label="PAYLOAD"      value={e.payload}     valueColor={C.orange} />
+                                  <KV label="REDIRECTS_TO" value={e.redirectsTo} valueColor={C.red} />
+                                  <KV label="STATUS_CODE"  value={e.statusCode}  valueColor={C.textSecondary} />
+                                  <KV label="METHOD"       value={e.method}      valueColor={C.textMuted} />
+                                  <AutoKV obj={e} skipKeys={["url","parameter","payload","redirectsTo","statusCode","method"]} />
+                                </div>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })() : <Mono color={C.textMuted}>No open redirect vulnerabilities detected.</Mono>}
+                  </ModuleBlock>
+
+                  {/* ── CORS ── */}
+                  <ModuleBlock keyName="cors" title="CORS Misconfiguration" found={!!v.cors?.found} expanded={expanded.cors} onToggle={toggle}>
+                    {v.cors?.details ? (() => {
+                      const d = v.cors.details;
+                      const evidence = Array.isArray(d.evidence) ? d.evidence : [];
+                      return (
+                        <div>
+                          <KV label="ENDPOINTS_TESTED"  value={d.testedEndpoints||d.totalTested} valueColor={C.blue} />
+                          <KV label="MISCONFIGURATIONS" value={evidence.length||d.misconfigCount} valueColor={evidence.length>0?C.red:C.textMuted} />
+                          <KV label="WILDCARD_DETECTED" value={d.wildcardDetected?"YES":"NO"}     valueColor={d.wildcardDetected?C.red:C.green} />
+                          <KV label="NULL_ORIGIN"       value={d.nullOriginAllowed?"YES":"NO"}    valueColor={d.nullOriginAllowed?C.red:C.green} />
+                          <AutoKV obj={d} skipKeys={["evidence","testedEndpoints","totalTested","misconfigCount","wildcardDetected","nullOriginAllowed"]} />
+                          {evidence.length > 0 && (
+                            <>
+                              <SubHead>Issues ({evidence.length})</SubHead>
+                              {evidence.map((e,i) => (
+                                <div key={i} style={{ marginBottom:"12px", padding:"12px 14px", background:riskBg(e.severity), border:`1px solid ${riskBorder(e.severity)}`, borderLeft:`3px solid ${riskAccent(e.severity)}`, borderRadius:"0 6px 6px 0" }}>
+                                  <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"6px" }}><RiskChip level={e.severity}/></div>
+                                  <KV label="TYPE"        value={e.type}        valueColor={C.text} />
+                                  <KV label="URL"         value={e.url}         valueColor={C.blue} />
+                                  <KV label="ORIGIN_SENT" value={e.originSent}  valueColor={C.textSecondary} />
+                                  <KV label="ACAO_HEADER" value={e.acaoHeader}  valueColor={e.acaoHeader==="*"?C.red:C.orange} />
+                                  <KV label="ACAC_HEADER" value={e.acacHeader}  valueColor={C.textMuted} />
+                                  <KV label="DESCRIPTION" value={e.description} valueColor={C.textMuted} mono={false} />
+                                  <KV label="IMPACT"      value={e.impact}      valueColor={C.orange} mono={false} />
+                                  <AutoKV obj={e} skipKeys={["type","url","severity","originSent","acaoHeader","acacHeader","description","impact"]} />
+                                </div>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })() : <Mono color={C.textMuted}>No CORS misconfigurations detected.</Mono>}
+                  </ModuleBlock>
+
+                  {/* ── WORDPRESS ── */}
+                  <ModuleBlock keyName="wordpress" title="WordPress Security" found={!!v.wordpress?.found} expanded={!!expanded.wordpress} onToggle={toggle}>
+                    {v.wordpress?.found && v.wordpress?.details ? (() => {
+                      const d       = v.wordpress.details;
+                      const risk    = d.riskScore || {};
+                      const vulns   = Array.isArray(d.vulnerabilities) ? d.vulnerabilities : [];
+                      const plugins = Array.isArray(d.plugins) ? d.plugins : [];
+                      const themes  = Array.isArray(d.themes)  ? d.themes  : [];
+                      const users   = Array.isArray(d.users)   ? d.users   : [];
+                      return (
+                        <div>
+                          {risk.score !== undefined && (
+                            <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:"16px", padding:"12px 16px", background:riskBg(risk.level), border:`1px solid ${riskBorder(risk.level)}`, borderRadius:"6px" }}>
+                              <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:"36px", color:riskAccent(risk.level), lineHeight:1 }}>{risk.score}</div>
+                              <div>
+                                <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"10px", color:C.textMuted, textTransform:"uppercase", letterSpacing:"0.06em" }}>Risk Score / 100</div>
+                                <RiskChip level={risk.level} />
+                              </div>
+                            </div>
+                          )}
+                          <KV label="WP_VERSION"       value={d.version}                     valueColor={d.versionOutdated?C.red:C.blue} />
+                          <KV label="VERSION_OUTDATED" value={d.versionOutdated?"YES":"NO"}   valueColor={d.versionOutdated?C.red:C.green} />
+                          <KV label="THEME"            value={d.activeTheme||d.theme}         valueColor={C.textSecondary} />
+                          <KV label="XMLRPC_ENABLED"   value={d.xmlrpc?"YES":"NO"}            valueColor={d.xmlrpc?C.red:C.green} />
+                          <KV label="USER_ENUMERATION" value={d.userEnumeration?"YES":"NO"}   valueColor={d.userEnumeration?C.orange:C.green} />
+                          <KV label="README_EXPOSED"   value={d.readmeExposed?"YES":"NO"}     valueColor={d.readmeExposed?C.amber:C.green} />
+                          <KV label="DEBUG_LOG_EXPOSED" value={d.debugLogExposed?"YES":"NO"}  valueColor={d.debugLogExposed?C.red:C.green} />
+                          <KV label="USERS_FOUND"      value={users.length}                   valueColor={users.length>0?C.orange:C.textMuted} />
+                          <KV label="PLUGINS_FOUND"    value={plugins.length}                 valueColor={plugins.length>0?C.blue:C.textMuted} />
+                          <KV label="THEMES_FOUND"     value={themes.length}                  valueColor={C.textMuted} />
+                          <AutoKV obj={d} skipKeys={["riskScore","version","versionOutdated","activeTheme","theme","users","plugins","themes","vulnerabilities","xmlrpc","userEnumeration","readmeExposed","debugLogExposed"]} />
+                          {users.length > 0 && (
+                            <>
+                              <SubHead>Enumerated Users ({users.length})</SubHead>
+                              <div style={{ display:"flex", flexWrap:"wrap", gap:"4px" }}>
+                                {users.map((u,i) => <Tag key={i} color={C.orange}>{typeof u==="object"?(u.login||u.name||JSON.stringify(u)):u}</Tag>)}
+                              </div>
+                            </>
+                          )}
+                          {plugins.length > 0 && (
+                            <>
+                              <SubHead>Plugins ({plugins.length})</SubHead>
+                              {plugins.map((p,i) => (
+                                <div key={i} style={{ marginBottom:"8px", padding:"10px 12px", background:p.vulnerable?C.redBg:C.bg, border:`1px solid ${p.vulnerable?C.redBorder:C.border}`, borderRadius:"4px" }}>
+                                  <KV label="NAME"     value={p.name||p.slug} valueColor={C.blue} />
+                                  <KV label="VERSION"  value={p.version}      valueColor={p.outdated?C.red:C.textSecondary} />
+                                  <KV label="OUTDATED" value={p.outdated?"YES":"NO"} valueColor={p.outdated?C.red:C.green} />
+                                  <KV label="CVES"     value={Array.isArray(p.cves)?p.cves.join(", "):p.cves} valueColor={C.red} />
+                                  <AutoKV obj={p} skipKeys={["name","slug","version","outdated","cves","vulnerable"]} />
+                                </div>
+                              ))}
+                            </>
+                          )}
+                          {themes.length > 0 && (
+                            <>
+                              <SubHead>Themes ({themes.length})</SubHead>
+                              {themes.map((t,i) => (
+                                <div key={i} style={{ marginBottom:"6px", padding:"8px 12px", background:C.bg, border:`1px solid ${C.border}`, borderRadius:"4px" }}>
+                                  <KV label="NAME"    value={t.name||t.slug} valueColor={C.blue} />
+                                  <KV label="VERSION" value={t.version}      valueColor={C.textSecondary} />
+                                  <AutoKV obj={t} skipKeys={["name","slug","version"]} />
+                                </div>
+                              ))}
+                            </>
+                          )}
+                          {vulns.length > 0 && (
+                            <>
+                              <SubHead>CVEs / Vulnerabilities ({vulns.length})</SubHead>
+                              {vulns.map((vuln,i) => (
+                                <div key={i} style={{ marginBottom:"12px", padding:"12px 14px", background:riskBg(vuln.severity), border:`1px solid ${riskBorder(vuln.severity)}`, borderLeft:`3px solid ${riskAccent(vuln.severity)}`, borderRadius:"0 6px 6px 0" }}>
+                                  <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"8px" }}>
+                                    <RiskChip level={vuln.severity} />
+                                    <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:"13px", color:C.text }}>{vuln.title||vuln.name}</span>
+                                  </div>
+                                  <KV label="CVE"         value={vuln.cve}         valueColor={C.red} />
+                                  <KV label="CVSS"        value={vuln.cvss}        valueColor={C.orange} />
+                                  <KV label="COMPONENT"   value={vuln.component}   valueColor={C.blue} />
+                                  <KV label="FIXED_IN"    value={vuln.fixedIn}     valueColor={C.green} />
+                                  <KV label="DESCRIPTION" value={vuln.description} valueColor={C.textMuted} mono={false} />
+                                  <AutoKV obj={vuln} skipKeys={["title","name","severity","cve","cvss","component","fixedIn","description"]} />
+                                </div>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })() : <Mono color={C.textMuted}>Target is not running WordPress or no issues detected.</Mono>}
+                  </ModuleBlock>
+
+                </div>
+              );
+            })()}
+
+            {/* PDF */}
+            <div style={{ textAlign:"center", paddingTop:"36px", paddingBottom:"16px" }}>
+              <button onClick={downloadPDF} style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:"15px", letterSpacing:"0.1em", textTransform:"uppercase", color:C.white, background:C.orange, border:"none", padding:"14px 32px", borderRadius:"4px", cursor:"pointer", display:"inline-flex", alignItems:"center", gap:"10px", boxShadow:`0 4px 16px ${C.orange}40`, transition:"all 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow=`0 8px 24px ${C.orange}50`; }}
+                onMouseLeave={e => { e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow=`0 4px 16px ${C.orange}40`; }}>
+                <FaFileDownload /> Download Full PDF Report
               </button>
             </div>
           </div>
         )}
-        <div style={{ height: "60px" }} />
+        <div style={{ height:"60px" }} />
       </div>
     </div>
   );
