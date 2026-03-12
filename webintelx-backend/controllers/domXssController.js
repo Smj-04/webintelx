@@ -15,7 +15,12 @@ exports.scanDOMXSS = async (req, res) => {
 
   try {
     console.log(`DOM-Based XSS scan requested for: ${url}`);
-    const result = await scanDOMXSS(url);
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("DOM XSS scan exceeded 4 minute limit")), 240000)
+    );
+
+    const result = await Promise.race([scanDOMXSS(url), timeoutPromise]);
 
     console.log(`DOM-Based XSS scan completed. Vulnerable: ${result.vulnerable}`);
 

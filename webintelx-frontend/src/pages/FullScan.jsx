@@ -1,3 +1,5 @@
+//fullscan.jsx - A comprehensive, detailed report of all reconnaissance and intelligence findings related to the target, including technology fingerprinting, open ports, HTTP headers, OSINT data, and more. This is the "kitchen sink" page where we dump every useful piece of info we can find in a clean, organized way for analysts to pore over.
+
 import { useState, useRef } from "react";
 import axios from "axios";
 import {
@@ -452,11 +454,16 @@ export default function FullScan() {
     setIsScanning(true); setScanDone(false); setScanResult(null); setError(null); setIsPaused(false);
     setTimeout(() => loaderRef.current?.scrollIntoView({ behavior:"smooth" }), 100);
     try {
-      const resp = await axios.post("http://localhost:5000/api/fullscan", { url:input }, { timeout:0 });
-      setScanResult(resp.data); setScanDone(true);
-    } catch (err) {
-      setError(err.response ? err.response.data.error||"Invalid target" : "Backend not reachable.");
-    } finally { setIsScanning(false); setIsPaused(false); }
+          const resp = await axios.post("http://localhost:5000/api/fullscan", { url:input }, { timeout:0 });
+          setScanResult(resp.data);
+          setScanDone(true);
+          setIsScanning(false);
+          setIsPaused(false);
+        } catch (err) {
+          setError(err.response ? err.response.data.error||"Invalid target" : "Backend not reachable.");
+          setIsScanning(false);
+          setIsPaused(false);
+        }
   };
 
   const downloadPDF = async () => {
@@ -585,7 +592,7 @@ export default function FullScan() {
         )}
 
         {/* RESULTS */}
-        {scanDone && !isScanning && (
+        {scanDone && !isScanning && scanResult && (
           <div style={{ animation:"fadeUp 0.5s ease both", paddingBottom:"100px" }}>
 
             <div style={{ background:C.greenBg, border:`1px solid ${C.greenBorder}`, borderLeft:`4px solid ${C.green}`, borderRadius:"0 8px 8px 0", padding:"20px 28px", marginBottom:"28px" }}>

@@ -8,6 +8,15 @@ const { scanXSS } = require("../utils/xssScanner");
 const XSS_PARAMS = ["q", "search", "s", "id", "page", "test"];
 const MAX_TESTS = 50;
 
+// Pages that are known false positives or irrelevant for XSS
+const FALSE_POSITIVE_PATHS = [
+  /phpinfo/i, /phpmyadmin/i, /adminer/i,
+  /logout/i,  /setup/i,     /install/i,
+  /about/i,   /readme/i,    /license/i,
+  /\.css$/i,  /\.js$/i,     /\.png$/i,
+  /\.jpg$/i,  /\.gif$/i,    /\.ico$/i,
+];
+
 exports.runAutoXSSScan = async (req, res) => {
   const { url } = req.body;
 
@@ -82,41 +91,57 @@ exports.runAutoXSSScan = async (req, res) => {
       // skip non-html endpoints
       if (!testUrl.match(/\.(php|html|htm|asp|aspx|jsp)?(\?|$)/i)) continue;
 
+      // skip known false-positive pages
+      if (FALSE_POSITIVE_PATHS.some(p => p.test(testUrl))) continue;
+
       testedEndpoints++;
 
       try {
         const findings = await scanXSS(testUrl);
-        if (findings.length > 0) {
-          // Use the actual vulnerable URL from findings, not the test URL
-          // Group findings by their actual submit URL
-          const byActualUrl = {};
-          for (const finding of findings) {
-            const actualUrl = finding.url || testUrl;
-            if (!byActualUrl[actualUrl]) {
-              byActualUrl[actualUrl] = [];
-            }
-            byActualUrl[actualUrl].push(finding);
-          }
 
-          for (const [actualUrl, urlFindings] of Object.entries(byActualUrl)) {
-            // Check if this actual URL was already reported
-            const alreadyReported = vulnerableEndpoints.some(e => e.url === actualUrl);
-            if (!alreadyReported) {
-              vulnerableEndpoints.push({
-                url: actualUrl,
-                findings: urlFindings,
-              });
+        // Only care about High confidence findings — Low = likely safe (encoded chars)
+        const highFindings = findings.filter(f => f.confidence === "High");
+
+        if (highFindings.length > 0) {
+          // Group by base URL (strip payload) + param to avoid duplicates
+          for (const finding of highFindings) {
+            const actualUrl = finding.url || testUrl;
+
+            // Build a clean dedup key: base path + param name only
+            let dedupKey;
+            try {
+              const u = new URL(actualUrl);
+              dedupKey = `${u.origin}${u.pathname}::${finding.parameter}`;
+            } catch {
+              dedupKey = `${actualUrl}::${finding.parameter}`;
             }
+
+            // Skip if we already reported this endpoint+param combo
+            const alreadyReported = vulnerableEndpoints.some(e => e._dedupKey === dedupKey);
+            if (alreadyReported) continue;
+
+            vulnerableEndpoints.push({
+              url: actualUrl,
+              param: finding.parameter,
+              payload: finding.payload,
+              confidence: finding.confidence,
+              evidence: finding.evidence,
+              findings: [finding],
+              _dedupKey: dedupKey,
+            });
           }
         }
       } catch {}
     }
 
+    // Strip internal dedup key before sending to frontend
+    const cleanEndpoints = vulnerableEndpoints.map(({ _dedupKey, ...rest }) => rest);
+
     return res.json({
       success: true,
       base,
       testedEndpoints,
-      vulnerableEndpoints,
+      vulnerableEndpoints: cleanEndpoints,
     });
   } catch (err) {
     console.error("Auto XSS Scan Error:", err);

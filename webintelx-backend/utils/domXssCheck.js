@@ -17,8 +17,8 @@ const { JSDOM } = require("jsdom");
 const { URL } = require("url");
 
 const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36";
-const PAGE_TIMEOUT = 8000;   // 8s per page — fast enough, generous enough
-const SCAN_TIMEOUT = 150000; // 2.5 min total — covers crawler + multi-page puppeteer
+const PAGE_TIMEOUT = 15000;  // 15s per page
+const SCAN_TIMEOUT = 280000; // 3 min total
 
 // Focused payload list — best coverage, minimal count
 // Each tests a different sink type
@@ -127,22 +127,51 @@ function buildTestUrls(baseUrl, payload) {
   // Hash injection — most common DOM XSS vector
   urls.push(`${base}/#${payload}`);
 
-  // Top 4 most common reflected params only
-  const commonParams = ["q", "search", "input", "query"];
+  // Expanded param list — includes DVWA-style and common app params
+  const commonParams = [
+    "q", "search", "input", "query",
+    "default", "lang", "page", "name",
+    "msg", "text", "data", "value", "var",
+  ];
   for (const param of commonParams) {
     urls.push(`${base}/?${param}=${encodeURIComponent(payload)}`);
   }
 
-  return urls; // 5 URLs per payload max
+  return urls;
 }
 
 /**
  * Core Puppeteer-based DOM XSS scanner
  * Launches real Chrome, injects payloads, listens for alert() execution
  */
+// Quick pre-check — if page redirects to login, skip puppeteer entirely
+async function isAccessible(url) {
+  try {
+    const res = await axios.get(url, {
+      timeout: 8000,
+      maxRedirects: 5,
+      validateStatus: () => true,
+      headers: { "User-Agent": USER_AGENT },
+    });
+    const finalUrl = res.request?.res?.responseUrl || url;
+    // If redirected to a login page, skip
+    if (/login|signin|auth/i.test(finalUrl)) return false;
+    // If page returned login form content
+    if (typeof res.data === "string" && /name=["']?password["']?/i.test(res.data)) return false;
+    return res.status < 500;
+  } catch { return false; }
+}
+
 async function puppeteerScan(url) {
   const findings = [];
   let browser = null;
+
+  // Skip pages behind auth walls
+  const accessible = await isAccessible(url);
+  if (!accessible) {
+    console.log(`[DOM XSS] Skipping ${url} — redirects to login or inaccessible`);
+    return [];
+  }
 
   console.log(`[DOM XSS] Launching headless Chrome for: ${url}`);
 
@@ -342,6 +371,23 @@ async function staticScan(url) {
  * Discovers linked pages from a page (same origin, shallow crawl)
  * Used to find subpages like /level1/frame that have actual XSS
  */
+// Pages that waste time — auth walls, logout, setup
+const SKIP_PATH_PATTERNS = [
+  /login/i, /logout/i, /signin/i, /signup/i,
+  /register/i, /setup/i, /install/i, /phpinfo/i,
+  /password/i, /forgot/i, /reset/i,
+  /upload/i, /brute/i, /captcha/i, /fi\//i,
+  /sqli/i, /blind/i, /weak_id/i, /javascript/i,
+  /about/i, /instructions/i, /security/i,
+];
+
+function shouldSkipUrl(url) {
+  try {
+    const path = new URL(url).pathname;
+    return SKIP_PATH_PATTERNS.some(p => p.test(path));
+  } catch { return false; }
+}
+
 async function discoverLinkedPages(url) {
   const pages = new Set();
   try {
@@ -354,7 +400,7 @@ async function discoverLinkedPages(url) {
     dom.window.document.querySelectorAll("a[href]").forEach(el => {
       try {
         const resolved = new URL(el.getAttribute("href"), url);
-        if (resolved.origin === base.origin) {
+        if (resolved.origin === base.origin && !shouldSkipUrl(resolved.toString())) {
           resolved.search = "";
           resolved.hash = "";
           pages.add(resolved.toString());
@@ -412,9 +458,18 @@ async function scanDOMXSS(inputUrl) {
 
   // Discover linked subpages to scan (e.g. /level1/frame, /app, /search)
   const linkedPages = await discoverLinkedPages(url);
-  const allTargets = [url, ...linkedPages];
-  console.log(`[DOM XSS] Will test ${allTargets.length} page(s): ${allTargets.join(", ")}`);
+const filteredLinked = linkedPages.filter(p => !shouldSkipUrl(p));
 
+  // Prioritize pages that are likely to have XSS — put them first
+  const XSS_PRIORITY_PATTERNS = [/xss/i, /dom/i, /inject/i, /search/i, /query/i, /input/i, /reflect/i];
+  const prioritized = filteredLinked.sort((a, b) => {
+    const aScore = XSS_PRIORITY_PATTERNS.some(p => p.test(a)) ? 0 : 1;
+    const bScore = XSS_PRIORITY_PATTERNS.some(p => p.test(b)) ? 0 : 1;
+    return aScore - bScore;
+  });
+
+  const allTargets = [url, ...prioritized].slice(0, 8);
+  console.log(`[DOM XSS] Will test ${allTargets.length} page(s): ${allTargets.join(", ")}`);
   // === PRIMARY: Puppeteer browser-based scan ===
   try {
     const timeoutPromise = new Promise((_, reject) =>
