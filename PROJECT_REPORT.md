@@ -1,7 +1,7 @@
 # WebIntelX Project Report
 
 ## Overview
-WebIntelX is a modular web security toolkit that provides fast reconnaissance, deep vulnerability scanning, phishing detection with ML, a password strength hardener, and AI-generated summaries. The repository hosts four collaborating apps:
+WebIntelX is a modular web security toolkit that provides fast reconnaissance, deep vulnerability scanning, phishing detection with ML, a password strength hardener, and detailed summaries. The repository hosts four collaborating apps:
 - webintelx-backend (Node/Express): scanning orchestration and vulnerability modules (REST API on port 5000)
 - webintelx-frontend (React): main UI for quick/full scans and results
 - Phishing/phishing-site-or-not (Python): phishing classifier CLI used by the backend

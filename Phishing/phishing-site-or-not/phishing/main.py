@@ -330,22 +330,36 @@ def run_cli():
             except Exception:
                 domain_to_check = None
 
-            if not domain_to_check or not resolve_domain(domain_to_check):
-                sys.stdout.write(json.dumps({"url": url, "message": "No such site exists."}))
-                return
+        if not domain_to_check or not resolve_domain(domain_to_check):
+            sys.stdout.write(json.dumps({"url": url, "message": "No such site exists."}))
+            return
 
+        # HTTP reachability — generous timeout, multiple fallback strategies.
+        # Many legitimate sites reject HEAD, return 3xx, or are slow.
+        # We only hard-reject if ALL strategies fail AND DNS also fails.
+        _reachable = False
+        try:
+            resp = requests.head(url, timeout=10, allow_redirects=True,
+                                 headers={"User-Agent": "Mozilla/5.0"})
+            # 2xx, 3xx, 401, 403 all mean the server EXISTS
+            if resp.status_code < 500:
+                _reachable = True
+        except Exception:
+            pass
+
+        if not _reachable:
             try:
-                resp = requests.head(url, timeout=5, allow_redirects=True)
-                status = resp.status_code
-                if status >= 400:
-                    resp = requests.get(url, timeout=5, allow_redirects=True)
-                    status = resp.status_code
-                if status >= 400:
-                    sys.stdout.write(json.dumps({"url": url, "message": "Site not reachable."}))
-                    return
+                resp = requests.get(url, timeout=12, allow_redirects=True,
+                                    headers={"User-Agent": "Mozilla/5.0"})
+                if resp.status_code < 500:
+                    _reachable = True
             except Exception:
-                sys.stdout.write(json.dumps({"url": url, "message": "Site not reachable."}))
-                return
+                pass
+
+        if not _reachable:
+            # Final fallback: if DNS resolves, treat as reachable anyway
+            # (server may block bots but still exist)
+            _reachable = True  # DNS already confirmed above — trust it
 
         # ── Feature extraction ─────────────────────────────────────────────────
         features = extract_realtime_features(url)

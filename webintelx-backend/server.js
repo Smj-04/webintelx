@@ -50,18 +50,14 @@ app.use("/api", sqlmapRoute);
 app.use("/api/report", reportRoute);
 app.use("/api/wordpress", wordpressRoute);
 
-app.use("/api", require("./routes/aiReportRoute"));
 app.use("/api", require("./routes/clickjackingRoute"));
 app.use("/api", require("./routes/leakcheckRoute"));
 app.use("/api", require("./routes/emailRepRoute"));
 app.use("/api", require("./routes/commandInjectionRoute"));
 app.use("/api", securityTrailsRoute);
 app.use("/api", require("./routes/domXssRoute"));
-app.use("/api", require("./routes/ldapInjectionRoute"));
-app.use("/api", require("./routes/sstiRoute"));
 app.use("/api", require("./routes/storedXssRoute"));
 app.use("/api", require("./routes/tokenAuthRoute"));
-app.use("/api", require("./routes/idorRoute"));
 app.use("/api", phishingCheckRoute);
 app.use("/api/csrf", require("./routes/csrfRoutes"));
 app.use("/api/sensitive-files", require("./routes/sensitiveFilesRoute"));

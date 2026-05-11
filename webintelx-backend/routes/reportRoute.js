@@ -1,3 +1,5 @@
+// routes/reportRoute.js
+
 const express = require("express");
 const router = express.Router();
 const { generateQuickScanPDF, generateCustomScanPDF } = require("../controllers/reportController");

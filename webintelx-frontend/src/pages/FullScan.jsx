@@ -475,14 +475,7 @@ export default function FullScan() {
 
   const toggle = (key) => setExpanded(s => ({ ...s, [key]: !s[key] }));
 
-  const capabilities = [
-    { icon:<FaUserSecret style={{color:C.purple}}/>,   title:"Deep OSINT Enumeration",       desc:"Scrapes public records, social sources, leak databases, DNS history, WHOIS, emails & metadata.", accent:C.purple },
-    { icon:<FaNetworkWired style={{color:C.green}}/>,  title:"Infrastructure Reconnaissance", desc:"Maps subdomains, servers, CDN layers, firewalls, hosting providers & entry points.", accent:C.green },
-    { icon:<FaBug style={{color:C.orange}}/>,          title:"Vulnerability Assessment",      desc:"Detects SQLi, XSS (DOM/Stored/Reflected), Clickjacking, Command Injection & exposed sensitive files.", accent:C.orange },
-    { icon:<FaFingerprint style={{color:C.amber}}/>,   title:"Technology Fingerprinting",     desc:"Identifies CMS, frameworks, JS libraries, outdated components & vulnerable versions.", accent:C.amber },
-    { icon:<FaListUl style={{color:C.blue}}/>,         title:"Port & Service Mapping",        desc:"Performs deep port scans to fingerprint running services & detect outdated servers.", accent:C.blue },
-    { icon:<FaSearch style={{color:C.green}}/>,        title:"Malware & Phishing Indicators", desc:"Scans domain reputation, blocklists, suspicious redirects & malware hosting markers.", accent:C.green },
-  ];
+
 
   return (
     <div style={{ backgroundColor:C.bg, minHeight:"100vh", color:C.text }}>
@@ -542,13 +535,7 @@ export default function FullScan() {
           <div style={{ width:"48px", height:"3px", background:C.orange, borderRadius:"1px" }}/>
         </div>
 
-        {/* Capabilities */}
-        <div style={{ marginBottom:"52px", animation:"fadeUp 0.5s ease 0.2s both" }}>
-          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"11px", color:C.textXMuted, letterSpacing:"0.08em", marginBottom:"18px" }}>// what_full_scan_includes</div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(300px, 1fr))", gap:"12px" }}>
-            {capabilities.map((c,i) => <CapabilityCard key={i} {...c} />)}
-          </div>
-        </div>
+
 
         {/* Input */}
         <div style={{ background:C.white, border:`1px solid ${C.border}`, borderTop:`3px solid ${C.orange}`, borderRadius:"0 0 8px 8px", padding:"28px 32px", maxWidth:"600px", marginBottom:"28px", boxShadow:"0 2px 10px rgba(0,0,0,0.05)", animation:"fadeUp 0.5s ease 0.3s both" }}>

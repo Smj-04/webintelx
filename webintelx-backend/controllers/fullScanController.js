@@ -400,22 +400,40 @@ exports.fullScan = async (req, res) => {
     // ─────────────────────────────────────────────────────────────
     const [sqlResult, ...moduleResults] = await Promise.allSettled([
 
-      // SQLMap with pause support between endpoint iterations
+     // SQLMap with pause support + 7-minute overall cap
       (async () => {
+        const SQL_TOTAL_TIMEOUT = 7 * 60 * 1000; // 7 minutes hard cap for entire SQLi phase
+        const sqlStart = Date.now();
+ 
         const sqlFindings = [];
         for (const target of endpoints) {
+          // ── Hard cap: if 7 mins elapsed since SQLi started, stop immediately ──
+          if (Date.now() - sqlStart >= SQL_TOTAL_TIMEOUT) {
+            console.log(`[SQLi] Overall timeout reached (${SQL_TOTAL_TIMEOUT / 60000}m) — stopping endpoint loop`);
+            break;
+          }
+ 
           await waitIfPaused(scanId);
+ 
+          // Per-endpoint timeout = whichever is smaller:
+          // remaining budget OR 90s cap so one endpoint can't eat the whole budget
+          const remaining = SQL_TOTAL_TIMEOUT - (Date.now() - sqlStart);
+          const perEndpointTimeout = Math.min(90000, remaining);
+ 
+          if (perEndpointTimeout <= 0) break; // budget exhausted
+ 
           const resSql = await safePost(
             "http://localhost:5000/api/sqlmap",
             { url: target.url, param: target.param },
-            { timeout: 120000 }
+            { timeout: perEndpointTimeout }
           );
+ 
           if (resSql.ok && resSql.data?.vulnerable) {
-            console.log("SQLMap response data:", JSON.stringify(resSql.data));  // add temporarily
+            console.log("SQLMap response data:", JSON.stringify(resSql.data));
             sqlFindings.push({
-              url: resSql.data.url || target.url,
-              param: resSql.data.param || target.param,
-              databases: resSql.data.databases || resSql.data.dbs || resSql.data.extractedDatabases || []
+              url:       resSql.data.url       || target.url,
+              param:     resSql.data.param     || target.param,
+              databases: resSql.data.databases || resSql.data.dbs || resSql.data.extractedDatabases || [],
             });
             console.log("🔥 SQLi found — stopping endpoint loop early");
             break;
@@ -424,7 +442,7 @@ exports.fullScan = async (req, res) => {
         return sqlFindings;
       })(),
 
-      axios.post("http://localhost:5000/api/dom-xss",          { url: baseUrl }, { timeout: 600000 }),
+      axios.post("http://localhost:5000/api/dom-xss",          { url: baseUrl }, { timeout: 180000 }),
       axios.post("http://localhost:5000/api/stored-xss",       { url: baseUrl }, { timeout: 180000 }),
       axios.post("http://localhost:5000/api/autoxss", { url: baseUrl, endpoints: crawledLinks }, { timeout: 180000 }),
       axios.post("http://localhost:5000/api/clickjacking",     { url: baseUrl }, { timeout: 180000 }),

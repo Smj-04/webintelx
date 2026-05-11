@@ -1,3 +1,5 @@
+// controllers/reportController.js
+
 const PDFDocument = require("pdfkit");
 
 // ─────────────────────────────────────────────
@@ -151,6 +153,8 @@ exports.generateQuickScanPDF = async (req, res) => {
     res.setHeader("Content-Disposition", `attachment; filename="QuickScan-${target}.pdf"`);
     doc.pipe(res);
 
+    const selectedModules = req.body.selectedModules || scanData?.selectedModules || [];
+    const has = (m) => selectedModules.length === 0 || selectedModules.includes(m);
     const risk    = riskAssessment?.risk  || "LOW";
     const score   = riskAssessment?.score ?? 0;
     const findings = riskAssessment?.findings || [];
@@ -185,6 +189,7 @@ exports.generateQuickScanPDF = async (req, res) => {
     divider(doc);
 
     // ── SSL / TLS ──────────────────────────────
+    if (has("ssl")) {
     sectionTitle(doc, "SSL / TLS Certificate");
     const ssl = scanData.ssl || {};
     row(doc, "Status",        ssl.valid ? "[VALID]" : "[INVALID]", ssl.valid ? "#15803d" : "#b91c1c");
@@ -194,10 +199,12 @@ exports.generateQuickScanPDF = async (req, res) => {
     row(doc, "Valid To",      fmtDate(ssl.validTo));
     row(doc, "Days Remaining", ssl.daysRemaining ?? "N/A");
     if (!ssl.valid) bullet(doc, "HTTPS not enforced — data may be transmitted in plaintext", "#b91c1c");
-
+    }
     divider(doc);
 
     // ── SECURITY HEADERS ──────────────────────
+        if (has("headers")) {
+
     sectionTitle(doc, "Security Headers");
     const h = scanData.headers || {};
     row(doc, "Server",               h.server);
@@ -212,10 +219,12 @@ exports.generateQuickScanPDF = async (req, res) => {
       doc.moveDown(0.3);
       bullet(doc, `Missing headers: ${h.missingSecurityHeaders.join(", ")}`, "#b45309");
     }
-
+  }
     divider(doc);
 
     // ── TECHNOLOGY STACK ──────────────────────
+        if (has("wappalyzer")) {
+
     sectionTitle(doc, "Technology Stack (Wappalyzer)");
     const wap = scanData.wappalyzer || {};
     if (Object.keys(wap).length > 0) {
@@ -225,10 +234,12 @@ exports.generateQuickScanPDF = async (req, res) => {
     } else {
       doc.text("No technologies detected.");
     }
-
+  }
     divider(doc);
 
     // ── ATTACK SURFACE ────────────────────────
+        if (has("subdomains")) {
+
     sectionTitle(doc, "Attack Surface — Subdomains");
     const st = scanData.securityTrails || {};
     row(doc, "Subdomain Count", st.subdomainCount ?? 0);
@@ -239,10 +250,12 @@ exports.generateQuickScanPDF = async (req, res) => {
       st.subdomains.slice(0, 10).forEach(s => bullet(doc, s));
       if (st.subdomains.length > 10) bullet(doc, `... and ${st.subdomains.length - 10} more`);
     }
-
+  }
     divider(doc);
 
     // ── ENDPOINTS ─────────────────────────────
+        if (has("endpoints")) {
+
     sectionTitle(doc, "Parameterized Endpoints");
     const eps = scanData.endpoints || [];
     row(doc, "Total Found", eps.length);
@@ -251,10 +264,12 @@ exports.generateQuickScanPDF = async (req, res) => {
       eps.slice(0, 10).forEach(e => bullet(doc, e.url || fmt(e)));
       if (eps.length > 10) bullet(doc, `... and ${eps.length - 10} more`);
     }
-
+  }
     divider(doc);
 
     // ── OPEN PORTS ────────────────────────────
+        if (has("ports")) {
+
     sectionTitle(doc, "Network Ports");
     const ports = scanData.openPorts || [];
     if (ports.length > 0) {
@@ -262,10 +277,12 @@ exports.generateQuickScanPDF = async (req, res) => {
     } else {
       doc.text("No common ports detected as open.");
     }
-
+  }
     divider(doc);
 
     // ── DNS ───────────────────────────────────
+        if (has("dns")) {
+
     sectionTitle(doc, "DNS Intelligence");
     const dns = scanData.dns || {};
     row(doc, "Resolved",    dns.resolvedSuccessfully ? "YES" : "NO", dns.resolvedSuccessfully ? "#15803d" : "#b91c1c");
@@ -274,10 +291,12 @@ exports.generateQuickScanPDF = async (req, res) => {
     row(doc, "MX Records",  (dns.MX || []).length);
     row(doc, "NS Records",  (dns.NS || []).length);
     row(doc, "DNSSEC",      dns.dnssec);
-
+        }
     divider(doc);
 
     // ── WHOIS ─────────────────────────────────
+        if (has("whois")) {
+
     sectionTitle(doc, "WHOIS / Registration");
     const w = scanData.whois || {};
     row(doc, "Registrar",       w.registrar);
@@ -287,10 +306,12 @@ exports.generateQuickScanPDF = async (req, res) => {
     row(doc, "Last Updated",    fmtDate(w.updatedDate));
     row(doc, "DNSSEC",          w.dnssec);
     row(doc, "Nameservers",     (w.nameservers || []).slice(0, 4).join(", ") || "N/A");
-
+        }
     divider(doc);
 
     // ── TRACEROUTE / PING ─────────────────────
+        if (has("ping") || has("traceroute")) {
+
     sectionTitle(doc, "Network Reachability");
     const ping = scanData.ping || {};
     row(doc, "Reachable",     ping.reachable ? "YES" : "NO", ping.reachable ? "#15803d" : "#b91c1c");
@@ -301,10 +322,12 @@ exports.generateQuickScanPDF = async (req, res) => {
     row(doc, "Reachable Hops", tr.reachableHops ?? "N/A");
     row(doc, "Final Hop",     tr.finalHop || "Unknown");
     row(doc, "Avg Hop Latency", tr.avgLatency ? `${tr.avgLatency} ms` : "N/A");
-
+        }
     divider(doc);
 
     // ── ASN / GEOLOCATION ─────────────────────
+        if (has("asnGeo")) {
+
     sectionTitle(doc, "Host Intelligence — ASN & Geolocation");
     const geo = scanData.asnGeo || {};
     row(doc, "IP Address",  geo.ip);
@@ -314,10 +337,12 @@ exports.generateQuickScanPDF = async (req, res) => {
     row(doc, "Org",         geo.org);
     row(doc, "ASN",         geo.asn);
     row(doc, "Cloud Hosted", geo.isCloud ? `YES — ${geo.cloudProvider}` : "NO", geo.isCloud ? "#b45309" : "#15803d");
-
+        }
     divider(doc);
 
     // ── COOKIES ───────────────────────────────
+        if (has("cookies")) {
+
     sectionTitle(doc, "Cookie Security Analysis");
     const ck = scanData.cookies || {};
     row(doc, "Cookies Set",     ck.cookieCount ?? (ck.cookies || []).length);
@@ -332,19 +357,23 @@ exports.generateQuickScanPDF = async (req, res) => {
       doc.moveDown(0.3).text("Issues:");
       ck.issues.forEach(i => bullet(doc, i, "#b45309"));
     }
-
+  }
     divider(doc);
 
     // ── GREEN HOSTING ─────────────────────────
+        if (has("greenWeb")) {
+
     sectionTitle(doc, "Green / Sustainable Hosting");
     const gw = scanData.greenWeb || {};
     row(doc, "Green Verified", gw.green ? "[VERIFIED]" : "NOT VERIFIED", gw.green ? "#15803d" : "#6b7280");
     if (gw.hostedBy) row(doc, "Provider", gw.hostedBy);
     if (gw.partnerUrl) row(doc, "Provider Site", gw.partnerUrl);
-
+        }
     divider(doc);
 
     // ── EMAIL INTELLIGENCE ────────────────────
+        if (has("email")) {
+
     sectionTitle(doc, "Email Intelligence");
     const ei = scanData.emailIntelligence || {};
 
@@ -369,10 +398,12 @@ exports.generateQuickScanPDF = async (req, res) => {
         });
       }
     }
-
+  }
     divider(doc);
 
     // ── THREAT INTELLIGENCE ───────────────────
+        if (has("safeBrowsing") || has("virusTotal") || has("shodan")) {
+
     sectionTitle(doc, "Threat Intelligence");
 
     subTitle(doc, "Google Safe Browsing");
@@ -423,7 +454,7 @@ exports.generateQuickScanPDF = async (req, res) => {
     } else {
       doc.text(`Not available: ${sh.note || "API key not configured"}`);
     }
-
+  }
     divider(doc);
 
     // ── VULNERABILITY CLASSIFICATION ──────────
@@ -485,8 +516,7 @@ exports.generateQuickScanPDF = async (req, res) => {
 // CUSTOM SCAN PDF — reuses same layout as QuickScan
 // ─────────────────────────────────────────────
 exports.generateCustomScanPDF = async (req, res) => {
-  // Custom scan has the same data shape as QuickScan + vulnerabilities
-  // Reuse generateQuickScanPDF logic with a different title
   req.body._scanType = "Custom Scan";
+  req.body.selectedModules = req.body.selectedModules || req.body.scanData?.selectedModules || [];
   return exports.generateQuickScanPDF(req, res);
 };

@@ -1,9 +1,9 @@
-const scanner         = require("../utils/scanner");
-const cleanUrl        = require("../utils/cleanUrl");
+const scanner           = require("../utils/scanner");
+const cleanUrl          = require("../utils/cleanUrl");
 const emailIntelligence = require("../utils/emailRepCheck");
-const dns             = require("dns").promises;
-const axios           = require("axios");
-const { exec }        = require("child_process");
+const dns               = require("dns").promises;
+const axios             = require("axios");
+const { exec }          = require("child_process");
 
 // ── Active scan state tracker ─────────────────────────────────────────────────
 const scanStates = {}; // scanId → 'running' | 'stopped'
@@ -17,9 +17,6 @@ exports.stopCustomScan = (req, res) => {
   }
   return res.status(404).json({ error: "Scan not found or already completed" });
 };
-
-// ─── Re-use all parsers & OSINT functions from quickScanController ────────────
-// (copy-imported here so customScan is self-contained)
 
 // ── Target validation ──────────────────────────────────────────────────────────
 async function validateTarget(url) {
@@ -83,15 +80,15 @@ function parseHeaders(raw) {
   if (!raw || typeof raw !== "object") return { missingSecurityHeaders: [], exposedInfo: [], raw: {} };
   const headers = raw;
   const get = (k) => headers[k] || headers[k.toLowerCase()] || null;
-  const server        = get("server");
-  const poweredBy     = get("x-powered-by");
+  const server          = get("server");
+  const poweredBy       = get("x-powered-by");
   const strictTransport = get("strict-transport-security");
-  const xFrameOptions = get("x-frame-options");
-  const csp           = get("content-security-policy");
-  const referrer      = get("referrer-policy");
-  const cors          = get("access-control-allow-origin");
-  const xssProtection = get("x-xss-protection");
-  const missingHeaders = [];
+  const xFrameOptions   = get("x-frame-options");
+  const csp             = get("content-security-policy");
+  const referrer        = get("referrer-policy");
+  const cors            = get("access-control-allow-origin");
+  const xssProtection   = get("x-xss-protection");
+  const missingHeaders  = [];
   if (!strictTransport) missingHeaders.push("Strict-Transport-Security (HSTS)");
   if (!xFrameOptions)   missingHeaders.push("X-Frame-Options");
   if (!csp)             missingHeaders.push("Content-Security-Policy");
@@ -158,11 +155,11 @@ function parseWhois(raw) {
       return Array.isArray(row?.[3]) ? row[3][0] : row?.[3] || null;
     };
     const getEvent = (type) => d.events?.find(e => e.eventAction === type)?.eventDate?.split("T")[0] || null;
-    const registrarEntity = d.entities?.find(e => e.roles?.includes("registrar"));
+    const registrarEntity  = d.entities?.find(e => e.roles?.includes("registrar"));
     const registrantEntity = d.entities?.find(e => e.roles?.includes("registrant"));
     const nameservers = (d.nameservers || []).map(n => n.ldhName?.toLowerCase()).filter(Boolean);
     const country = vcardField(registrantEntity, "adr")?.[6] || null;
-    const dnssec = d.secureDNS?.delegationSigned ? "signedDelegation" : d.secureDNS ? "unsigned" : "Unknown";
+    const dnssec  = d.secureDNS?.delegationSigned ? "signedDelegation" : d.secureDNS ? "unsigned" : "Unknown";
     return {
       registrar: vcardField(registrarEntity, "fn") || registrarEntity?.handle || "Unknown",
       creationDate: getEvent("registration"),
@@ -213,14 +210,14 @@ async function shodanLookup(hostname) {
     if (cfRanges.some(r => ip.startsWith(r))) return { available: true, ip, note: "Origin IP hidden behind Cloudflare proxy — Shodan data reflects Cloudflare infrastructure, not origin server", ports: [], vulns: [], vulnDetails: [], vulnCount: 0, kevCount: 0, criticalCount: 0, tags: ["cloudflare-proxy"], org: "Cloudflare, Inc.", risk: "LOW" };
     const res = await axios.get(`https://api.shodan.io/shodan/host/${ip}?key=${apiKey}`, { timeout: 8000 });
     const d = res.data;
-    const ports = d.ports || [];
+    const ports   = d.ports || [];
     const vulnIds = Array.isArray(d.vulns) ? d.vulns : Object.keys(d.vulns || {});
     const mergedVulnMap = {};
     (d.data || []).forEach(service => { if (service.vulns && typeof service.vulns === "object") Object.assign(mergedVulnMap, service.vulns); });
-    const vulnDetails = vulnIds.map(id => { const v = mergedVulnMap[id] || {}; return { id, cvss: v.cvss || null, epss: v.epss || null, kev: !!(v.kev || v.epss?.kev), summary: v.summary || null }; });
-    const kevCount = vulnDetails.filter(v => v.kev).length;
-    const criticalCount = vulnDetails.filter(v => v.cvss >= 9).length;
-    const isCloud = ["Amazon","AWS","Google","DigitalOcean","Azure","Microsoft","Cloudflare","Linode","Vultr"].some(p => (d.org || "").includes(p));
+    const vulnDetails    = vulnIds.map(id => { const v = mergedVulnMap[id] || {}; return { id, cvss: v.cvss || null, epss: v.epss || null, kev: !!(v.kev || v.epss?.kev), summary: v.summary || null }; });
+    const kevCount       = vulnDetails.filter(v => v.kev).length;
+    const criticalCount  = vulnDetails.filter(v => v.cvss >= 9).length;
+    const isCloud        = ["Amazon","AWS","Google","DigitalOcean","Azure","Microsoft","Cloudflare","Linode","Vultr"].some(p => (d.org || "").includes(p));
     return { available: true, ip, org: d.org || null, asn: d.asn || null, isp: d.isp || null, country: d.country_name || null, city: d.city || null, ports, portCount: ports.length, vulnCount: vulnIds.length, kevCount, criticalCount, vulnDetails, lastSeen: d.last_update || null, tags: d.tags || [], isCloud, risk: kevCount > 0 ? "CRITICAL" : vulnIds.length > 0 ? "HIGH" : ports.length > 10 ? "MEDIUM" : "LOW" };
   } catch (err) {
     if (err.response?.status === 404) return { available: true, ip: null, note: "Host not indexed by Shodan", ports: [], vulns: [], vulnDetails: [], vulnCount: 0, kevCount: 0, criticalCount: 0, risk: "LOW" };
@@ -248,7 +245,7 @@ async function virusTotalScan(domain) {
   if (!apiKey) return { available: false, note: "VIRUSTOTAL_API_KEY not set" };
   try {
     const res = await axios.get(`https://www.virustotal.com/api/v3/domains/${domain}`, { headers: { "x-apikey": apiKey }, timeout: 10000 });
-    const attr = res.data?.data?.attributes || {};
+    const attr  = res.data?.data?.attributes || {};
     const stats = attr.last_analysis_stats || {};
     const total = Object.values(stats).reduce((a, b) => a + b, 0);
     const malicious = stats.malicious || 0;
@@ -319,36 +316,22 @@ async function greenWebCheck(hostname) {
   }
 }
 
-// ── Known latest versions table (update periodically) ─────────────────────────
+// ── Known latest versions table ────────────────────────────────────────────────
 const LATEST_VERSIONS = {
-  "jQuery":        { latest: "3.7.1",  majorSafe: 3 },
-  "Bootstrap":     { latest: "5.3.3",  majorSafe: 5 },
-  "React":         { latest: "18.3.1", majorSafe: 18 },
-  "Angular":       { latest: "18.0.0", majorSafe: 18 },
-  "Vue.js":        { latest: "3.4.27", majorSafe: 3 },
-  "Next.js":       { latest: "14.2.3", majorSafe: 14 },
-  "Nuxt.js":       { latest: "3.12.3", majorSafe: 3 },
-  "Ember.js":      { latest: "5.9.0",  majorSafe: 5 },
-  "Backbone.js":   { latest: "1.6.0",  majorSafe: 1 },
-  "Lodash":        { latest: "4.17.21",majorSafe: 4 },
-  "Moment.js":     { latest: "2.30.1", majorSafe: 2 },
-  "Axios":         { latest: "1.7.2",  majorSafe: 1 },
-  "Chart.js":      { latest: "4.4.3",  majorSafe: 4 },
-  "D3.js":         { latest: "7.9.0",  majorSafe: 7 },
-  "Three.js":      { latest: "0.166.0",majorSafe: 0 },
-  "Swiper":        { latest: "11.1.4", majorSafe: 11 },
-  "GSAP":          { latest: "3.12.5", majorSafe: 3 },
-  "Tailwind CSS":  { latest: "3.4.4",  majorSafe: 3 },
-  "Font Awesome":  { latest: "6.5.2",  majorSafe: 6 },
-  "WordPress":     { latest: "6.5.5",  majorSafe: 6 },
-  "Drupal":        { latest: "10.3.0", majorSafe: 10 },
-  "Joomla":        { latest: "5.1.2",  majorSafe: 5 },
-  "PHP":           { latest: "8.3.0",  majorSafe: 8 },
-  "nginx":         { latest: "1.27.0", majorSafe: 1 },
-  "Apache":        { latest: "2.4.62", majorSafe: 2 },
-  "OpenSSL":       { latest: "3.3.1",  majorSafe: 3 },
-  "jQuery UI":     { latest: "1.13.3", majorSafe: 1 },
-  "jQuery Migrate":{ latest: "3.4.1",  majorSafe: 3 },
+  "jQuery": { latest: "3.7.1", majorSafe: 3 }, "Bootstrap": { latest: "5.3.3", majorSafe: 5 },
+  "React": { latest: "18.3.1", majorSafe: 18 }, "Angular": { latest: "18.0.0", majorSafe: 18 },
+  "Vue.js": { latest: "3.4.27", majorSafe: 3 }, "Next.js": { latest: "14.2.3", majorSafe: 14 },
+  "Nuxt.js": { latest: "3.12.3", majorSafe: 3 }, "Ember.js": { latest: "5.9.0", majorSafe: 5 },
+  "Backbone.js": { latest: "1.6.0", majorSafe: 1 }, "Lodash": { latest: "4.17.21", majorSafe: 4 },
+  "Moment.js": { latest: "2.30.1", majorSafe: 2 }, "Axios": { latest: "1.7.2", majorSafe: 1 },
+  "Chart.js": { latest: "4.4.3", majorSafe: 4 }, "D3.js": { latest: "7.9.0", majorSafe: 7 },
+  "Three.js": { latest: "0.166.0", majorSafe: 0 }, "Swiper": { latest: "11.1.4", majorSafe: 11 },
+  "GSAP": { latest: "3.12.5", majorSafe: 3 }, "Tailwind CSS": { latest: "3.4.4", majorSafe: 3 },
+  "Font Awesome": { latest: "6.5.2", majorSafe: 6 }, "WordPress": { latest: "6.5.5", majorSafe: 6 },
+  "Drupal": { latest: "10.3.0", majorSafe: 10 }, "Joomla": { latest: "5.1.2", majorSafe: 5 },
+  "PHP": { latest: "8.3.0", majorSafe: 8 }, "nginx": { latest: "1.27.0", majorSafe: 1 },
+  "Apache": { latest: "2.4.62", majorSafe: 2 }, "OpenSSL": { latest: "3.3.1", majorSafe: 3 },
+  "jQuery UI": { latest: "1.13.3", majorSafe: 1 }, "jQuery Migrate": { latest: "3.4.1", majorSafe: 3 },
 };
 
 function parseVersion(v) {
@@ -358,7 +341,6 @@ function parseVersion(v) {
 }
 
 function compareVersions(a, b) {
-  // returns negative if a < b (a is older)
   if (a.major !== b.major) return a.major - b.major;
   if (a.minor !== b.minor) return a.minor - b.minor;
   return a.patch - b.patch;
@@ -368,32 +350,23 @@ function analyzeVersions(wappalyzerRaw) {
   const result = {};
   for (const [tech, version] of Object.entries(wappalyzerRaw)) {
     const knownInfo = LATEST_VERSIONS[tech] || LATEST_VERSIONS[tech.split(" ")[0]];
-    const detected = parseVersion(version);
-    if (!knownInfo || !detected) {
-      result[tech] = { version: version || "Unknown", outdated: false, latest: null, severity: null };
-      continue;
-    }
+    const detected  = parseVersion(version);
+    if (!knownInfo || !detected) { result[tech] = { version: version || "Unknown", outdated: false, latest: null, severity: null }; continue; }
     const latest = parseVersion(knownInfo.latest);
-    const isOld = compareVersions(detected, latest) < 0;
-    // Severity: CRITICAL if major version behind, HIGH if minor, LOW if patch
+    const isOld  = compareVersions(detected, latest) < 0;
     let severity = null;
     if (isOld) {
       if (detected.major < knownInfo.majorSafe) severity = "CRITICAL";
-      else if (detected.major < latest.major)    severity = "HIGH";
-      else if (detected.minor < latest.minor)    severity = "HIGH";
-      else                                        severity = "LOW";
+      else if (detected.major < latest.major)   severity = "HIGH";
+      else if (detected.minor < latest.minor)   severity = "HIGH";
+      else                                       severity = "LOW";
     }
-    result[tech] = {
-      version: version,
-      latest: knownInfo.latest,
-      outdated: isOld,
-      severity,
-    };
+    result[tech] = { version, latest: knownInfo.latest, outdated: isOld, severity };
   }
   return result;
 }
 
-// ── Wappalyzer (Python script — same as QuickScan) ────────────────────────────
+// ── Wappalyzer ─────────────────────────────────────────────────────────────────
 function runWappalyzer(url) {
   return new Promise((resolve) => {
     exec(`python utils/wappalyzer_scan.py ${url}`, (err, stdout) => {
@@ -412,7 +385,6 @@ function calculateRisk(output) {
   const mh = output.headers?.missingSecurityHeaders || [];
   if (mh.length >= 3)                                         { score += 2; findings.push(`${mh.length} critical security headers missing`); }
   if (output.headers?.poweredBy?.includes("PHP/5"))           { score += 3; findings.push("Outdated PHP version exposed"); }
-  // Outdated technologies
   const outdatedCritical = Object.entries(output.wappalyzer || {}).filter(([,v]) => v.outdated && v.severity === "CRITICAL");
   const outdatedHigh     = Object.entries(output.wappalyzer || {}).filter(([,v]) => v.outdated && v.severity === "HIGH");
   if (outdatedCritical.length > 0) { score += 3; findings.push(`${outdatedCritical.length} critically outdated technolog${outdatedCritical.length>1?"ies":"y"}: ${outdatedCritical.map(([t])=>t).join(", ")}`); }
@@ -436,6 +408,17 @@ function calculateRisk(output) {
   if (output.vulnerabilities?.clickjacking?.vulnerable)       { score += 2; findings.push("Clickjacking vulnerability detected"); }
   if (output.vulnerabilities?.openRedirect?.found)            { score += 2; findings.push("Open Redirect vulnerability detected"); }
   if (output.vulnerabilities?.sensitiveFiles?.found)          { score += 3; findings.push("Sensitive files exposed"); }
+  // ── NEW: CORS + WordPress ──────────────────────────────────────────────────
+  if (output.vulnerabilities?.cors?.found) {
+    const s = output.vulnerabilities.cors.details?.summary;
+    if (s?.critical > 0) { score += 4; findings.push("Critical CORS misconfiguration detected"); }
+    else { score += 2; findings.push("CORS misconfiguration detected"); }
+  }
+  if (output.vulnerabilities?.wordpress?.found) {
+    const lvl = output.vulnerabilities.wordpress.details?.riskScore?.level;
+    if (lvl === "CRITICAL" || lvl === "HIGH") { score += 3; findings.push("High-risk WordPress vulnerabilities detected"); }
+    else { score += 1; findings.push("WordPress security issues detected"); }
+  }
   const risk = score >= 12 ? "CRITICAL" : score >= 8 ? "HIGH" : score >= 4 ? "MEDIUM" : "LOW";
   return { risk, score, findings };
 }
@@ -455,55 +438,51 @@ exports.customScan = async (req, res) => {
   catch { return res.status(400).json({ error: "Invalid URL" }); }
   const cleanedUrl = cleanUrl(url);
 
-  // Validate target
   const validation = await validateTarget(url);
   if (!validation.valid) return res.status(400).json({ error: validation.error });
 
-  // ── Assign scan ID and track state ───────────────────────────────────────────
   const scanId = Date.now().toString();
   scanStates[scanId] = "running";
   const isStopped = () => scanStates[scanId] === "stopped";
 
-  // Send scanId to frontend immediately so it can stop
   res.setHeader("X-Scan-Id", scanId);
 
-  const buildAndRespond = (output, stopped = false) => {
-    Object.keys(output).forEach(k => output[k] === undefined && delete output[k]);
-    const riskAssessment = calculateRisk(output);
-    delete scanStates[scanId];
-    return res.json({
-      success: true,
-      stopped,
-      message: stopped ? "Scan stopped — partial results returned" : "Custom scan completed",
-      scanId,
-      target: hostname,
-      modulesRun: selectedModules,
-      riskAssessment,
-      ...output,
-    });
-  };
+// ── Replace buildAndRespond ────────────────────────────────────────────────
+const buildAndRespond = (output, stopped = false) => {
+  const riskAssessment = calculateRisk(output);
+  delete scanStates[scanId];
+  return res.json({
+    success: true,
+    stopped,
+    message: stopped ? "Scan stopped — partial results returned" : "Custom scan completed",
+    scanId,
+    target:      hostname,
+    modulesRun:  selectedModules,
+    riskAssessment,
+    ...output,
+  });
+};
 
-  // ── Core modules ──────────────────────────────────────────────────────────────
+  // ── Core modules (all parallel) ───────────────────────────────────────────────
   const corePromises = {
-    dns:        has("dns")       ? scanner.nslookup(hostname)      : null,
-    ping:       has("ping")      ? scanner.ping(hostname)           : null,
-    headers:    has("headers")   ? scanner.headers(cleanedUrl)      : null,
-    ports:      has("ports")     ? scanner.portScan(hostname)       : null,
-    ssl:        has("ssl")       ? scanner.ssl(hostname)            : null,
-    endpoints:  has("endpoints") ? scanner.endpointScan(cleanedUrl) : null,
-    traceroute: has("traceroute")? scanner.traceroute(hostname)     : null,
-    whois:      has("whois")     ? fetchWhoisRDAP(hostname)         : null,
-    emailIntel: has("email")     ? emailIntelligence(hostname)      : null,
+    dns:        has("dns")        ? scanner.nslookup(hostname)      : null,
+    ping:       has("ping")       ? scanner.ping(hostname)           : null,
+    headers:    has("headers")    ? scanner.headers(cleanedUrl)      : null,
+    ports:      has("ports")      ? scanner.portScan(hostname)       : null,
+    ssl:        has("ssl")        ? scanner.ssl(hostname)            : null,
+    endpoints:  has("endpoints")  ? scanner.endpointScan(cleanedUrl) : null,
+    traceroute: has("traceroute") ? scanner.traceroute(hostname)     : null,
+    whois:      has("whois")      ? fetchWhoisRDAP(hostname)         : null,
+    emailIntel: has("email")      ? emailIntelligence(hostname)      : null,
   };
 
-  const coreKeys = Object.keys(corePromises);
+  const coreKeys    = Object.keys(corePromises);
   const coreResults = await Promise.allSettled(coreKeys.map(k => corePromises[k] || Promise.resolve(null)));
-  const coreData = {};
+  const coreData    = {};
   coreKeys.forEach((k, i) => {
     coreData[k] = coreResults[i].status === "fulfilled" ? coreResults[i].value : null;
   });
 
-  // ── Parse core data ───────────────────────────────────────────────────────────
   const parsedDns        = parseDns(coreData.dns);
   const parsedPing       = parsePing(coreData.ping);
   const parsedHeaders    = parseHeaders(coreData.headers);
@@ -519,39 +498,44 @@ exports.customScan = async (req, res) => {
     wappalyzerResult = analyzeVersions(raw);
   }
 
-  // ── Build partial output helper ───────────────────────────────────────────────
-  const buildOutput = (osintData = {}, vulnerabilities = {}, vulnKeys = []) => ({
-    dns:              has("dns")          ? parsedDns        : undefined,
-    ping:             has("ping")         ? parsedPing       : undefined,
-    headers:          has("headers")      ? parsedHeaders    : undefined,
-    openPorts:        has("ports")        ? parsedPorts      : undefined,
-    ssl:              has("ssl")          ? parsedSSL        : undefined,
-    endpoints:        has("endpoints")    ? parsedEndpoints  : undefined,
-    wappalyzer:       has("wappalyzer")   ? wappalyzerResult : undefined,
-    traceroute:       has("traceroute")   ? parsedTraceroute : undefined,
-    whois:            has("whois")        ? parsedWhois      : undefined,
-    emailIntelligence: has("email")       ? (coreData.emailIntel || { risk: "LOW", dnsbl: { listed: false }, hunter: { available: false } }) : undefined,
-    securityTrails:   has("subdomains") && osintData.subdomains ? {
-      scanType: "passive",
-      subdomainCount: osintData.subdomains.subdomains?.length || 0,
-      subdomains: osintData.subdomains.subdomains || [],
-      note: `Subdomain enumeration via ${osintData.subdomains.source || "passive DNS"}`,
-      risk: (osintData.subdomains.subdomains?.length || 0) > 30 ? "HIGH" : (osintData.subdomains.subdomains?.length || 0) > 10 ? "MEDIUM" : "LOW",
-    } : undefined,
-    shodan:        has("shodan")        ? osintData.shodan       : undefined,
-    safeBrowsing:  has("safeBrowsing")  ? osintData.safeBrowsing : undefined,
-    virusTotal:    has("virusTotal")    ? osintData.virusTotal   : undefined,
-    asnGeo:        has("asnGeo")        ? osintData.asnGeo       : undefined,
-    cookies:       has("cookies")       ? osintData.cookies      : undefined,
-    greenWeb:      has("greenWeb")      ? osintData.greenWeb     : undefined,
-    vulnerabilities: vulnKeys.length > 0 ? vulnerabilities       : undefined,
+// ── Replace your existing buildOutput function ─────────────────────────────
+const buildOutput = (osintData = {}, vulnerabilities = {}, vulnKeys = []) => {
+  const output = {
+    ...(has("dns")        && { dns:               parsedDns        }),
+    ...(has("ping")       && { ping:              parsedPing       }),
+    ...(has("headers")    && { headers:           parsedHeaders    }),
+    ...(has("ports")      && { openPorts:         parsedPorts      }),
+    ...(has("ssl")        && { ssl:               parsedSSL        }),
+    ...(has("endpoints")  && { endpoints:         parsedEndpoints  }),
+    ...(has("wappalyzer") && { wappalyzer:        wappalyzerResult }),
+    ...(has("traceroute") && { traceroute:        parsedTraceroute }),
+    ...(has("whois")      && { whois:             parsedWhois      }),
+    ...(has("email")      && { emailIntelligence: coreData.emailIntel || { risk: "LOW", dnsbl: { listed: false }, hunter: { available: false } } }),
+    ...(has("subdomains") && osintData.subdomains && {
+      securityTrails: {
+        scanType:       "passive",
+        subdomainCount: osintData.subdomains.subdomains?.length || 0,
+        subdomains:     osintData.subdomains.subdomains || [],
+        note:           `Subdomain enumeration via ${osintData.subdomains.source || "passive DNS"}`,
+        risk:           (osintData.subdomains.subdomains?.length || 0) > 30 ? "HIGH"
+                      : (osintData.subdomains.subdomains?.length || 0) > 10 ? "MEDIUM" : "LOW",
+      },
+    }),
+    ...(has("shodan")       && { shodan:       osintData.shodan       }),
+    ...(has("safeBrowsing") && { safeBrowsing: osintData.safeBrowsing }),
+    ...(has("virusTotal")   && { virusTotal:   osintData.virusTotal   }),
+    ...(has("asnGeo")       && { asnGeo:       osintData.asnGeo       }),
+    ...(has("cookies")      && { cookies:      osintData.cookies      }),
+    ...(has("greenWeb")     && { greenWeb:     osintData.greenWeb     }),
+    ...(vulnKeys.length > 0 && { vulnerabilities }),
     selectedModules,
-  });
+  };
+  return output;
+};
 
-  // ── STOP CHECK 1 — after core ─────────────────────────────────────────────────
   if (isStopped()) return buildAndRespond(buildOutput(), true);
 
-  // ── OSINT modules ─────────────────────────────────────────────────────────────
+  // ── OSINT modules (all parallel) ──────────────────────────────────────────────
   const osintPromises = {
     shodan:       has("shodan")       ? shodanLookup(hostname)         : null,
     safeBrowsing: has("safeBrowsing") ? googleSafeBrowsing(cleanedUrl) : null,
@@ -562,14 +546,13 @@ exports.customScan = async (req, res) => {
     subdomains:   has("subdomains")   ? crtshSubdomains(hostname)      : null,
   };
 
-  const osintKeys = Object.keys(osintPromises);
+  const osintKeys    = Object.keys(osintPromises);
   const osintResults = await Promise.allSettled(osintKeys.map(k => osintPromises[k] || Promise.resolve(null)));
-  const osintData = {};
+  const osintData    = {};
   osintKeys.forEach((k, i) => {
     osintData[k] = osintResults[i].status === "fulfilled" ? osintResults[i].value : null;
   });
 
-  // ── STOP CHECK 2 — after OSINT ────────────────────────────────────────────────
   if (isStopped()) return buildAndRespond(buildOutput(osintData), true);
 
   // ── Vuln modules ──────────────────────────────────────────────────────────────
@@ -581,34 +564,68 @@ exports.customScan = async (req, res) => {
   };
 
   const vulnPromises = {};
-  if (has("sqlInjection"))     vulnPromises.sqlInjection     = safePost("http://localhost:5000/api/sqlmap", { url: cleanedUrl });
-  if (has("xss"))              vulnPromises.xss              = (async () => {
-    const [reflected, dom, stored] = await Promise.allSettled([
-      safePost("http://localhost:5000/api/autoxss",    { url: cleanedUrl }, 180000),
-      safePost("http://localhost:5000/api/dom-xss",    { url: cleanedUrl }, 300000),
-      safePost("http://localhost:5000/api/stored-xss", { url: cleanedUrl }, 180000),
-    ]);
-    const rData = reflected.status === "fulfilled" ? reflected.value?.data : null;
-    const dData = dom.status       === "fulfilled" ? dom.value?.data       : null;
-    const sData = stored.status    === "fulfilled" ? stored.value?.data    : null;
-    const reflectedEndpoints = rData?.vulnerableEndpoints || [];
-    const domVuln    = !!(dData?.vulnerable);
-    const storedVuln = !!(sData?.vulnerable);
-    const found = reflectedEndpoints.length > 0 || domVuln || storedVuln;
-    return { ok: true, data: { vulnerable: found, reflected: { found: reflectedEndpoints.length > 0, vulnerableEndpoints: reflectedEndpoints, testedEndpoints: rData?.testedEndpoints || 0 }, dom: { found: domVuln, details: dData || null }, stored: { found: storedVuln, details: sData || null } } };
-  })();
-  if (has("csrf"))             vulnPromises.csrf             = safePost("http://localhost:5000/api/csrf", { url: cleanedUrl });
-  if (has("clickjacking"))     vulnPromises.clickjacking     = safePost("http://localhost:5000/api/clickjacking", { url: cleanedUrl });
-  if (has("commandInjection")) vulnPromises.commandInjection = safePost("http://localhost:5000/api/command-injection", { url: cleanedUrl });
-  if (has("sensitiveFiles"))   vulnPromises.sensitiveFiles   = safePost("http://localhost:5000/api/sensitive-files", { url: cleanedUrl });
-  if (has("openRedirect"))     vulnPromises.openRedirect     = safePost("http://localhost:5000/api/open-redirect", { url: cleanedUrl });
 
-  const vulnKeys = Object.keys(vulnPromises);
+  if (has("sqlInjection"))
+    vulnPromises.sqlInjection = safePost("http://localhost:5000/api/sqlmap", { url: cleanedUrl });
+
+  if (has("xss"))
+    vulnPromises.xss = (async () => {
+      const [reflected, dom, stored] = await Promise.allSettled([
+        safePost("http://localhost:5000/api/autoxss",    { url: cleanedUrl }, 180000),
+        safePost("http://localhost:5000/api/dom-xss",    { url: cleanedUrl }, 60000),   // ← updated timeout
+        safePost("http://localhost:5000/api/stored-xss", { url: cleanedUrl }, 180000),
+      ]);
+      const rData = reflected.status === "fulfilled" ? reflected.value?.data : null;
+      const dData = dom.status       === "fulfilled" ? dom.value?.data       : null;
+      const sData = stored.status    === "fulfilled" ? stored.value?.data    : null;
+      const reflectedEndpoints = rData?.vulnerableEndpoints || [];
+      const domVuln    = !!(dData?.vulnerable);
+      const storedVuln = !!(sData?.vulnerable);
+      const found = reflectedEndpoints.length > 0 || domVuln || storedVuln;
+      return { ok: true, data: { vulnerable: found, reflected: { found: reflectedEndpoints.length > 0, vulnerableEndpoints: reflectedEndpoints, testedEndpoints: rData?.testedEndpoints || 0 }, dom: { found: domVuln, details: dData || null }, stored: { found: storedVuln, details: sData || null } } };
+    })();
+
+  if (has("csrf"))
+    vulnPromises.csrf = safePost("http://localhost:5000/api/csrf", { url: cleanedUrl });
+
+  if (has("clickjacking"))
+    vulnPromises.clickjacking = safePost("http://localhost:5000/api/clickjacking", { url: cleanedUrl });
+
+  if (has("commandInjection"))
+    vulnPromises.commandInjection = safePost("http://localhost:5000/api/command-injection", { url: cleanedUrl });
+
+  if (has("sensitiveFiles"))
+    vulnPromises.sensitiveFiles = safePost("http://localhost:5000/api/sensitive-files", { url: cleanedUrl });
+
+  if (has("openRedirect"))
+    vulnPromises.openRedirect = safePost("http://localhost:5000/api/open-redirect", { url: cleanedUrl }, 60000);
+
+  // ── NEW: CORS ──────────────────────────────────────────────────────────────
+  if (has("cors"))
+    vulnPromises.cors = safePost("http://localhost:5000/api/cors", { url: cleanedUrl }, 60000);
+
+  // ── NEW: WordPress ────────────────────────────────────────────────────────
+  if (has("wordpress"))
+    vulnPromises.wordpress = safePost("http://localhost:5000/api/wordpress/scan", { url: cleanedUrl }, 60000);
+
+  const vulnKeys    = Object.keys(vulnPromises);
   const vulnResults = await Promise.allSettled(vulnKeys.map(k => vulnPromises[k]));
   const vulnerabilities = {};
+
   vulnKeys.forEach((k, i) => {
     const r = vulnResults[i].status === "fulfilled" ? vulnResults[i].value : { ok: false };
-    vulnerabilities[k] = r.ok ? { found: !!(r.data?.vulnerable || r.data?.found), details: r.data } : { found: false, details: null };
+
+    // WordPress needs special handling — it's only "found" if it IS WordPress
+    if (k === "wordpress") {
+      vulnerabilities[k] = r.ok
+        ? { found: !!(r.data?.isWordPress), details: r.data }
+        : { found: false, details: null };
+      return;
+    }
+
+    vulnerabilities[k] = r.ok
+      ? { found: !!(r.data?.vulnerable || r.data?.found), details: r.data }
+      : { found: false, details: null };
   });
 
   return buildAndRespond(buildOutput(osintData, vulnerabilities, vulnKeys));
