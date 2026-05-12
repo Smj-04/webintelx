@@ -616,17 +616,19 @@ exports.resumeScan = (req, res) => {
 };
 
 // ==========================
-// 🔹 PDF GENERATOR
+// 🔹 PDF GENERATOR  (drop-in replacement)
 // ==========================
 
 exports.generateFullScanPDF = async (scanData, target, res) => {
   try {
+    const PDFDocument = require("pdfkit");
     const doc = new PDFDocument({ size: "A4", margin: 50, bufferPages: true });
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="FullScan-${target}.pdf"`);
     doc.pipe(res);
 
-    const COLOR = {
+    // ── Colour palette ────────────────────────────────────────────────────────
+    const C = {
       brand:    "#1e40af",
       heading:  "#111827",
       subhead:  "#1f2937",
@@ -638,60 +640,107 @@ exports.generateFullScanPDF = async (scanData, target, res) => {
       low:      "#2563eb",
       safe:     "#16a34a",
       border:   "#e5e7eb",
+      rowBg:    "#f9fafb",
     };
 
-    // ── helpers ──────────────────────────────────────────────────────────────
-    const sectionTitle = (text, color = COLOR.subhead) => {
-      doc.moveDown(0.8);
-      doc.fontSize(13).fillColor(color).text(text, { underline: true });
+    // ── Layout constants ──────────────────────────────────────────────────────
+    const L = 50;           // left margin
+    const R = 545;          // right edge
+    const W = R - L;        // usable width
+    const LABEL_W  = 160;   // label column width
+    const VALUE_X  = L + LABEL_W + 10;  // where value text starts
+    const VALUE_W  = R - VALUE_X;       // value column width
+    const IND      = 65;    // indented left margin (inside numbered items)
+    const IND_V_X  = IND + LABEL_W + 5; // indented value X
+    const IND_V_W  = R - IND_V_X;
+
+    // ── Guard: new page if not enough room ───────────────────────────────────
+    const ensureSpace = (needed = 40) => {
+      if (doc.y > doc.page.height - doc.page.margins.bottom - needed) {
+        doc.addPage();
+      }
+    };
+
+    // ── Divider line ─────────────────────────────────────────────────────────
+    const divider = (top = 0.5, bottom = 0.5) => {
+      doc.moveDown(top);
+      doc.moveTo(L, doc.y).lineTo(R, doc.y).strokeColor(C.border).lineWidth(0.5).stroke();
+      doc.moveDown(bottom);
+    };
+
+    // ── Section title ─────────────────────────────────────────────────────────
+    const sectionTitle = (text, color = C.heading) => {
+      ensureSpace(30);
+      doc.moveDown(0.6);
+      doc.fontSize(13).fillColor(color).font("Helvetica-Bold").text(text);
+      doc.font("Helvetica");
       doc.moveDown(0.4);
     };
 
-    const field = (label, value, valueColor = COLOR.body) => {
-      const raw = String(value ?? "N/A");
-      const display = raw.length > 72 ? raw.substring(0, 72) + "..." : raw;
-      const startY = doc.y;
-      // Draw label in left column (fixed width so it never wraps onto value)
-      doc.fontSize(10).fillColor(COLOR.muted)
-        .text(label, 50, startY, { width: 155, lineBreak: false });
-      // Draw value in right column at same Y
-      doc.fontSize(10).fillColor(valueColor)
-        .text(display, 215, startY, { width: 330, lineBreak: false });
-      doc.moveDown(0.6);
+    // ── Two-column key/value row (top-level, L=50) ────────────────────────────
+    const field = (label, value, valueColor = C.body, leftX = L) => {
+      const raw     = String(value ?? "N/A");
+      const display = raw.length > 90 ? raw.substring(0, 90) + "…" : raw;
+      const valX    = leftX + LABEL_W + 10;
+      const valW    = R - valX;
+      ensureSpace(18);
+      const y = doc.y;
+      doc.fontSize(9).fillColor(C.muted).font("Helvetica")
+        .text(label, leftX, y, { width: LABEL_W, lineBreak: false });
+      doc.fontSize(9).fillColor(valueColor).font("Helvetica")
+        .text(display, valX, y, { width: valW });
+      // moveDown already handled by PDFKit's text() — just add a tiny gap
+      doc.moveDown(0.15);
     };
 
-    const badge = (text, color) => {
-      doc.fontSize(9).fillColor(color).text(`[ ${text} ]`, { continued: true });
-      doc.fillColor(COLOR.body).text("  ", { continued: false });
+    // ── Indented sub-field (inside numbered items, leftX = IND) ──────────────
+    const subField = (label, value, valueColor = C.body) =>
+      field(label, value, valueColor, IND);
+
+    // ── Numbered finding header (bold url / title line) ───────────────────────
+    const findingHeader = (n, text, color = C.body) => {
+      ensureSpace(20);
+      const clipped = text.length > 80 ? text.substring(0, 80) + "…" : text;
+      doc.fontSize(9).fillColor(color).font("Helvetica-Bold")
+        .text(`${n}.  ${clipped}`, L, doc.y, { width: W });
+      doc.font("Helvetica");
+      doc.moveDown(0.2);
     };
 
-    const divider = () => {
-      doc.moveDown(0.5);
-      doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor(COLOR.border).lineWidth(0.5).stroke();
-      doc.moveDown(0.5);
-    };
+    // ── Vuln block wrapper ────────────────────────────────────────────────────
+    const sevColor = (s) =>
+      s === "CRITICAL" ? C.critical : s === "HIGH" ? C.high : s === "MEDIUM" ? C.medium : C.low;
 
     const vulnBlock = (title, severity, children) => {
-      // Ensure title + severity label never orphan across a page break
-      if (doc.y > doc.page.height - doc.page.margins.bottom - 30) {
-        doc.addPage();
-      }
-      doc.moveDown(0.6);
-      const severityColor = severity === "CRITICAL" ? COLOR.critical : severity === "HIGH" ? COLOR.high : severity === "MEDIUM" ? COLOR.medium : COLOR.low;
-      doc.fontSize(12).fillColor(COLOR.subhead).text(title, { continued: true });
-      doc.fontSize(9).fillColor(severityColor).text(`  [${severity}]`, { continued: false });
-      doc.moveDown(0.3);
+      ensureSpace(50);
+      doc.moveDown(0.7);
+      // Thin coloured left bar
+      const barY = doc.y;
+      // Title + badge on same line
+      doc.fontSize(11).fillColor(C.subhead).font("Helvetica-Bold")
+        .text(title, L, doc.y, { width: 310, lineBreak: false, continued: true });
+      doc.fontSize(8).fillColor(sevColor(severity)).font("Helvetica")
+        .text(`  [${severity}]`, { lineBreak: false, continued: false });
+      doc.font("Helvetica");
+      doc.moveDown(0.4);
+      // draw left accent bar retroactively
+      doc.save()
+        .rect(L - 8, barY, 3, doc.y - barY)
+        .fill(sevColor(severity))
+        .restore();
       children();
-      doc.moveDown(0.3);
+      doc.moveDown(0.5);
     };
 
-    // ── COVER ────────────────────────────────────────────────────────────────
-    doc.fontSize(22).fillColor(COLOR.brand).text("WebIntelX", { align: "center" });
-    doc.fontSize(11).fillColor(COLOR.muted).text("Full Scan Security Report", { align: "center" });
+    // =========================================================================
+    // COVER PAGE
+    // =========================================================================
+    doc.fontSize(22).fillColor(C.brand).font("Helvetica-Bold")
+      .text("WebIntelX", { align: "center" });
+    doc.font("Helvetica");
+    doc.fontSize(11).fillColor(C.muted).text("Full Scan Security Report", { align: "center" });
     doc.moveDown(1.5);
 
-    // Meta table
-    doc.fontSize(10).fillColor(COLOR.body);
     [
       ["Target",        target],
       ["Scan Type",     "Full Scan"],
@@ -702,331 +751,390 @@ exports.generateFullScanPDF = async (scanData, target, res) => {
 
     divider();
 
-    // ── RISK SCORE SUMMARY ───────────────────────────────────────────────────
-    sectionTitle("Risk Score Summary", COLOR.heading);
+    // =========================================================================
+    // RISK SCORE SUMMARY
+    // =========================================================================
+    sectionTitle("Risk Score Summary");
     const s = scanData.summary || {};
     const riskItems = [
-      { label: "CRITICAL", val: s.critical ?? 0, color: COLOR.critical },
-      { label: "HIGH",     val: s.high     ?? 0, color: COLOR.high     },
-      { label: "MEDIUM",   val: s.medium   ?? 0, color: COLOR.medium   },
-      { label: "LOW",      val: s.low      ?? 0, color: COLOR.low      },
+      { label: "CRITICAL", val: s.critical ?? 0, color: C.critical },
+      { label: "HIGH",     val: s.high     ?? 0, color: C.high     },
+      { label: "MEDIUM",   val: s.medium   ?? 0, color: C.medium   },
+      { label: "LOW",      val: s.low      ?? 0, color: C.low      },
     ];
-    riskItems.forEach(r => {
-      doc.fontSize(11).fillColor(r.color).text(`${r.label}:  ${r.val}`, { continued: true });
-      doc.fillColor(COLOR.body).text("   ", { continued: false });
-    });
-    // single line summary
-    doc.moveDown(0.3);
-    const totalFound = riskItems.reduce((a, r) => a + r.val, 0);
-    doc.fontSize(10).fillColor(COLOR.muted).text(`${totalFound} issue${totalFound !== 1 ? "s" : ""} detected across all vulnerability modules.`);
 
+    // Draw coloured pill badges side by side
+    let pillX = L;
+    const pillY = doc.y;
+    riskItems.forEach(r => {
+      const label = `${r.label}: ${r.val}`;
+      doc.save()
+        .roundedRect(pillX, pillY, 100, 20, 4)
+        .fillAndStroke("#f3f4f6", r.color)
+        .restore();
+      doc.fontSize(9).fillColor(r.color).font("Helvetica-Bold")
+        .text(label, pillX + 6, pillY + 5, { width: 88, lineBreak: false });
+      pillX += 112;
+    });
+    doc.font("Helvetica");
+    doc.y = pillY + 28;
+    doc.moveDown(0.4);
+
+    const totalFound = riskItems.reduce((a, r) => a + r.val, 0);
+    doc.fontSize(9).fillColor(C.muted)
+      .text(`${totalFound} issue${totalFound !== 1 ? "s" : ""} detected across all vulnerability modules.`);
     divider();
 
-    // ── ATTACK SURFACE ───────────────────────────────────────────────────────
-    sectionTitle("Attack Surface Summary", COLOR.heading);
-    const atk = scanData.quickscan?.attackSurface || {};
-    field("Subdomains Discovered", atk.subdomainCount ?? 0);
-    field("Parameterized Endpoints", atk.endpointCount ?? 0);
-    field("Open Ports", atk.openPorts ?? 0);
+    // =========================================================================
+    // ATTACK SURFACE
+    // =========================================================================
+    sectionTitle("Attack Surface Summary");
+    const atk  = scanData.quickscan?.attackSurface || {};
+    const tech  = scanData.quickscan?.technology   || {};
+    const hdrs  = scanData.quickscan?.headers      || {};
+    const ports = scanData.quickscan?.ports;
+
+    field("Subdomains Discovered",     atk.subdomainCount ?? 0);
+    field("Parameterized Endpoints",   atk.endpointCount  ?? 0);
+    field("Open Ports",                atk.openPorts      ?? 0);
     if (atk.formCount) field("Forms Detected", atk.formCount);
 
-    // Technology
-    const tech = scanData.quickscan?.technology || {};
-    if (tech.server || tech.poweredBy || tech.cms) {
+    if (tech.server || tech.poweredBy || tech.cms || tech.cdn || tech.waf) {
       doc.moveDown(0.5);
-      doc.fontSize(10).fillColor(COLOR.muted).text("Technology Stack:");
-      doc.moveDown(0.2);
-      if (tech.server)    field("Web Server",   tech.server,    COLOR.body);
-      if (tech.poweredBy) field("Powered By",   tech.poweredBy, COLOR.body);
-      if (tech.cms)       field("CMS",          tech.cms,       COLOR.body);
-      if (tech.cdn)       field("CDN",          tech.cdn,       COLOR.body);
-      if (tech.waf)       field("WAF",          tech.waf,       COLOR.body);
-      if (tech.frameworks?.length > 0) field("Frameworks", tech.frameworks.join(", "), COLOR.body);
-      field("SSL/HTTPS", tech.ssl ? "Enabled" : "Not Enabled", tech.ssl ? COLOR.safe : COLOR.high);
+      doc.fontSize(10).fillColor(C.muted).font("Helvetica-Bold").text("Technology Stack");
+      doc.font("Helvetica");
+      doc.moveDown(0.25);
+      if (tech.server)              field("Web Server",   tech.server);
+      if (tech.poweredBy)           field("Powered By",   tech.poweredBy);
+      if (tech.cms)                 field("CMS",          tech.cms);
+      if (tech.cdn)                 field("CDN",          tech.cdn);
+      if (tech.waf)                 field("WAF",          tech.waf);
+      if (tech.frameworks?.length)  field("Frameworks",   tech.frameworks.join(", "));
+      field("SSL / HTTPS", tech.ssl ? "Enabled" : "Not Enabled", tech.ssl ? C.safe : C.high);
     }
 
-    // HTTP Headers summary
-    const hdrs = scanData.quickscan?.headers || {};
-    const missingHdrs = Object.entries(hdrs).filter(([, v]) => !v || v === false).map(([k]) => k);
+    const missingHdrs = Object.entries(hdrs)
+      .filter(([, v]) => !v || v === false)
+      .map(([k]) => k);
     if (missingHdrs.length > 0) {
       doc.moveDown(0.5);
-      doc.fontSize(10).fillColor(COLOR.muted).text("Missing Security Headers:");
-      doc.moveDown(0.2);
+      doc.fontSize(10).fillColor(C.muted).font("Helvetica-Bold").text("Missing Security Headers");
+      doc.font("Helvetica");
+      doc.moveDown(0.25);
       missingHdrs.forEach(h => {
-        doc.fontSize(10).fillColor(COLOR.high).text(`  (X)  ${h}`);
+        ensureSpace(14);
+        doc.fontSize(9).fillColor(C.high).text(`  ✗  ${h}`);
       });
     }
 
-    // Open ports detail
-    const ports = scanData.quickscan?.ports;
     if (ports?.open?.length > 0) {
       doc.moveDown(0.5);
-      doc.fontSize(10).fillColor(COLOR.muted).text(`Open Ports  (IP: ${ports.ip || "—"}):`);
-      doc.moveDown(0.2);
+      doc.fontSize(10).fillColor(C.muted).font("Helvetica-Bold")
+        .text(`Open Ports  (IP: ${ports.ip || "—"})`);
+      doc.font("Helvetica");
+      doc.moveDown(0.25);
       ports.open.forEach(p => {
-        const sensitive = [21,22,23,25,3306,5432,6379,27017,8080,8443,1433,3389].includes(Number(p.port));
-        doc.fontSize(10)
-          .fillColor(sensitive ? COLOR.high : COLOR.body)
-          .text(`  Port ${p.port}${p.service ? `  —  ${p.service}` : ""}${sensitive ? "  ⚠ Sensitive" : ""}`);
+        const sensitive = [21,22,23,25,3306,5432,6379,27017,8080,8443,1433,3389]
+          .includes(Number(p.port));
+        ensureSpace(14);
+        doc.fontSize(9)
+          .fillColor(sensitive ? C.high : C.body)
+          .text(`  ${p.port}${p.service ? `  —  ${p.service}` : ""}${sensitive ? "  ⚠ Sensitive" : ""}`);
       });
     }
 
     divider();
 
-    // ── VULNERABILITY SUMMARY TABLE ──────────────────────────────────────────
-    sectionTitle("Vulnerability Assessment Results", COLOR.heading);
+    // =========================================================================
+    // VULNERABILITY ASSESSMENT TABLE
+    // =========================================================================
+    sectionTitle("Vulnerability Assessment Results");
     const vuln = scanData.vulnerabilities || {};
+
     const vulnRows = [
-      { name: "SQL Injection",          sev: "HIGH",     found: vuln.sqlInjection?.found      },
-      { name: "DOM XSS",                sev: "MEDIUM",   found: vuln.domXss?.found            },
-      { name: "Stored XSS",             sev: "HIGH",     found: vuln.storedXss?.found         },
-      { name: "Reflected XSS",          sev: "MEDIUM",   found: vuln.reflectedXss?.found      },
-      { name: "Clickjacking",           sev: "LOW",      found: vuln.clickjacking?.vulnerable  },
-      { name: "Command Injection",      sev: "CRITICAL", found: vuln.commandInjection?.found  },
-      { name: "CSRF",                   sev: "HIGH",     found: vuln.csrf?.found              },
-      { name: "Sensitive File Exposure",sev: "HIGH",     found: vuln.sensitiveFiles?.found    },
-      { name: "Open Redirect",          sev: "HIGH",     found: vuln.openRedirect?.found      },
-      { name: "CORS Misconfiguration",  sev: "HIGH",     found: vuln.cors?.found              },
-      { name: "WordPress Security",     sev: "MEDIUM",   found: vuln.wordpress?.found         },
+      { name: "SQL Injection",           sev: "HIGH",     found: vuln.sqlInjection?.found      },
+      { name: "DOM XSS",                 sev: "MEDIUM",   found: vuln.domXss?.found            },
+      { name: "Stored XSS",              sev: "HIGH",     found: vuln.storedXss?.found         },
+      { name: "Reflected XSS",           sev: "MEDIUM",   found: vuln.reflectedXss?.found      },
+      { name: "Clickjacking",            sev: "LOW",      found: vuln.clickjacking?.vulnerable },
+      { name: "Command Injection",       sev: "CRITICAL", found: vuln.commandInjection?.found  },
+      { name: "CSRF",                    sev: "HIGH",     found: vuln.csrf?.found              },
+      { name: "Sensitive File Exposure", sev: "HIGH",     found: vuln.sensitiveFiles?.found    },
+      { name: "Open Redirect",           sev: "HIGH",     found: vuln.openRedirect?.found      },
+      { name: "CORS Misconfiguration",   sev: "HIGH",     found: vuln.cors?.found              },
+      { name: "WordPress Security",      sev: "MEDIUM",   found: vuln.wordpress?.found         },
     ];
+
+    // Column X positions for the table
+    const COL = { num: L, name: L + 18, sev: L + 255, status: L + 350 };
+
+    // Header row
+    ensureSpace(24);
+    const thY = doc.y;
+    doc.save().rect(L, thY, W, 18).fill("#e5e7eb").restore();
+    doc.fontSize(8).fillColor(C.subhead).font("Helvetica-Bold");
+    doc.text("#",          COL.num,    thY + 5, { width: 16,  lineBreak: false });
+    doc.text("Vulnerability",  COL.name,   thY + 5, { width: 230, lineBreak: false });
+    doc.text("Severity",   COL.sev,    thY + 5, { width: 90,  lineBreak: false });
+    doc.text("Status",     COL.status, thY + 5, { width: 130, lineBreak: false });
+    doc.font("Helvetica");
+    doc.y = thY + 22;
+
     vulnRows.forEach((r, i) => {
-      const sevColor = r.sev === "CRITICAL" ? COLOR.critical : r.sev === "HIGH" ? COLOR.high : r.sev === "MEDIUM" ? COLOR.medium : COLOR.low;
-      const statusColor = r.found ? COLOR.high : COLOR.safe;
-
-      // Guard: if less than 20pt left on page, add a new page
-      if (doc.y > doc.page.height - doc.page.margins.bottom - 20) {
-        doc.addPage();
+      ensureSpace(18);
+      const rowY = doc.y;
+      if (i % 2 === 0) {
+        doc.save().rect(L, rowY, W, 16).fill(C.rowBg).restore();
       }
+      const sc = sevColor(r.sev);
+      const statusTxt   = r.found ? "DETECTED"  : "NOT FOUND";
+      const statusColor = r.found ? C.high       : C.safe;
 
-      const y = doc.y;
-      doc.fontSize(10).fillColor(COLOR.body).text(`${i + 1}.  ${r.name}`, 50, y, { width: 240, lineBreak: false });
-      doc.fontSize(9).fillColor(sevColor).text(r.sev, 300, y, { width: 80, lineBreak: false });
-      doc.fontSize(10).fillColor(statusColor).text(r.found ? "[DETECTED]" : "[NOT FOUND]", 390, y, { width: 155, lineBreak: false });
-      doc.moveDown(0.6);
+      doc.fontSize(8).fillColor(C.muted).font("Helvetica")
+        .text(`${i + 1}`, COL.num, rowY + 4, { width: 16, lineBreak: false });
+      doc.fillColor(C.body)
+        .text(r.name,     COL.name,   rowY + 4, { width: 230, lineBreak: false });
+      doc.fillColor(sc)
+        .text(r.sev,      COL.sev,    rowY + 4, { width: 90,  lineBreak: false });
+      doc.fillColor(statusColor).font("Helvetica-Bold")
+        .text(statusTxt,  COL.status, rowY + 4, { width: 130, lineBreak: false });
+      doc.font("Helvetica");
+      doc.y = rowY + 18;
     });
 
     divider();
 
-    // ── VULNERABILITY DETAILS ────────────────────────────────────────────────
-    sectionTitle("Detailed Findings", COLOR.heading);
+    // =========================================================================
+    // DETAILED FINDINGS
+    // =========================================================================
+    sectionTitle("Detailed Findings");
 
-    // SQL Injection
+    // ── SQL Injection ─────────────────────────────────────────────────────────
     if (vuln.sqlInjection?.found) {
       vulnBlock("SQL Injection", "HIGH", () => {
         const findings = vuln.sqlInjection.details?.findings || [];
-        findings.forEach((f, idx) => {
-          const sqlUrl = f.url && f.url.length > 60 ? f.url.substring(0,60)+"..." : (f.url||"Unknown");
-          doc.fontSize(10).fillColor(COLOR.body).text(`${idx + 1}.  ${sqlUrl}  [param: ${f.param||"?"}]`, 50, doc.y, { width: 495, lineBreak: false });
-          doc.moveDown(0.6);
-          field("Databases", (f.databases || []).join(", ") || "N/A");
-          doc.moveDown(0.2);
-        });
-        if (findings.length === 0) doc.fontSize(10).fillColor(COLOR.muted).text("No detailed findings available.");
+        if (findings.length === 0) {
+          doc.fontSize(9).fillColor(C.muted).text("No detailed findings available.", IND);
+        } else {
+          findings.forEach((f, idx) => {
+            findingHeader(idx + 1, `${f.url || "Unknown URL"}`, C.body);
+            subField("Parameter", f.param    || "Unknown");
+            subField("Databases", (f.databases || []).join(", ") || "N/A");
+            doc.moveDown(0.3);
+          });
+        }
       });
     }
 
-    // DOM XSS
+    // ── DOM XSS ───────────────────────────────────────────────────────────────
     if (vuln.domXss?.found) {
       vulnBlock("DOM-Based XSS", "MEDIUM", () => {
         const evidence = vuln.domXss.details?.evidence;
         if (Array.isArray(evidence) && evidence.length > 0) {
           evidence.forEach((item, idx) => {
-            doc.fontSize(10).fillColor(COLOR.body).text(`${idx + 1}.  Type: ${item.type || "Unknown"}`);
-            field("Location",   item.location   || "Unknown");
-            field("Evidence",   item.evidence   || "N/A");
-            field("Confidence", item.confidence || "Unknown");
-            doc.moveDown(0.2);
+            findingHeader(idx + 1, `Type: ${item.type || "Unknown"}`);
+            subField("Location",   item.location   || "Unknown");
+            subField("Evidence",   item.evidence   || "N/A");
+            subField("Confidence", item.confidence || "Unknown",
+              (item.confidence || "").toLowerCase() === "high" ? C.high : C.muted);
+            doc.moveDown(0.3);
           });
         } else {
-          doc.fontSize(10).fillColor(COLOR.muted).text(vuln.domXss.details?.notes || "DOM-based XSS payload detected.");
+          doc.fontSize(9).fillColor(C.muted)
+            .text(vuln.domXss.details?.notes || "DOM-based XSS payload detected.", IND);
         }
       });
     }
 
-    // Stored XSS
+    // ── Stored XSS ────────────────────────────────────────────────────────────
     if (vuln.storedXss?.found) {
       vulnBlock("Stored XSS", "HIGH", () => {
         const evidence = vuln.storedXss.details?.evidence;
         if (Array.isArray(evidence) && evidence.length > 0) {
           evidence.forEach((item, idx) => {
-            doc.fontSize(10).fillColor(COLOR.body).text(`${idx + 1}.  Location: ${item.location || "Unknown"}`);
-            field("Payload",    (item.payload    || "N/A").substring(0, 80));
-            field("Evidence",   (item.evidence   || "N/A").substring(0, 80));
-            field("Confidence", item.confidence  || "Unknown");
-            doc.moveDown(0.2);
+            findingHeader(idx + 1, `Location: ${item.location || "Unknown"}`);
+            subField("Payload",    (item.payload    || "N/A").substring(0, 80));
+            subField("Evidence",   (item.evidence   || "N/A").substring(0, 80));
+            subField("Confidence", item.confidence  || "Unknown",
+              (item.confidence || "").toLowerCase() === "high" ? C.high : C.muted);
+            doc.moveDown(0.3);
           });
         } else {
-          doc.fontSize(10).fillColor(COLOR.muted).text(vuln.storedXss.details?.notes || "Stored XSS payload persisted and reflected.");
+          doc.fontSize(9).fillColor(C.muted)
+            .text(vuln.storedXss.details?.notes || "Stored XSS payload persisted and reflected.", IND);
         }
       });
     }
 
-    // Reflected XSS
+    // ── Reflected XSS ─────────────────────────────────────────────────────────
     if (vuln.reflectedXss?.found) {
       vulnBlock("Reflected XSS", "MEDIUM", () => {
-        const d = vuln.reflectedXss.details || {};
-        field("Endpoints Tested",     d.testedEndpoints ?? 0);
-        field("Vulnerable Endpoints", (d.vulnerableEndpoints || []).length);
+        const d    = vuln.reflectedXss.details || {};
+        const eps  = d.vulnerableEndpoints || [];
+        field("Endpoints Tested",     d.testedEndpoints ?? 0, C.body, L);
+        field("Vulnerable Endpoints", eps.length,             C.high, L);
         doc.moveDown(0.3);
-        (d.vulnerableEndpoints || []).slice(0, 10).forEach((ep, idx) => {
-          const epUrl = ep.url && ep.url.length > 65 ? ep.url.substring(0,65)+"..." : (ep.url || "Unknown URL");
-          doc.fontSize(10).fillColor(COLOR.body).text(`${idx + 1}.  ${epUrl}`, 50, doc.y, { width: 495, lineBreak: false });
-          doc.moveDown(0.6);
+        eps.slice(0, 10).forEach((ep, idx) => {
+          findingHeader(idx + 1, ep.url || "Unknown URL");
           (ep.findings || []).slice(0, 3).forEach(f => {
-            doc.fontSize(9).fillColor(COLOR.muted)
-              .text(`      ${f.type || "Finding"}: ${(f.evidence || "Detected").substring(0, 60)}  (${f.confidence || "unknown"})`);
+            subField(f.type || "Finding",
+              `${(f.evidence || "Detected").substring(0, 60)}  (${f.confidence || "unknown"})`);
           });
-          doc.moveDown(0.2);
+          doc.moveDown(0.25);
         });
       });
     }
 
-    // Clickjacking
+    // ── Clickjacking ──────────────────────────────────────────────────────────
     if (vuln.clickjacking?.vulnerable) {
       vulnBlock("Clickjacking", "LOW", () => {
         const d = vuln.clickjacking.details || {};
-        field("Issue", d.issue || "Missing X-Frame-Options / CSP frame-ancestors", COLOR.high);
-        field("Recommendation", "Add  X-Frame-Options: DENY  or  Content-Security-Policy: frame-ancestors 'none'");
+        field("Issue",          d.issue || "Missing X-Frame-Options / CSP frame-ancestors", C.high, L);
+        field("Recommendation", "Add X-Frame-Options: DENY  or  Content-Security-Policy: frame-ancestors 'none'", C.body, L);
       });
     }
 
-    // Command Injection
+    // ── Command Injection ─────────────────────────────────────────────────────
     if (vuln.commandInjection?.found) {
       vulnBlock("Command Injection", "CRITICAL", () => {
         const d = vuln.commandInjection.details || {};
-        field("Confidence", d.confidence || "Unknown", COLOR.critical);
-        field("Notes",      d.notes      || "OS command injection vulnerability confirmed.");
-        const evidence = d.evidence;
-        if (Array.isArray(evidence) && evidence.length > 0) {
-          doc.moveDown(0.3);
+        field("Confidence", d.confidence || "Unknown", C.critical, L);
+        field("Notes",      (d.notes || "OS command injection vulnerability confirmed.").substring(0, 100), C.body, L);
+        const evidence = Array.isArray(d.evidence) ? d.evidence : [];
+        if (evidence.length > 0) {
+          doc.moveDown(0.35);
           evidence.slice(0, 5).forEach((item, idx) => {
-            doc.fontSize(10).fillColor(COLOR.body).text(`${idx + 1}.  Parameter: ${item.parameter || "Unknown"}`, 50, doc.y, { width: 495, lineBreak: false }); doc.moveDown(0.6);
-            field("Payload",  (item.payload  || "N/A").substring(0, 80));
-            field("Evidence", (item.evidence || "N/A").substring(0, 80));
-            doc.moveDown(0.2);
+            findingHeader(idx + 1, `Parameter: ${item.parameter || "Unknown"}`, C.critical);
+            subField("Payload",  (item.payload  || "N/A").substring(0, 80));
+            subField("Evidence", (item.evidence || "N/A").substring(0, 80));
+            doc.moveDown(0.3);
           });
         }
       });
     }
 
-    // CSRF
+    // ── CSRF ──────────────────────────────────────────────────────────────────
     if (vuln.csrf?.found) {
       vulnBlock("CSRF (Cross-Site Request Forgery)", "HIGH", () => {
-        const d = vuln.csrf.details || {};
+        const d   = vuln.csrf.details || {};
         const sum = d.summary || {};
-        field("Endpoints Tested", sum.totalEndpoints ?? 0);
-        field("Vulnerable",       sum.vulnerable     ?? 0, COLOR.high);
-        field("Safe",             sum.safe           ?? 0, COLOR.safe);
-        doc.moveDown(0.3);
+        field("Endpoints Tested", sum.totalEndpoints ?? 0, C.body, L);
+        field("Vulnerable",       sum.vulnerable     ?? 0, C.high, L);
+        field("Safe",             sum.safe           ?? 0, C.safe, L);
+        doc.moveDown(0.35);
         const vulnEps = d.vulnerableEndpoints || [];
         if (vulnEps.length > 0) {
-          doc.fontSize(10).fillColor(COLOR.muted).text("Vulnerable Endpoints:");
+          doc.fontSize(9).fillColor(C.muted).text("Vulnerable Endpoints:", L);
           doc.moveDown(0.2);
           vulnEps.slice(0, 10).forEach((ep, idx) => {
-            doc.fontSize(10).fillColor(COLOR.body)
-              .text(`${idx + 1}.  ${ep.endpoint || "Unknown"}  [${ep.method || "POST"}]`);
-            doc.fontSize(9).fillColor(COLOR.muted)
-              .text(`      Status: ${ep.status || "—"}   Confidence: ${ep.confidence || "—"}   Risk: ${ep.risk || "—"}`);
-            doc.moveDown(0.2);
+            findingHeader(idx + 1, `${ep.endpoint || "Unknown"}  [${ep.method || "POST"}]`);
+            subField("Status",     ep.status     || "—");
+            subField("Confidence", ep.confidence || "—");
+            subField("Risk",       ep.risk       || "—",
+              (ep.risk || "").toLowerCase() === "high" ? C.high : C.body);
+            doc.moveDown(0.25);
           });
         }
       });
     }
 
-    // Sensitive Files
+    // ── Sensitive Files ───────────────────────────────────────────────────────
     if (vuln.sensitiveFiles?.found) {
       vulnBlock("Sensitive File Exposure", "HIGH", () => {
-        const d = vuln.sensitiveFiles.details || {};
+        const d   = vuln.sensitiveFiles.details || {};
         const sum = d.summary || {};
-        if (sum.critical) field("Critical Files", sum.critical, COLOR.critical);
-        if (sum.high)     field("High Risk Files", sum.high,    COLOR.high);
+        if (sum.critical) field("Critical Files",   sum.critical, C.critical, L);
+        if (sum.high)     field("High Risk Files",  sum.high,     C.high,     L);
         const files = d.exposedFiles || d.files || [];
         if (files.length > 0) {
-          doc.moveDown(0.3);
-          doc.fontSize(10).fillColor(COLOR.muted).text("Exposed Files:");
+          doc.moveDown(0.35);
+          doc.fontSize(9).fillColor(C.muted).text("Exposed Files:", L);
           doc.moveDown(0.2);
           files.slice(0, 15).forEach((f, idx) => {
-            const url  = typeof f === "object" ? (f.url  || f.path || f.file) : f;
+            const url  = typeof f === "object" ? (f.url || f.path || f.file) : f;
             const risk = typeof f === "object" ? (f.risk || f.severity || "") : "";
-            const urlSafe = url && url.length > 60 ? url.substring(0,60)+"..." : (url || "Unknown");
-            doc.fontSize(10).fillColor(risk === "CRITICAL" ? COLOR.critical : COLOR.high)
-              .text(`${idx + 1}.  ${urlSafe}${risk ? "  ["+risk+"]" : ""}`, 50, doc.y, { width: 495, lineBreak: false });
-            doc.moveDown(0.6);
+            const urlSafe = (url || "Unknown").substring(0, 70);
+            ensureSpace(16);
+            doc.fontSize(9)
+              .fillColor(risk === "CRITICAL" ? C.critical : C.high)
+              .text(`${idx + 1}.  ${urlSafe}${risk ? "  [" + risk + "]" : ""}`, IND);
           });
         }
       });
     }
 
-    // Open Redirect
+    // ── Open Redirect ─────────────────────────────────────────────────────────
     if (vuln.openRedirect?.found) {
       vulnBlock("Open Redirect", "HIGH", () => {
-        const d = vuln.openRedirect.details || {};
+        const d        = vuln.openRedirect.details || {};
         const findings = d.findings || d.vulnerableEndpoints || [];
         if (findings.length > 0) {
           findings.slice(0, 10).forEach((f, idx) => {
             const url   = typeof f === "object" ? (f.url   || f.endpoint) : f;
             const param = typeof f === "object" ? (f.param || f.parameter) : "";
-            const urlShort = url && url.length > 60 ? url.substring(0,60)+"..." : (url || "Unknown");
-            const paramStr = param ? `  [param: ${param}]` : "";
-            doc.fontSize(10).fillColor(COLOR.body).text(`${idx + 1}.  ${urlShort}${paramStr}`, 50, doc.y, { width: 495, lineBreak: false });
-            doc.moveDown(0.6);
-            doc.moveDown(0.2);
+            findingHeader(idx + 1, `${(url || "Unknown").substring(0, 75)}`);
+            if (param) subField("Parameter", param);
+            doc.moveDown(0.25);
           });
         } else {
-          doc.fontSize(10).fillColor(COLOR.muted).text(d.notes || "Open redirect vulnerability confirmed.");
+          doc.fontSize(9).fillColor(C.muted)
+            .text(d.notes || "Open redirect vulnerability confirmed.", IND);
         }
       });
     }
 
-    // CORS
+    // ── CORS ──────────────────────────────────────────────────────────────────
     if (vuln.cors?.found) {
       vulnBlock("CORS Misconfiguration", "HIGH", () => {
-        const d = vuln.cors.details || {};
+        const d   = vuln.cors.details || {};
         const sum = d.summary || {};
-        if (sum.critical) field("Critical Issues", sum.critical, COLOR.critical);
-        if (sum.high)     field("High Issues",     sum.high,     COLOR.high);
+        if (sum.critical) field("Critical Issues", sum.critical, C.critical, L);
+        if (sum.high)     field("High Issues",     sum.high,     C.high,     L);
         const findings = d.findings || d.vulnerableEndpoints || [];
         if (findings.length > 0) {
-          doc.moveDown(0.3);
+          doc.moveDown(0.35);
           findings.slice(0, 10).forEach((f, idx) => {
-            const url   = typeof f === "object" ? (f.url   || f.endpoint || f.origin) : f;
-            const issue = typeof f === "object" ? (f.issue || f.type     || "") : "";
-            const corsUrl = url && url.length > 65 ? url.substring(0,65)+"..." : (url || "Unknown");
-            doc.fontSize(10).fillColor(COLOR.body).text(`${idx + 1}.  ${corsUrl}`, 50, doc.y, { width: 495, lineBreak: false });
-            doc.moveDown(0.6);
-            if (issue) field("Issue", issue, COLOR.high);
-            doc.moveDown(0.2);
+            const url   = typeof f === "object" ? (f.url || f.endpoint || f.origin) : f;
+            const issue = typeof f === "object" ? (f.issue || f.type || "") : "";
+            findingHeader(idx + 1, (url || "Unknown").substring(0, 70));
+            if (issue) subField("Issue", issue, C.high);
+            doc.moveDown(0.25);
           });
         } else {
-          doc.fontSize(10).fillColor(COLOR.muted).text(d.notes || "CORS misconfiguration detected — overly permissive origin policy.");
+          doc.fontSize(9).fillColor(C.muted)
+            .text(d.notes || "CORS misconfiguration — overly permissive origin policy.", IND);
         }
       });
     }
 
-    // WordPress
+    // ── WordPress ─────────────────────────────────────────────────────────────
     if (vuln.wordpress?.found) {
-      const wp = vuln.wordpress.details || {};
+      const wp    = vuln.wordpress.details || {};
       const wpSev = wp.riskScore?.level || "MEDIUM";
       vulnBlock("WordPress Security", wpSev, () => {
-        if (wp.version)           field("WP Version",  wp.version,  COLOR.body);
-        if (wp.riskScore?.score)  field("Risk Score",  wp.riskScore.score, COLOR.high);
-        if (wp.theme)             field("Active Theme", wp.theme,   COLOR.body);
+        if (wp.version)          field("WP Version",   wp.version,          C.body, L);
+        if (wp.riskScore?.score) field("Risk Score",   wp.riskScore.score,  C.high, L);
+        if (wp.theme)            field("Active Theme",  wp.theme,           C.body, L);
         const plugins = wp.vulnerablePlugins || wp.plugins || [];
         if (plugins.length > 0) {
-          doc.moveDown(0.3);
-          doc.fontSize(10).fillColor(COLOR.muted).text("Vulnerable Plugins:");
+          doc.moveDown(0.35);
+          doc.fontSize(9).fillColor(C.muted).text("Vulnerable Plugins:", L);
           doc.moveDown(0.2);
           plugins.slice(0, 10).forEach((p, idx) => {
             const name = typeof p === "object" ? (p.name || p.plugin || JSON.stringify(p)) : p;
-            doc.fontSize(10).fillColor(COLOR.high).text(`${idx + 1}.  ${name}`);
+            ensureSpace(14);
+            doc.fontSize(9).fillColor(C.high).text(`${idx + 1}.  ${name}`, IND);
           });
         }
         const cves = wp.cves || [];
         if (cves.length > 0) {
-          doc.moveDown(0.3);
-          doc.fontSize(10).fillColor(COLOR.muted).text("CVEs:");
+          doc.moveDown(0.35);
+          doc.fontSize(9).fillColor(C.muted).text("CVEs:", L);
+          doc.moveDown(0.2);
           cves.slice(0, 5).forEach(c => {
-            doc.fontSize(10).fillColor(COLOR.critical).text(`  ${typeof c === "object" ? c.id || c.cve : c}`);
+            ensureSpace(14);
+            doc.fontSize(9).fillColor(C.critical)
+              .text(`  ${typeof c === "object" ? c.id || c.cve : c}`, IND);
           });
         }
       });
@@ -1034,43 +1142,53 @@ exports.generateFullScanPDF = async (scanData, target, res) => {
 
     divider();
 
-    // ── RECOMMENDATIONS ──────────────────────────────────────────────────────
-    sectionTitle("Remediation Recommendations", COLOR.heading);
+    // =========================================================================
+    // REMEDIATION RECOMMENDATIONS
+    // =========================================================================
+    sectionTitle("Remediation Recommendations");
     const recs = [];
-    if (vuln.sqlInjection?.found)      recs.push(["SQL Injection",           "HIGH",     "Use parameterized queries / prepared statements. Never interpolate user input into SQL."]);
-    if (vuln.domXss?.found)            recs.push(["DOM XSS",                 "MEDIUM",   "Avoid innerHTML/document.write with user-controlled data. Use textContent or DOMPurify."]);
-    if (vuln.storedXss?.found)         recs.push(["Stored XSS",              "HIGH",     "Sanitize and encode all stored user input before rendering. Implement a strict CSP."]);
-    if (vuln.reflectedXss?.found)      recs.push(["Reflected XSS",           "MEDIUM",   "Encode all reflected user input. Implement Content-Security-Policy headers."]);
-    if (vuln.clickjacking?.vulnerable) recs.push(["Clickjacking",            "LOW",      "Add X-Frame-Options: DENY or Content-Security-Policy: frame-ancestors 'none'."]);
-    if (vuln.commandInjection?.found)  recs.push(["Command Injection",       "CRITICAL", "Never pass user input to shell commands. Use safe APIs and strict input validation."]);
-    if (vuln.csrf?.found)              recs.push(["CSRF",                    "HIGH",     "Implement CSRF tokens on all state-changing requests. Use SameSite cookie attribute."]);
-    if (vuln.sensitiveFiles?.found)    recs.push(["Sensitive File Exposure", "HIGH",     "Remove or restrict access to backup files, config files and admin panels."]);
-    if (vuln.openRedirect?.found)      recs.push(["Open Redirect",           "HIGH",     "Validate and whitelist redirect destinations. Avoid user-controlled redirect URLs."]);
-    if (vuln.cors?.found)              recs.push(["CORS Misconfiguration",   "HIGH",     "Restrict Access-Control-Allow-Origin to trusted domains only. Avoid wildcard (*)."]);
-    if (missingHdrs.length > 0)        recs.push(["Missing Security Headers","MEDIUM",   `Add: ${missingHdrs.slice(0,4).join(", ")}${missingHdrs.length > 4 ? "..." : ""}.`]);
+    if (vuln.sqlInjection?.found)       recs.push(["SQL Injection",           "HIGH",     "Use parameterized queries / prepared statements. Never interpolate user input into SQL."]);
+    if (vuln.domXss?.found)             recs.push(["DOM XSS",                 "MEDIUM",   "Avoid innerHTML/document.write with user-controlled data. Use textContent or DOMPurify."]);
+    if (vuln.storedXss?.found)          recs.push(["Stored XSS",              "HIGH",     "Sanitize and encode all stored user input before rendering. Implement a strict CSP."]);
+    if (vuln.reflectedXss?.found)       recs.push(["Reflected XSS",           "MEDIUM",   "Encode all reflected user input. Implement Content-Security-Policy headers."]);
+    if (vuln.clickjacking?.vulnerable)  recs.push(["Clickjacking",            "LOW",      "Add X-Frame-Options: DENY or Content-Security-Policy: frame-ancestors 'none'."]);
+    if (vuln.commandInjection?.found)   recs.push(["Command Injection",       "CRITICAL", "Never pass user input to shell commands. Use safe APIs and strict input validation."]);
+    if (vuln.csrf?.found)               recs.push(["CSRF",                    "HIGH",     "Implement CSRF tokens on all state-changing requests. Use SameSite cookie attribute."]);
+    if (vuln.sensitiveFiles?.found)     recs.push(["Sensitive File Exposure", "HIGH",     "Remove or restrict access to backup files, config files and admin panels."]);
+    if (vuln.openRedirect?.found)       recs.push(["Open Redirect",           "HIGH",     "Validate and whitelist redirect destinations. Avoid user-controlled redirect URLs."]);
+    if (vuln.cors?.found)               recs.push(["CORS Misconfiguration",   "HIGH",     "Restrict Access-Control-Allow-Origin to trusted domains only. Avoid wildcard (*)."]);
+    if (missingHdrs.length > 0)         recs.push(["Missing Security Headers","MEDIUM",   `Add: ${missingHdrs.slice(0, 4).join(", ")}${missingHdrs.length > 4 ? "…" : ""}.`]);
 
     if (recs.length === 0) {
-      doc.fontSize(10).fillColor(COLOR.safe).text("No critical issues detected. Continue monitoring and re-scan periodically.");
+      doc.fontSize(9).fillColor(C.safe)
+        .text("No critical issues detected. Continue monitoring and re-scan periodically.");
     } else {
       recs.forEach((r, i) => {
-        const sevColor = r[1] === "CRITICAL" ? COLOR.critical : r[1] === "HIGH" ? COLOR.high : r[1] === "MEDIUM" ? COLOR.medium : COLOR.low;
-        doc.fontSize(10).fillColor(sevColor).text(`${i + 1}. [${r[1]}] ${r[0]}`, 50, doc.y, { width: 495 });
-        doc.fontSize(10).fillColor(COLOR.body).text(`   ${r[2]}`, 50, doc.y, { width: 495 });
-        doc.moveDown(0.4);
+        ensureSpace(28);
+        const sc = sevColor(r[1]);
+        doc.fontSize(9).fillColor(sc).font("Helvetica-Bold")
+          .text(`${i + 1}.  [${r[1]}]  ${r[0]}`, L, doc.y, { width: W });
+        doc.font("Helvetica").fillColor(C.body)
+          .text(`   ${r[2]}`, L, doc.y, { width: W });
+        doc.moveDown(0.45);
       });
     }
 
     divider();
 
-    // ── FOOTER ───────────────────────────────────────────────────────────────
-    doc.fontSize(9).fillColor(COLOR.muted).text(
-      "Generated by WebIntelX  —  For authorized security assessment purposes only  —  Handle with confidentiality.",
-      { align: "center" }
-    );
+    // =========================================================================
+    // FOOTER
+    // =========================================================================
+    doc.fontSize(8).fillColor(C.muted)
+      .text(
+        "Generated by WebIntelX  —  For authorised security assessment purposes only  —  Handle with confidentiality.",
+        { align: "center" }
+      );
 
     doc.end();
+
   } catch (err) {
     console.error("FullScan PDF generation failed:", err);
-    try { res.status(500).json({ error: "PDF generation failed" }); } catch(e) {}
+    try { res.status(500).json({ error: "PDF generation failed" }); } catch (e) {}
   }
 };
