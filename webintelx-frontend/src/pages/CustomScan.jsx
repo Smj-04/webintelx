@@ -163,21 +163,7 @@ function ResultsView({ r, riskAssessment, target, onDownload, isDownloading }) {
 
   return (
     <div style={{ animation: "fadeUp 0.5s ease forwards" }}>
-      {/* Risk Banner */}
-      <div style={{ background: rb, border: `1px solid ${rbd}`, borderLeft: `4px solid ${rc}`, borderRadius: "0 8px 8px 0", padding: "24px 28px", marginBottom: "28px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: "12px", color: C.textSecondary, letterSpacing: "0.08em", marginBottom: "10px", fontWeight: 500 }}>// overall_risk_assessment</div>
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap", marginBottom: "10px" }}>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: "24px", color: rc }}>{risk} RISK</div>
-          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "13px", color: rc, background: C.white, border: `1px solid ${rbd}`, padding: "4px 14px", borderRadius: "20px", fontWeight: 600 }}>Score: {score}/20</span>
-          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "13px", color: C.textSecondary, fontWeight: 500 }}>Target: {target}</span>
-        </div>
-        {findings.length > 0 && (
-          <div style={{ marginTop: "10px" }}>
-            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: "12px", color: C.textSecondary, letterSpacing: "0.06em", marginBottom: "10px", fontWeight: 500 }}>// key_findings</div>
-            {findings.map((f, i) => <AlertRow key={i} text={f} severity={risk === "CRITICAL" || risk === "HIGH" ? "critical" : "warn"} />)}
-          </div>
-        )}
-      </div>
+ 
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
 

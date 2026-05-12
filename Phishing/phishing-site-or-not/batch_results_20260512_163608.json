@@ -1,0 +1,5158 @@
+[
+  {
+    "url": "https://member17.agency-connect-profile.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://ynabioueconus-meriescs-experinces-t.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5189019403591796,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.52) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://www.ynabioueconus-meriescs-experinces-t.vercel.app/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5861609756029507,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.59) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://member427.partner-business-hub.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://ftx.claims-notification.com/portal-claims/?id=Y2FsY3VsYXRvYXJlcGl0ZXN0aS5jb20",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.7280361264365826,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 5.555555555555555,
+      "content_score": 3.125,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.73) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://desenrolabrasil2026.site/",
+    "message": "No such site exists."
+  },
+  {
+    "url": "https://www.app86365.cc/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "MODERATE",
+    "ml_probability": 0.8226197111179561,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 22.22222222222222,
+      "content_score": 12.5,
+      "final_weighted_score": 55
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "MODERATE (55.0%) \u2013 ML predicted legitimate (0.82) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://survey.refassured.com/mbMDN5NK",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.70777072199285,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 0.0,
+      "content_score": 0.0,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.71) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://survey.refassured.co/mbMDN5NK",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.7514718894479676,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 0.0,
+      "content_score": 0.0,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.75) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://id-meta.busines-help-center.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "http://diogohenriquedotpy.github.io/meus-sites-favoritos",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5427547148659201,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.54) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://finnest.ink/yago/index.html",
+    "message": "No such site exists."
+  },
+  {
+    "error": "Invalid URL"
+  },
+  {
+    "url": "https://hughssherika896572396.pages.dev/help/contact/521544119187011/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5603518435296531,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.56) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://loenwe-hopeagia-noprobs.pages.dev/help/contact/289022682371252",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5006941505247643,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 0.0,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.50) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://studyioiyy.b-cdn.net/all1.html?eta=mirus2@f0fca16225d1fa713bfefd56bbd8674cead3.org",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5830608709106777,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 16.666666666666664,
+      "content_score": 6.25,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted phishing (0.58) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://novolimitepratodos.s3.us-east-005.backblazeb2.com/aumento.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5807493652865843,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.58) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://www.amazon-clone-gray-psi.vercel.app/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5318072556404867,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 27.77777777777778,
+      "content_score": 12.5,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "amazon",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted legitimate (0.53) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://ipfs.io/ipfs/bafybeid77ah547l36ef5c5m7o24ooophtfyhddpm64ku5ubxi6wvdsh3oy",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8211854399685802,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.82) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://sites.google.com/view/wetrsfer/accueil/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "MODERATE",
+    "ml_probability": 0.9392986165474879,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 6.25,
+      "final_weighted_score": 55
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "MODERATE (55.0%) \u2013 ML predicted legitimate (0.94) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://synva-nalra-biz01-prixo-dexma-spct1.pages.dev/heartily_welcome?id=845957945277545&page_name=AryaSpa/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6125726575617036,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 0.0,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.61) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://croatiapools.com/DK/DKB/dkb/login.php/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8109461156808471,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 68
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4167,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (68.0%) \u2013 ML predicted legitimate (0.81) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://discord-clone-rajdeep019.vercel.app/login",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5743836912358136,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 27.77777777777778,
+      "content_score": 12.5,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "discord",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted phishing (0.57) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://mattcreamer17-gif.github.io/bank-of-america/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7110845879506267,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.71) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://artmedal.ir/ggyg/alibaba/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8487562054915815,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 5.555555555555555,
+      "content_score": 18.75,
+      "final_weighted_score": 68
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4444,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (68.0%) \u2013 ML predicted legitimate (0.85) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://ipfs.io/ipfs/bafkreidykzihrphv3kincyjruk34txtfvtja5rfilg4dffcdgoic7est54",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8500763075371234,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.85) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://nandaatenatec.github.io/clone-spotify/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7026392965306227,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.70) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://javi-salas-dev.github.io/duplicate-Netflix",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5249378354949148,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.52) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://adiraneazkuenaga.es/cn/en.php?rand=13inboxlightaspxn.1774256418",
+    "prediction": "legitimate",
+    "classification": "Legitimate Website",
+    "risk_level": "LOW",
+    "ml_probability": 0.8508177263705963,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 10.381944444444445
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.4375,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "LOW (10.4%) \u2013 ML predicted legitimate (0.85) \u2013 Legitimate Website"
+  },
+  {
+    "url": "https://easy-bank-landing-page-pi.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5378756948618386,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 22.22222222222222,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "etsy",
+      "typosquat_score": 0.75
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.54) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://easy-bank-landing-page-ecru.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5554524370827133,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 22.22222222222222,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "etsy",
+      "typosquat_score": 0.75
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.56) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://shrutitomar02.github.io/Amazon-Project/checkout.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6789667824979658,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.68) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://sab8942.github.io/Amazon-clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6987018044281796,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.70) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://sheetaljanghu-design.github.io/Amazon-UI/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7138335732311161,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.71) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://mhamedkbt.github.io/NetflixPrj/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6351855012825689,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 22.22222222222222,
+      "content_score": 12.5,
+      "final_weighted_score": 82
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (82.0%) \u2013 ML predicted legitimate (0.64) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://easybank-landing-page-xi-eight.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.53970776309184,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.54) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://update-exodus-helpcentre.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5592258473957733,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 11.11111111111111,
+      "content_score": 9.375,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.56) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://my-site-103180-108737.weeblysite.com/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8430804059423297,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 0.0,
+      "content_score": 0.0,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.84) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://clover-infotech-internal.github.io/clover-ai-chatboat-compass/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.7391946286875295,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.74) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://view-help---auth---bitmert--sso.webflow.io/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7365813390574207,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.74) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://finance-ndax.pages.dev/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5186195243226293,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 27.77777777777778,
+      "content_score": 3.125,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "binance",
+      "typosquat_score": 0.857
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted phishing (0.52) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://www.robiox.com.ua/users/7426339782/profile?https://www.roblox.com/users/7426339782/profile=",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6190632364448682,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 27.77777777777778,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.8333,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false,
+      "typosquat_target": "roblox",
+      "typosquat_score": 0.833
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.62) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://us-support-ledgor-en.pages.dev/page1.html/page2.html/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5184754675624087,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.52) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://mayuresh-2601.github.io/Netflix-Clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6774113059658968,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.68) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://namanjain-git.github.io/Netflix-UI-Clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6637374301162502,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.66) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://kcoinlogin.github.io/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6559994697874363,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.66) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://next-ab-clone-apetta.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5378756948618386,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.54) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://mandalacraft.ro/lop/admin%20verify/",
+    "prediction": "legitimate",
+    "classification": "Legitimate Website",
+    "risk_level": "LOW",
+    "ml_probability": 0.8678130733502167,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 3.7847222222222223
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4375,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "LOW (3.8%) \u2013 ML predicted legitimate (0.87) \u2013 Legitimate Website"
+  },
+  {
+    "url": "https://tamaratav.github.io/Netflix/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6427692069894048,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 9.375,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.64) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://portal-live-ledgar.webflow.io/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7280625719152898,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.73) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://ddeepakgoutam2005.github.io/Netflix_Clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6648105141126319,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.66) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://apple-responsive-frontend.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5474362473268908,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 27.77777777777778,
+      "content_score": 12.5,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "apple",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted phishing (0.55) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://zeynepsudeilaslan.github.io/netflix-website-bootstrap/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6791646969580609,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.68) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://www.robiox.com.ua/games/11729688377/Booga-Booga?privateServerLinkCode=92750181032122628380385966605650",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6029994246250485,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 27.77777777777778,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.8333,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false,
+      "typosquat_target": "roblox",
+      "typosquat_score": 0.833
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.60) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://jhamilan.github.io/Netflix-Clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6868306122944806,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.69) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://karankumae.github.io/netflixclone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6868306122944806,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.69) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://shruti01022004.github.io/NETFLIX-UI-clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6877172584635437,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.69) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://public-trezo.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5653875779591914,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.57) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://jjanahh274-eng.github.io/portofoliocs/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.7515811544692351,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 9.375,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.75) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://help--ledgerlivelad.webflow.io/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6968232862893207,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.70) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://sso-blockfee.webflow.io/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6704298933281698,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.67) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://galexcarrion.github.io/steam/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7444774181663609,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 21.875,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.74) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://netflix-clone-qu144p5yp-lumiereproductions.vercel.app/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5274403783108151,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 33.33333333333333,
+      "content_score": 12.5,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "netflix",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted legitimate (0.53) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://abhishekkumar2280.github.io/Netflix-Clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6418864521117211,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.64) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://pub-1e5d76a3f07d40fca9aaa348be68acb6.r2.dev/Client:DogsForOurBraveEventDate%204:07:2026Tue.html",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6928333062149491,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 22.22222222222222,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.1667,
+      "ssl_valid": false,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted phishing (0.69) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://edu4life.github.io/amazon-project-version-1/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6432560793808528,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.64) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://www.vlkote.hop.ru/",
+    "prediction": "legitimate",
+    "classification": "Legitimate Website",
+    "risk_level": "LOW",
+    "ml_probability": 0.952063711225733,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 11.11111111111111,
+      "content_score": 9.375,
+      "final_weighted_score": 10.850694444444445
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6667,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "LOW (10.9%) \u2013 ML predicted legitimate (0.95) \u2013 Legitimate Website"
+  },
+  {
+    "url": "https://us-support-ledgor-en.pages.dev/page1.html/page4.html/page2.html/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5053274080783601,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.51) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://loginservice.cloud/E.lEcQSl9-99fHIQ?/linkedin/slink?code=afSN103785",
+    "prediction": "legitimate",
+    "classification": "Legitimate Website",
+    "risk_level": "LOW",
+    "ml_probability": 0.7057049685508754,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 5.555555555555555,
+      "content_score": 6.25,
+      "final_weighted_score": 7.534722222222222
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4167,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "LOW (7.5%) \u2013 ML predicted legitimate (0.71) \u2013 Legitimate Website"
+  },
+  {
+    "url": "https://fdgfdg.center-meta-agency.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://fnaver.netlify.app/nidlogin.login/?naps",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5316293063447766,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.5714,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.53) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://login-finan2026.gamer.gd/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.541773526995597,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 72
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "CRITICAL (72.0%) \u2013 ML predicted legitimate (0.54) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://red-mud-f702.kendallelsaxbthtp0668.workers.dev/email-notification2e3waXFarD_eFq_tvhuJl8ff%3Bfr%3D1lyxrntvqTbTboazV.AWccO3ZxPz8a78gk_aXXTrSbCR2jUDllDnMyiTKvp4YMycirUlo.Bp8iie..AAA.0.0.Bp8iie.AWfdP6EKabBlBt6U0GYa0PcIPxQ",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5761395788590109,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5714,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.58) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://login-pichinha.hstn.me/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5815529198503518,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 22.22222222222222,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.5,
+      "ssl_valid": false,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.58) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://www.joyfullmint-drop7.vercel.app/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5180502950754826,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 27.77777777777778,
+      "content_score": 12.5,
+      "final_weighted_score": 82
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (82.0%) \u2013 ML predicted legitimate (0.52) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://armt.cloud/devices/0027044E39FD",
+    "prediction": "legitimate",
+    "classification": "Legitimate Website",
+    "risk_level": "LOW",
+    "ml_probability": 0.8892822286551099,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 5.555555555555555,
+      "content_score": 12.5,
+      "final_weighted_score": 8.159722222222221
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4286,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "LOW (8.2%) \u2013 ML predicted legitimate (0.89) \u2013 Legitimate Website"
+  },
+  {
+    "url": "https://telasmaster.serveirc.com/sicred/Portal.php",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5015444797292509,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.4545,
+      "ssl_valid": false,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.50) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://microsoftquarantine.authorised-support.com/login/review/wjy99UrJpywk6FVPPIN_vx51xfx1Jt7X1UEQ=7Bg==0XVlTQl9DX1ZEb1xfV1leb0dZRFhvQFFDQ0dfQlQ=/qVL0fNmNYahdj2smOXWXeggfE1TOi_hb/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6364717728294725,
+    "scores": {
+      "url_score": 31.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 6.25,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4286,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.64) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://www.robiox.com.ps/users/6528622062/profile",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.85596787716142,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 22.22222222222222,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.8333,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false,
+      "typosquat_target": "roblox",
+      "typosquat_score": 0.833
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.86) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://secur-servenupdates.b-cdn.net/secure.html?eta=kalospro@9940cf839c8806745bd7b4900dafd8a656e5.net/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5683315957927899,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 16.666666666666664,
+      "content_score": 6.25,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.57) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://khushijain3103.github.io/Instagram-Love",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5861395390988182,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 9.375,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.59) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://codebyprathmesh.github.io/Amazon_Clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6810612211522897,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.68) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://pub-f4bf4b5c581d4d2fae8ac6d8e8ea7310.r2.dev/woad.html",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.8069406510980969,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 22.22222222222222,
+      "content_score": 6.25,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.1667,
+      "ssl_valid": false,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.81) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://mdkamran623.github.io/Amazon-clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7078778018483779,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.71) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://www.robiox.com.py/users/473677855297/profile",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.85596787716142,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 22.22222222222222,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.8333,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false,
+      "typosquat_target": "roblox",
+      "typosquat_score": 0.833
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.86) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://member37.agency-connection-hub.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://princemedia.co.za/mipaz/pages/login.php",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.9669270021606428,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 68
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4545,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (68.0%) \u2013 ML predicted legitimate (0.97) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://www.robiox.com.py/users/267220066116/profile",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.85596787716142,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 22.22222222222222,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.8333,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false,
+      "typosquat_target": "roblox",
+      "typosquat_score": 0.833
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.86) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://aumento25.s3.us-east-005.backblazeb2.com/aumento.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5516724065710411,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.55) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://crditoecuadoenlinea.gt.tc/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8749704422690412,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.3333,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.87) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://firewalll.b-cdn.net/11a.html",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6841187835470847,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 11.11111111111111,
+      "content_score": 6.25,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted phishing (0.68) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://profile-meta.busines-help-center.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://armt.cloud/devices/002704488C51",
+    "prediction": "legitimate",
+    "classification": "Legitimate Website",
+    "risk_level": "LOW",
+    "ml_probability": 0.893509950171772,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 5.555555555555555,
+      "content_score": 12.5,
+      "final_weighted_score": 8.159722222222221
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "LOW (8.2%) \u2013 ML predicted legitimate (0.89) \u2013 Legitimate Website"
+  },
+  {
+    "url": "https://portal-cliente.hstn.me/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5815529198503518,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 22.22222222222222,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.5,
+      "ssl_valid": false,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.58) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://desaplicadas.vu/bgt5/others.html?eta=maror9@ab14f2274f9be61f966367b15882eba516d5.com",
+    "prediction": "legitimate",
+    "classification": "Legitimate Website",
+    "risk_level": "LOW",
+    "ml_probability": 0.9486858006284916,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 11.11111111111111,
+      "content_score": 21.875,
+      "final_weighted_score": 15.225694444444443
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4375,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "LOW (15.2%) \u2013 ML predicted legitimate (0.95) \u2013 Legitimate Website"
+  },
+  {
+    "url": "https://agency-manager.accounts-admin-agency.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://agency-marketing.accounts-admin-agency.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://member24.agency-connection-hub.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://jkblog790.netlify.app/playerunknowns-battlegrounds",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5846559013668615,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 33.33333333333333,
+      "content_score": 0.0,
+      "final_weighted_score": 82
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5714,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (82.0%) \u2013 ML predicted legitimate (0.58) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://jkblog790.netlify.app/playerunknowns-battlegrounds.html/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5651131499733082,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 33.33333333333333,
+      "content_score": 0.0,
+      "final_weighted_score": 82
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5714,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (82.0%) \u2013 ML predicted phishing (0.57) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://member35.agency-connection-hub.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://meta-id17660.invoice-ads-manager.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://meta-id17659.invoice-ads-manager.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "http://thatpartllc.co/wp-admin/sf/sf_marley/sf_marley",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8075933766080062,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 5.555555555555555,
+      "content_score": 6.25,
+      "final_weighted_score": 68
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4286,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (68.0%) \u2013 ML predicted legitimate (0.81) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://kidcarteer.b-cdn.net/all2.html?eta=elen@af4ca0094d3b1404f6b727ea8d84549f47f5.org",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5830608709106777,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 16.666666666666664,
+      "content_score": 6.25,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted phishing (0.58) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://serves-9eprotection.vercel.app/jsecsev.html?eta=renenhub@7048b0f77cf7408ea29da6189a080712327c.com",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5967256563862328,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 16.666666666666664,
+      "content_score": 21.875,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.60) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://verifasoli.webcindario.com/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5379369660994431,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 18.75,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4545,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.54) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://seunovolimitealtoliberado.s3.us-east-005.backblazeb2.com/aumento.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5326819397716291,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.53) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://updatesubs-netfilx.dynv6.net/login",
+    "message": "No such site exists."
+  },
+  {
+    "url": "http://updatesubs-netfilx.dynv6.net/",
+    "message": "No such site exists."
+  },
+  {
+    "url": "https://kuiocnlogen.gitbook.io/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.7377694546284292,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 6.25,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.74) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://sso-en-ca-netcoins-com-nav-azure.webflow.io/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6845095945013145,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.68) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://ribanholdlogip.gitbook.io/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.7638624400357975,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 6.25,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.76) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://badging.it-support-group.com/s/63BZGFSVBWSFCDX7Y9/584dd8/90eab167-7429-489f-99f6-ce86e8d0d81a",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.7941685847806147,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.4286,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.79) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://inicioinusual365.webcindario.com/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.716098298179217,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 18.75,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4545,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.72) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://web2.pancake.run/info/tokens/0x2170ed0880ac9a755fd29b2688956bd959f933f8",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.7124333114632164,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 22.22222222222222,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.4286,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.71) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://trkloge23.serv00.net/dkb/login.php",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6988473057437334,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.70) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://maida1610.github.io/Amazon-clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7197452154206867,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.72) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://faiyazusmani.github.io/instagram/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7714479056683683,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 9.375,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.77) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://vishal7398.github.io/avs/index.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "MODERATE",
+    "ml_probability": 0.6804277842575022,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 0.0,
+      "final_weighted_score": 55
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "MODERATE (55.0%) \u2013 ML predicted legitimate (0.68) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://f.digitalmaillane.com/igit/4/222vni5Mfeym7n6hxrM1t8MuxqlmwMgrwMstlM4hMxMq",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5497744926792646,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 5.555555555555555,
+      "content_score": 6.25,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.55) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://crackaf-bubbles-frontend.vercel.app/swap",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5421272787974819,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.54) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://niharika0732.github.io/Project_Sem1/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.691886448489818,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.69) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://ww.viettevghy2026.kesug.com/facebook-meta-ads2026",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8563688778741702,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 5.555555555555555,
+      "content_score": 6.25,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4286,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.86) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://discontcomputers.com/2513501.doc/18a80a/fad0f483-81b2-45c6-ad47-7272058d9cb6",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.9260831002924146,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4375,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.93) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://zxd365756.com/index_m.html",
+    "prediction": "legitimate",
+    "classification": "Legitimate Website",
+    "risk_level": "LOW",
+    "ml_probability": 0.547857939582176,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 3.7847222222222223
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.3333,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "LOW (3.8%) \u2013 ML predicted legitimate (0.55) \u2013 Legitimate Website"
+  },
+  {
+    "url": "https://hems.standard.us-east-1.oortstorages.com/11.znc",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5157422961685818,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4167,
+      "ssl_valid": false,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.52) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://netflix-clone-azure-ten.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5378756948618386,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 27.77777777777778,
+      "content_score": 12.5,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "netflix",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted phishing (0.54) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://microsoft.authorised-support.com/new-account/EOzAFbYj1bjLmgufSIlKJJR9Kpvsy5kc3UkY=3Ag==5WFxWR1pGWlNBallaUlxbakJcQV1qRVRGRkJaR1E=/6Xx5KG1mKRNjeU3rSnC8diFTM7R4V1de",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6931041533725197,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 27.77777777777778,
+      "content_score": 12.5,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.4286,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false,
+      "typosquat_target": "microsoft",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted legitimate (0.69) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://enuganduladineshkumar.github.io/Netflix-Clone-Landing-page/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.775683282335486,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.78) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://gestao.current-news-alerts.com/s/63BZGFSVBWSFCDX7Y9/584dd8/90eab167-7429-489f-99f6-ce86e8d0d81a",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.9074908735942907,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.91) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://gh.cyberfish.io/s/63BZGFSVBWSFCDX7Y9/584dd8/90eab167-7429-489f-99f6-ce86e8d0d81a",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8809393522777982,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.4444,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.88) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://fortflarefn.github.io/roblox.github.io/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7120116330011059,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 18.75,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.71) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://shantanu024.github.io/Netflix-Clone",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.525673249724303,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.53) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://abhimanyu088.github.io/netflix-clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7133142271345587,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.71) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://kaarthi0312.github.io/Instagram-copy-page",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5004776572405774,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.50) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://secure-web-ndxxa-cdns.typedream.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.59160520748891,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.5556,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.59) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://netflix-clone-azure-seven.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5607320912561832,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 27.77777777777778,
+      "content_score": 12.5,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "netflix",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted phishing (0.56) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://ledfgt-xmvtyoz.pages.dev/index.htm/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5055356744197278,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 22.22222222222222,
+      "content_score": 0.0,
+      "final_weighted_score": 82
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (82.0%) \u2013 ML predicted phishing (0.51) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://rentrise.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "MODERATE",
+    "ml_probability": 0.5390304458894611,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 55
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "MODERATE (55.0%) \u2013 ML predicted phishing (0.54) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://emilemoraes.github.io/Netflix-Clone-/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6075151674718695,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.61) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://shabin-hussain.github.io/facebook_login/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.763507891620948,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 6.25,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.76) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://inner.website/443332cc8w6a2146c65a1833ca7b1ccd1a38.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8685139685841867,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.87) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://inner.website/x7198cf00060b941ffu8424c456q6cd00f38.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8685139685841867,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.87) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://sgr4fa.pages.dev/-/zh/gp/video/detail/0q7g46igupnjj9zutowrmf8nst/ref=atv_pp_tt_9",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5634687940442834,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 27.77777777777778,
+      "content_score": 12.5,
+      "final_weighted_score": 82
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (82.0%) \u2013 ML predicted phishing (0.56) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://notifyhubss.net/de0e811287ec9f469epa0aa42e72111ca8fe.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.7165283956686332,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.3636,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.72) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://inner.website/4c34e6ef9w4c4147d958e2603a2b61622c8e.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8685139685841867,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.87) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://inner.website/15bcca81a100994290f90c2f3c6fa100e443.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8685139685841867,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.87) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://www.uspsmailjourney.com/home",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8686573098683278,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 0.0,
+      "content_score": 0.0,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.3333,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.87) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://xdanaidnpayltersp.teocix.my.id/",
+    "message": "No such site exists."
+  },
+  {
+    "url": "http://f.digitalmaillane.com/igit/4/5t2frilU1qu1lizaqkU3b1Ue36xwkU0vpUlmeUxaUqUj",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5497744926792646,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 5.555555555555555,
+      "content_score": 6.25,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.55) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://f.digitalmaillane.com/igit/4/bigkqjpFj1n8c9q1hbFu2sFrg6xukFrmgFed5Fo1FhFa",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5426223829606324,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 5.555555555555555,
+      "content_score": 6.25,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.54) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://radhachavan.github.io/My_website/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6868306122944806,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.69) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://956882coinbase.com/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.725943214815943,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 22.22222222222222,
+      "content_score": 9.375,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false,
+      "typosquat_target": "coinbase",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted legitimate (0.73) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://humanresources-team.com/s/63BZGFSVBWSFCDX7Y9/584dd8/90eab167-7429-489f-99f6-ce86e8d0d81a",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.7754458606163342,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.8,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false,
+      "typosquat_target": "steam",
+      "typosquat_score": 0.8
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.78) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://phiscientificholdings.com/2513501.doc/18a80a/fad0f483-81b2-45c6-ad47-7272058d9cb6",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.92319943192262,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4762,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.92) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://ledger.updatesetup.com/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6277271454311237,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 0.0,
+      "content_score": 0.0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.3636,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.63) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://whatsapp-clone-peach-nine.vercel.app/login",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5263131325500685,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 27.77777777777778,
+      "content_score": 12.5,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "whatsapp",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted phishing (0.53) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://webfun.website/landingpages/a462b1ba-cbb5-4aec-853c-99f6af486dd1/jhAEYEtInnqYxzPh_N4lL-B6doAiM3LckFuEP39p2Kc",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8730869971623274,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 11.11111111111111,
+      "content_score": 6.25,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.3333,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.87) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://central.pr-universe.com/s/63BZGFSVBWSFCDX7Y9/584dd8/90eab167-7429-489f-99f6-ce86e8d0d81a/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.9116092540690153,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.91) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://sahanajambagi.github.io/amazon_clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6961664532778438,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.70) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://mail.supplier-gas-elpiji.duckdns.org/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5988350063950598,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 22.22222222222222,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "gmail",
+      "typosquat_score": 0.8
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.60) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://tax.securebankinggroup.com/s/63BZGFSVBWSFCDX7Y9/584dd8/90eab167-7429-489f-99f6-ce86e8d0d81a",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.921550699804382,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.3333,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.92) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://allhrgroup.com/s/63BZGFSVBWSFCDX7Y9/584dd8/90eab167-7429-489f-99f6-ce86e8d0d81a/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.7735607817203337,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.77) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://ms-en.github.io/lnstagram/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.707933918095502,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 6.25,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.71) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://chinkotemple.github.io/monfigs/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.66037644282988,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.66) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://airbnb-alpha-coral.vercel.app/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5661653679159193,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 27.77777777777778,
+      "content_score": 0.0,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "airbnb",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted legitimate (0.57) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://contact-account-client.com/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6551437260084405,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 5.555555555555555,
+      "content_score": 9.375,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5714,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.66) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://biswarup96.github.io/cloneofnetflix/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6684809225109154,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.67) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://dkcode1706.github.io/netflix-clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6480168842343279,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.65) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://facebook-member.bussines-partner-agency.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "http://f.digitalmaillane.com/igit/4/9aqqgz3Ynu95em5gwqYlx7Ygco6q0YktvYuskY3gYwYp",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5497744926792646,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 5.555555555555555,
+      "content_score": 6.25,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.55) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://rohanmore20.github.io/Project-Netflix-Clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6814687484447317,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.68) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://banban87.github.io/banana/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6452902012417582,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.65) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://dhlsupplychaintest.earcu.com/jobs/login",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.9635771210493569,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 5.555555555555555,
+      "content_score": 12.5,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.96) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://site-6aa3879fh.godaddysites.com/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5945419703998946,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 9.375,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.59) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://meta-id17658.invoice-ads-manager.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://inner.website/jc7dfe04275484474069e879b267b917cacb.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8685139685841867,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.87) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://accounts.bmwweb.systems/en/login",
+    "message": "No such site exists."
+  },
+  {
+    "url": "https://sso--netcoins-com--cdn-oauth.webflow.io/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6553022482862126,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.66) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://theblueheart321-max.github.io/Amazon-clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6725336358998658,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.67) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://sarthak312004.github.io/Netflix_cln/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.700563381238464,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.70) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://ecount-update.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5815296339069136,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.58) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://yashaitt.github.io/Netflix-clone/netflix-signup.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7126077870960741,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.71) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://aktifkanpayylater.ijj.my.id/",
+    "message": "No such site exists."
+  },
+  {
+    "url": "https://instagram-clone-kappa-five.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5257049510871743,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 27.77777777777778,
+      "content_score": 12.5,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "instagram",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted phishing (0.53) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://kucoinrewards.blogspot.com/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6067757142218108,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.375,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.61) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://trilova.com.br/wp-includes/images/smilies/?ai=Gsolex@661f473f1606f68678eada72ac26d980b864.com",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "MODERATE",
+    "ml_probability": 0.5504534727063902,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 11.11111111111111,
+      "content_score": 6.25,
+      "final_weighted_score": 55
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4286,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "MODERATE (55.0%) \u2013 ML predicted phishing (0.55) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://home-rent-application.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.524474724212721,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.52) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://dnaxx-ld.nxtxle.biz.id/x/int.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8783165319007658,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 9.375,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4286,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.88) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://anusriyacp.github.io/amazon-clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7153372472225998,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.72) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://shreyajaiswal0808.github.io/PROJECT-main/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6418864521117211,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.64) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://lmoriw-iekascma-oqmmcq-213-cmakwe-fgacsax.pages.dev/help/contact/422625022731437",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5671266431222439,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.57) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://nr7571808-bit.github.io/Amazon-clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7175358291374745,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 22.22222222222222,
+      "content_score": 3.125,
+      "final_weighted_score": 82
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (82.0%) \u2013 ML predicted legitimate (0.72) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://ubercar-site.web.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5444735527898094,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.54) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://joaogallindo-dev.github.io/Clone-Netflix/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.715746066921084,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.72) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://netflix-clone-red-seven.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5378756948618386,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 27.77777777777778,
+      "content_score": 12.5,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "netflix",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted phishing (0.54) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://netflix-clone-tan-six.vercel.app/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6419740310604698,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 27.77777777777778,
+      "content_score": 0.0,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "netflix",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted legitimate (0.64) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://imarsalan-tech.github.io/amazon-website/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7143316071580461,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.71) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://spotify.servernotification.events/premium/campaign/rejoin6m/login/jYIzT3IkJkRzitEx5knZyYGJ069Fh6em0RVs=6Bw==9SklWTVBfQGZVVl5QVw==/PFbnBhvz5dwOkHR1eD_R-l48VOHQKA2m/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7111273900577572,
+    "scores": {
+      "url_score": 25.0,
+      "domain_score": 27.77777777777778,
+      "content_score": 0.0,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4444,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false,
+      "typosquat_target": "spotify",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted legitimate (0.71) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://semdesculpaparasuassolucoes.s3.us-east-005.backblazeb2.com/aumento.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5326819397716291,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.53) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://pqsolutions.org/yak/rogers/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8710047398024008,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 0.0,
+      "content_score": 6.25,
+      "final_weighted_score": 68
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4545,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (68.0%) \u2013 ML predicted legitimate (0.87) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://pqsolutions.org/yak/rogers",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8582559085048916,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 0.0,
+      "content_score": 6.25,
+      "final_weighted_score": 68
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4545,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (68.0%) \u2013 ML predicted legitimate (0.86) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://www.mexcdefi.com/h5/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "MODERATE",
+    "ml_probability": 0.5611930471065865,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 0.0,
+      "content_score": 6.25,
+      "final_weighted_score": 55
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "MODERATE (55.0%) \u2013 ML predicted phishing (0.56) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://applelocalizar.com/KvnLR/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6296867350759996,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4286,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.63) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://member11.agency-ad-meta.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://comtamsabichuongsiungonn.pages.dev/help/contact/633659756476066",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5552901462559026,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.56) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://u6u.site/",
+    "message": "No such site exists."
+  },
+  {
+    "url": "https://dpd.zplmqxjtrv.cfd/com",
+    "message": "No such site exists."
+  },
+  {
+    "url": "https://survey.refassured.com/BeWnoLnm",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.7393544090546232,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 0.0,
+      "content_score": 0.0,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.74) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://arunvbiradar.github.io/instagram-clone",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5556499116619004,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 11.11111111111111,
+      "content_score": 9.375,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.56) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://adsmaxtt.putunesimbah.de/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8056523528967816,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 0.0,
+      "content_score": 9.375,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.3529,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.81) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://register27.agency-partner-management.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://aumentosolicitadomaio.s3.us-east-005.backblazeb2.com/aumento.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5807493652865843,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.58) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://bridge-home--trezor.gitbook.io/us",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6653809427767385,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.67) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://bridge-home--trezor.gitbook.io/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5514570382253011,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.55) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://maiorlimiteagora.s3.us-east-005.backblazeb2.com/aumento.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5807493652865843,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.58) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://agency-network.accounts-admin-agency.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://www.16ue-casefb751962.vercel.app/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5433605767123513,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.54) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://agency-service.accounts-admin-agency.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://pqsolutions.org/yak/rogers/login.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8479977602054255,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 0.0,
+      "content_score": 6.25,
+      "final_weighted_score": 68
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4545,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (68.0%) \u2013 ML predicted legitimate (0.85) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://www.free-instagram-followers-mocha.vercel.app/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.560312603513959,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 33.33333333333333,
+      "content_score": 12.5,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "instagram",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted legitimate (0.56) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://free-instagram-followers-mocha.vercel.app/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5263131325500685,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 27.77777777777778,
+      "content_score": 12.5,
+      "final_weighted_score": 78
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false,
+      "typosquat_target": "instagram",
+      "typosquat_score": 1.0
+    },
+    "details": "CRITICAL (78.0%) \u2013 ML predicted phishing (0.53) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://www.nethubcorp.com/a57dc89e5gafef46a46bc0d58a4d0b6cf305.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8360775931913778,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 0.0,
+      "content_score": 6.25,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.84) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://asistenciahoy.com/?r=9f5adc1a-07a7-4de3-b3cb-e368f57c684b&rg=eu",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6365690920837833,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.3846,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.64) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://ericasantiago.com.br/0utFix/Mr_Khan/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8815965308785869,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 5.555555555555555,
+      "content_score": 6.25,
+      "final_weighted_score": 68
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.3846,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (68.0%) \u2013 ML predicted legitimate (0.88) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://ericasantiago.com.br/0utFix/Mr_Khan/index2.php",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.8700890155219403,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 5.555555555555555,
+      "content_score": 6.25,
+      "final_weighted_score": 68
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.3846,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (68.0%) \u2013 ML predicted legitimate (0.87) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://01bced66.sweet-credit-9cdf.pages.dev/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5151314751688751,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.52) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://net1.vercel.app/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "MODERATE",
+    "ml_probability": 0.6558186127469625,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 55
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "MODERATE (55.0%) \u2013 ML predicted legitimate (0.66) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://banque-online.com/?r=ad85ef05-2f84-483c-9666-7f58616606bd&rg=eu",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.7093690664460821,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 5.555555555555555,
+      "content_score": 0.0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.71) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://luiplky.b-cdn.net/all1.html",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6737852121015079,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 11.11111111111111,
+      "content_score": 6.25,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted phishing (0.67) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://partner-sync.credit-agency-meta.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://husnainjavaid856.github.io/netflix-ui-clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6944297974940324,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.69) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://sherkar.github.io/Amazon_Web_Clone/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7153372472225998,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 3.125,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 1.0,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.72) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://members-meta.accounts-admin-agency.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "http://web-git-05-08-trystagingbutprobwillfailbcunauthe-c7b77b-uniswap.vercel.app/portfolio",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5826571436436251,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 16.666666666666664,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.58) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://web-git-05-08-trystagingbutprobwillfailbcunauthe-c7b77b-uniswap.vercel.app/swap",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5826571436436251,
+    "scores": {
+      "url_score": 18.75,
+      "domain_score": 16.666666666666664,
+      "content_score": 0.0,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.6667,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.58) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://auth-io-ttrezrcdn.gitbook.io/us",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.6853944058519436,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted legitimate (0.69) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://auth-io-ttrezrcdn.gitbook.io/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5845982041272549,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 75
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (75.0%) \u2013 ML predicted phishing (0.58) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://aumento75.s3.us-east-005.backblazeb2.com/aumento.html",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.5516724065710411,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 11.11111111111111,
+      "content_score": 12.5,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.4,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (65.0%) \u2013 ML predicted legitimate (0.55) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://auth-metasmskchrrm.gitbook.io/us",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.7746206115813503,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 27.77777777777778,
+      "content_score": 6.25,
+      "final_weighted_score": 82
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (82.0%) \u2013 ML predicted legitimate (0.77) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://auth-metasmskchrrm.gitbook.io/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "CRITICAL",
+    "ml_probability": 0.5696323807616135,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 27.77777777777778,
+      "content_score": 12.5,
+      "final_weighted_score": 82
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "CRITICAL (82.0%) \u2013 ML predicted legitimate (0.57) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://automation-meta.accounts-admin-agency.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://hotel-stay77213.com/1006451789",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.7668007157214147,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 11.11111111111111,
+      "content_score": 9.375,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.8333,
+      "ssl_valid": true,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.77) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://kuckoinlogen.gitbook.io/us",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6748394110077405,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.67) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://kuckoinlogen.gitbook.io/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6052593454406742,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.61) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://member-sync.credit-agency-meta.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  },
+  {
+    "url": "https://jsz.nyx.temporary.site/3https.netflix.com.pago.php/",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.9163026628046048,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 6.25,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": false,
+      "brand_similarity": 0.5556,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.92) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://caseid0030.marketing-network.agency/",
+    "message": "No such site exists."
+  },
+  {
+    "url": "https://kixcoinlognin.gitbook.io/us",
+    "prediction": "legitimate",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6748394110077405,
+    "scores": {
+      "url_score": 6.25,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted legitimate (0.67) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "http://kixcoinlognin.gitbook.io/",
+    "prediction": "phishing",
+    "classification": "Potential Phishing Website",
+    "risk_level": "HIGH",
+    "ml_probability": 0.6052593454406742,
+    "scores": {
+      "url_score": 12.5,
+      "domain_score": 16.666666666666664,
+      "content_score": 12.5,
+      "final_weighted_score": 62
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0.5,
+      "ssl_valid": true,
+      "free_hosting": true,
+      "ip_url": false
+    },
+    "details": "HIGH (62.0%) \u2013 ML predicted phishing (0.61) \u2013 Potential Phishing Website"
+  },
+  {
+    "url": "https://agency-partner.accounts-admin-agency.com/",
+    "prediction": "phishing",
+    "classification": "Suspicious Domain Pattern",
+    "risk_level": "HIGH",
+    "ml_probability": 0.0,
+    "scores": {
+      "url_score": 0,
+      "domain_score": 0,
+      "content_score": 0,
+      "final_weighted_score": 65
+    },
+    "flags": {
+      "unreachable": true,
+      "brand_similarity": 0,
+      "ssl_valid": false,
+      "free_hosting": false,
+      "ip_url": false
+    },
+    "details": "HIGH (65%) \u2013 DNS failed but domain matches phishing template pattern"
+  }
+]

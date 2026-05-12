@@ -21,6 +21,8 @@ const TIMEOUT = 10000;
 const EVIL_ORIGIN = "https://evil-attacker.com";
 const NULL_ORIGIN = "null";
 
+const VALID_ENDPOINT_STATUSES = new Set([200, 201, 204, 301, 302, 401, 403]);
+
 function normalizeUrl(input) {
   if (!input.startsWith("http://") && !input.startsWith("https://")) {
     return "http://" + input;
@@ -125,70 +127,85 @@ async function discoverEndpoints(url) {
 async function analyzeEndpoint(endpointUrl) {
   const issues = [];
 
+  const evilTest = await testCorsOnUrl(endpointUrl, EVIL_ORIGIN);
+
+  // Skip endpoints that don't exist or are broken
+  if (!evilTest || !VALID_ENDPOINT_STATUSES.has(evilTest.status)) {
+    return issues;
+  }
+
   // Test 1: Wildcard ACAO
-  const wildcardTest = await testCorsOnUrl(endpointUrl, EVIL_ORIGIN);
-  if (wildcardTest) {
-    if (wildcardTest.acao === "*") {
-      issues.push({
-        type: "Wildcard CORS",
-        severity: "MEDIUM",
-        description: "Access-Control-Allow-Origin: * allows any origin to read responses",
-        header: `Access-Control-Allow-Origin: ${wildcardTest.acao}`,
-        url: endpointUrl,
-        exploitable: !wildcardTest.acac, // Wildcard + no credentials = medium risk
-      });
-    }
+  if (evilTest.acao === "*") {
+    issues.push({
+      type: "Wildcard CORS",
+      severity: "MEDIUM",
+      description: "Access-Control-Allow-Origin: * allows any origin to read responses",
+      header: `Access-Control-Allow-Origin: ${evilTest.acao}`,
+      url: endpointUrl,
+      exploitable: !evilTest.acac,
+    });
 
-    // Test 2: Origin reflection
-    if (wildcardTest.acao === EVIL_ORIGIN) {
-      const severity = wildcardTest.acac ? "CRITICAL" : "HIGH";
-      issues.push({
-        type: wildcardTest.acac ? "CORS Origin Reflection + Credentials" : "CORS Origin Reflection",
-        severity,
-        description: wildcardTest.acac
-          ? "Server reflects arbitrary Origin AND allows credentials — attacker can make authenticated requests cross-origin"
-          : "Server reflects arbitrary Origin header — attacker can read responses from any origin",
-        header: `Access-Control-Allow-Origin: ${wildcardTest.acao}${wildcardTest.acac ? "\nAccess-Control-Allow-Credentials: true" : ""}`,
-        url: endpointUrl,
-        exploitable: true,
-      });
-    }
-
-    // Test 3: Wildcard + Credentials (misconfiguration — browsers block but server is wrong)
-    if (wildcardTest.acao === "*" && wildcardTest.acac) {
+    // Test 3: Wildcard + Credentials
+    if (evilTest.acac) {
       issues.push({
         type: "Wildcard + Credentials Misconfiguration",
         severity: "HIGH",
-        description: "Server sets both ACAO: * and ACAC: true — browsers block this but it indicates a misconfiguration that may be bypassed",
+        description:
+          "Server sets both ACAO: * and ACAC: true — browsers block this but it indicates misconfiguration",
         header: "Access-Control-Allow-Origin: *\nAccess-Control-Allow-Credentials: true",
         url: endpointUrl,
-        exploitable: false, // Browsers block, but still a misconfiguration
+        exploitable: false,
       });
     }
   }
 
-  // Test 4: Missing CORS headers on API-like endpoints
-  // Only flag this for paths that look like APIs — not for regular pages
-  const isApiEndpoint = /\/(api|v\d|graphql|rest|auth|user|users|account|me|profile|data|endpoint)/i.test(endpointUrl);
-  if (isApiEndpoint && wildcardTest && wildcardTest.status < 500 && !wildcardTest.acao) {
+  // Test 2: Origin reflection — separate check, runs regardless of wildcard result
+  if (evilTest.acao === EVIL_ORIGIN) {
+    const severity = evilTest.acac ? "CRITICAL" : "HIGH";
+    issues.push({
+      type: evilTest.acac
+        ? "CORS Origin Reflection + Credentials"
+        : "CORS Origin Reflection",
+      severity,
+      description: evilTest.acac
+        ? "Server reflects arbitrary Origin AND allows credentials — attacker can make authenticated cross-origin requests"
+        : "Server reflects arbitrary Origin header — attacker can read responses from any origin",
+      header: `Access-Control-Allow-Origin: ${evilTest.acao}${
+        evilTest.acac ? "\nAccess-Control-Allow-Credentials: true" : ""
+      }`,
+      url: endpointUrl,
+      exploitable: true,
+    });
+  }
+
+  // Test 4: Missing CORS on API endpoints — only flag real endpoints
+  const isApiEndpoint =
+    /\/(api|v\d|graphql|rest|auth|user|users|account|me|profile|data|endpoint)/i.test(
+      endpointUrl
+    );
+  if (isApiEndpoint && !evilTest.acao) {
     issues.push({
       type: "Missing CORS Headers on API Endpoint",
       severity: "LOW",
-      description: "API endpoint does not return any CORS headers — cross-origin requests will be blocked by browsers, which may break legitimate integrations or indicate CORS is not considered",
+      description:
+        "API endpoint does not return CORS headers — cross-origin requests will be blocked",
       header: "Access-Control-Allow-Origin: (not set)",
       url: endpointUrl,
       exploitable: false,
     });
   }
 
-  // Test 5: Null origin allowed
+  // Test 5: Null origin — only on valid endpoints (no extra request needed, already validated above)
   const nullTest = await testCorsOnUrl(endpointUrl, NULL_ORIGIN);
   if (nullTest && (nullTest.acao === "null" || nullTest.acao === NULL_ORIGIN)) {
     issues.push({
       type: "Null Origin Allowed",
       severity: nullTest.acac ? "HIGH" : "MEDIUM",
-      description: "Server allows null origin — attackers can use sandboxed iframes or file:// pages to make cross-origin requests",
-      header: `Access-Control-Allow-Origin: null${nullTest.acac ? "\nAccess-Control-Allow-Credentials: true" : ""}`,
+      description:
+        "Server allows null origin — attackers can use sandboxed iframes to make cross-origin requests",
+      header: `Access-Control-Allow-Origin: null${
+        nullTest.acac ? "\nAccess-Control-Allow-Credentials: true" : ""
+      }`,
       url: endpointUrl,
       exploitable: true,
     });
