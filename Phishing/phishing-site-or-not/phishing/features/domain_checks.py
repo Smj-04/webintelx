@@ -64,11 +64,48 @@ get_ssl_days_left = ttl_cache(ttl_seconds=300)(get_ssl_days_left)
 
 
 def get_domain_age_days(domain):
-    """Try to get domain age in days via whois; returns None if whois not available or fails."""
+    """Get domain age via whois, with RDAP as fallback (no API key needed)."""
+    # Try whois first
     try:
         import whois
+        try:
+            info = whois.whois(domain)
+            cd = info.creation_date
+            if isinstance(cd, list):
+                cd = cd[0]
+            if cd:
+                if isinstance(cd, str):
+                    try:
+                        cd = datetime.fromisoformat(cd)
+                    except Exception:
+                        pass
+                if isinstance(cd, datetime):
+                    return max(0, (datetime.utcnow() - cd).days)
+        except Exception:
+            pass
     except Exception:
-        return None
+        pass
+
+    # RDAP fallback — free, no API key, more reliable than whois
+    try:
+        import requests as _req
+        resp = _req.get(
+            f"https://rdap.org/domain/{domain}",
+            timeout=5,
+            headers={"User-Agent": "Mozilla/5.0"}
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            for event in data.get("events", []):
+                if event.get("eventAction") == "registration":
+                    date_str = event.get("eventDate", "")
+                    if date_str:
+                        cd = datetime.fromisoformat(date_str[:19])
+                        return max(0, (datetime.utcnow() - cd).days)
+    except Exception:
+        pass
+
+    return None
 
     try:
         info = whois.whois(domain)

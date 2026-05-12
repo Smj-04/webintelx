@@ -22,10 +22,23 @@ from phishing.features.domain_checks import resolve_domain, get_ssl_days_left, g
 # Sites hosted on these platforms inherit the platform's trusted domain reputation,
 # which causes the ML model to miss phishing pages hosted on them.
 FREE_HOSTING_PLATFORMS = {
+    # Website builders
     "webflow.io", "netlify.app", "github.io", "glitch.me",
     "vercel.app", "web.app", "firebaseapp.com", "pages.dev",
     "wixsite.com", "weebly.com", "squarespace.com", "carrd.co",
     "render.com", "railway.app", "surge.sh", "repl.co",
+    "godaddysites.com", "wordpress.com", "blogger.com", "blogspot.com",
+    "typedream.app", "gitbook.io", "webador.com",
+    "000webhostapp.com", "infinityfreeapp.com",
+    # Cloud object storage — commonly abused for phishing HTML pages
+    "backblazeb2.com", "s3.amazonaws.com", "storage.googleapis.com",
+    "r2.dev", "b-cdn.net", "digitaloceanspaces.com",
+    "blob.core.windows.net", "oortstorages.com",
+    # Free CDN/tunneling abuse
+    "b2.backblazeb2.com", "workers.dev", "trycloudflare.com",
+    # Free DNS/subdomain abuse
+    "dynv6.net", "duckdns.org", "serv00.net",
+    "webcindario.com", "hstn.me", "serveirc.com",
 }
 
 # ── TLD REPUTATION TABLE ───────────────────────────────────────────────────────
@@ -197,8 +210,15 @@ def extract_realtime_features(url: str) -> dict:
     # ── FREE HOSTING PLATFORM FLAG ────────────────────────────────────────────
     # Phishing pages on trusted platforms (webflow.io, netlify.app etc.) bypass
     # domain reputation checks because the registered domain looks legitimate.
-    features["IsOnFreeHosting"] = 1 if registered_domain in FREE_HOSTING_PLATFORMS else 0
-
+    # Check both registered_domain AND full netloc (catches subdomains like
+    # novolimitepratodos.s3.us-east-005.backblazeb2.com)
+    from urllib.parse import urlparse
+    netloc = urlparse(url).netloc.lower().lstrip("www.")
+    features["IsOnFreeHosting"] = 1 if (
+        registered_domain in FREE_HOSTING_PLATFORMS
+        or any(netloc.endswith("." + p) or netloc == p for p in FREE_HOSTING_PLATFORMS)
+    ) else 0
+    
     # ── 3. CONTENT ANALYSIS ───────────────────────────────────────────────────
     try:
         r = requests.get(url, timeout=7, allow_redirects=True)
